@@ -17,12 +17,47 @@ const players = [
   "爱吃鱼的星喵", "BB88", "镜落镜落-南极🇺🇾",
 ];
 
-const stages: Array<{ id: StageId; roman: string; title: string; range: string; tpBase: number }> = [
-  { id: 1, roman: "I", title: "生命之火试炼", range: "GW1–GW8", tpBase: 686 },
-  { id: 2, roman: "II", title: "冰海角斗场", range: "GW9–GW20", tpBase: 812 },
-  { id: 3, roman: "III", title: "冰山与深海分界", range: "GW21–GW30", tpBase: 936 },
-  { id: 4, roman: "IV", title: "深海大逃杀", range: "GW31–GW34", tpBase: 1012 },
-  { id: 5, roman: "V", title: "冰渊王座对决", range: "GW35–GW38", tpBase: 1094 },
+const stages: Array<{ id: StageId; roman: string; title: string; range: string; tpBase: number; description: string }> = [
+  {
+    id: 1,
+    roman: "I",
+    title: "生命之火试炼",
+    range: "GW1–GW8",
+    tpBase: 686,
+    description: "踏入终焉冰海的那一刻，所有远征者都会被古老的寒冰魔法剥去昔日荣光，只留下微弱却不肯熄灭的生命之火。他们以“寒冰见习者”之名穿越无声冰原，在没有战争与背叛的最初旅程中，既要学会重新燃起自己的火种，也要留意远古龙魂的凝视。这里尚未响起刀剑，冰海安静地记录每一次选择，并把真正的力量藏进即将到来的风暴。",
+  },
+  {
+    id: 2,
+    roman: "II",
+    title: "冰海角斗场",
+    range: "GW9–GW20",
+    tpBase: 812,
+    description: "寒冬加剧，封冻千年的冰龙决斗场从裂海之下重新升起。曾并肩远行的勇士第一次以敌手的身份隔着冰刃相望，荣耀、鲜血与命运在古老看台的回声中交织。冰龙不赞颂迟疑，也不怜悯弱小；当挑战的号角响起，有人成为猎人，有人成为猎物，而每一次交锋都在冰渊深处上留下无法抹去的刻痕。",
+  },
+  {
+    id: 3,
+    roman: "III",
+    title: "冰山与深海分界",
+    range: "GW21–GW30",
+    tpBase: 936,
+    description: "二十周的征战之后，远古冰龙降临冰海，审判所有仍然站立的勇士。命运自冰面中央裂开：一边是沐浴寒光、资源丰饶的浮冰大陆，冰冠贵族在高处继续追逐荣耀；另一边是永无天日的深渊，幸存者在暗流、巨兽与未知恐惧中寻找出路。冰山象征被承认的力量，深海则收藏尚未写完的传奇——因为终焉冰海最古老的传说，总从绝境开始。",
+  },
+  {
+    id: 4,
+    roman: "IV",
+    title: "深海大逃杀",
+    range: "GW31–GW34",
+    tpBase: 1012,
+    description: "冰海陷入狂潮，所有未被王座选中的幸存者都被卷入万丈冰渊。这里没有坚固的盟约，没有安全的边界，也没有谁能倚仗旧日排名获得庇护。曾经的强者可能在黑潮中陨落，曾经的弱者也可能从最深处归来；当整片深海化作最后的战场，唯有坚韧的意志才是能让人最终活下去的火苗。",
+  },
+  {
+    id: 5,
+    roman: "V",
+    title: "冰渊王座对决",
+    range: "GW35–GW38",
+    tpBase: 1094,
+    description: "冰山之巅的八位冰冠骑士，与深海归来的八位挑战者，终在冰龙王座竞技场相会。漫长远征就此结束，留下十六道孤独的身影，每一步都通往王冠之巅，但一不留神也可能坠入永恒寒夜。乱战之后，远古冰龙只会向最后站立的人低首；那个人将戴上冰渊王冠，成为新的冰渊之王，并把自己的名字刻入终焉冰海从不融化的冰层深处。",
+  },
 ];
 
 const captainNames = [
@@ -168,13 +203,22 @@ export default function Home() {
     <main>
       <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a className="active" href={`${siteBasePath}/`}>战榜</a><a href={`${siteBasePath}/rules/`}>冰渊法典</a></nav><div className="gameweek"><small>当前试炼</small><strong>GW 8</strong></div></div></header>
 
-      <section className="league-hero"><div className="hero-inner"><div className="hero-copy"><span>THE FROZEN ABYSS · 2026–27</span><h1>冰渊王座<br />之战</h1><p>你的生命，由你守护 你的传奇，由你书写</p></div></div></section>
+      <section className="league-hero"><div className="hero-inner"><div className="hero-copy"><span>THE FROZEN ABYSS · 2026–27</span><h1>冰渊王座<span>之战</span></h1><p className="hero-myth"><span>在世界尽头，有一片被遗忘的禁地——终焉冰海。这里没有四季，只有永恒的寒冬。传说远古巨龙陨落后，它的心脏化为了贯穿天地的巨大冰山，而它的鲜血流入深海，孕育出了无数深渊生灵。</span><span>冰山之上，是荣耀、力量与王权的象征；<br />深海之下，是黑暗、危险与未知的试炼。</span><span>千年以来，无数冒险者、骑士、法师、海妖与巨兽都曾踏入这片领域，只为寻找传说中的至高宝藏。据说，只有经历五重试炼、在冰山与深海之间活到最后的人，才能获得王座认可，成为新一代——</span><strong>冰渊之王</strong></p></div><div className="hero-seal" aria-label="Frozen Five Trials"><small>FROZEN</small><strong>V</strong><small>TRIALS</small></div></div></section>
 
       <section className="stage-switcher" aria-label="选择阶段">
         {stages.map((item) => (
-          <div className={`stage-slot ${activeStage === item.id ? "active" : ""}`} key={item.id}>
+          <div className={`stage-slot stage-slot-${item.id} ${activeStage === item.id ? "active" : ""}`} data-stage={item.id} key={item.id}>
             <button className={item.id === 1 ? "current-stage" : ""} onClick={() => selectStage(item.id)} aria-pressed={activeStage === item.id}>
-              <span className="shield-weathering" aria-hidden="true"></span>
+              <span className="stage-relic" aria-hidden="true">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`${siteBasePath}/assets/stages/stage-${item.id}.png`}
+                  alt=""
+                  width="1536"
+                  height="1536"
+                  draggable="false"
+                />
+              </span>
               <strong className="stage-roman">{item.roman}</strong>
               <span className="stage-name">{item.title}</span>
               <small>{item.range}</small>
@@ -182,6 +226,11 @@ export default function Home() {
             </button>
           </div>
         ))}
+      </section>
+
+      <section className={`stage-lore stage-lore-${activeStage}`} aria-live="polite" key={`lore-${activeStage}`}>
+        <header><small>CHAPTER {stage.roman} · {stage.range}</small><h2>{stage.title}</h2></header>
+        <p>{stage.description}</p>
       </section>
 
       {activeStage === 1 ? <section className="boards">
@@ -229,7 +278,7 @@ export default function Home() {
         </article>
       </section> : <section className="chapter-await" aria-live="polite"><p>A New Chapter Await</p></section>}
 
-      <footer className="site-footer"><p>冰山之上争夺荣耀，深海之下寻找重生</p><div><strong>PENGUIN CUP 2026–27</strong></div></footer>
+      <footer className="site-footer"><p>冰山之上，强者争夺荣耀；深海之下，亡者寻找重生</p><div><strong>PENGUIN CUP 2026–27</strong></div></footer>
     </main>
   );
 }

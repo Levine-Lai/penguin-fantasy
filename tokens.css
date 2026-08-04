@@ -16,6 +16,16 @@
   --color-error: oklch(68% 0.192 24);
   --color-draw: oklch(82% 0.092 86);
   --color-violet: oklch(64% 0.112 285);
+  --color-ember: oklch(70% 0.166 48);
+  --color-ember-deep: oklch(34% 0.102 35);
+  --color-ember-a22: oklch(70% 0.166 48 / 0.22);
+  --color-frost: oklch(84% 0.052 220);
+  --color-frost-a24: oklch(84% 0.052 220 / 0.24);
+  --color-steel: oklch(48% 0.035 225);
+  --color-abyss: oklch(19% 0.066 245);
+  --color-abyss-deep: oklch(8% 0.034 250);
+  --color-throne-gold: oklch(66% 0.084 78);
+  --color-throne-gold-a28: oklch(66% 0.084 78 / 0.28);
   --color-clear: oklch(12% 0.018 235 / 0);
   --color-paper-a42: oklch(12% 0.018 235 / 0.42);
   --color-paper-a58: oklch(12% 0.018 235 / 0.58);
@@ -45,6 +55,7 @@
   --font-display: "FZShiGuangKeSongS", "方正时光刻宋 简", "方正时光刻宋", "Source Han Serif SC", "思源宋体", "Noto Serif SC", ui-serif, serif;
   --font-body: "Source Han Serif SC", "思源宋体", "Noto Serif SC", ui-serif, serif;
   --font-label: "Source Han Serif SC", "思源宋体", "Noto Serif SC", ui-serif, serif;
+  --font-hero: Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
 
   --text-xs: 0.6875rem;
   --text-sm: 0.8rem;
@@ -72,6 +83,7 @@
 
   --rule-hair: 1px;
   --rule-strong: 2px;
+  --pixel-unit: calc(var(--space-2xs) / 2);
   --cut-sm: 0.75rem;
   --cut-md: 1.125rem;
   --radius-sm: 0.5rem;

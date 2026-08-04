@@ -69,12 +69,21 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /useState<StageId>\(1\)/);
   assert.match(page, /item\.id === 1 \? <i>当前<\/i>/);
   assert.match(page, /className="brand-emblem"/);
-  assert.match(page, /className="shield-weathering"/);
+  assert.match(page, /className="stage-relic"/);
+  assert.match(page, /assets\/stages\/stage-\$\{item\.id\}\.png/);
+  const stageArtifacts = await Promise.all(
+    [1, 2, 3, 4, 5].map((id) => readFile(new URL(`../public/assets/stages/stage-${id}.png`, import.meta.url))),
+  );
+  assert.ok(stageArtifacts.every((asset) => asset.byteLength > 100_000));
+  assert.match(page, /stage-lore stage-lore-/);
+  assert.equal((page.match(/description:\s*"/g) ?? []).length, 5);
   assert.doesNotMatch(page, /iceBurst|ice-burst|ice-fragments|ice-dust|ice-cloud/);
   assert.doesNotMatch(page, /className="stage-token"|className="stage-sigil"/);
-  assert.doesNotMatch(page, /hero-metrics|hero-seal|当前为模拟数据|后续接入 FPL API/);
-  assert.match(page, /<p>你的生命，由你守护 你的传奇，由你书写<\/p>/);
-  assert.doesNotMatch(page, /你的生命，由你守护。|你的传奇，由你书写。/);
+  assert.match(page, /className="hero-seal"/);
+  assert.doesNotMatch(page, /hero-metrics|当前为模拟数据|后续接入 FPL API/);
+  assert.match(page, /据说，只有经历五重试炼、在冰山与深海之间活到最后的人/);
+  assert.match(page, /<strong>冰渊之王<\/strong>/);
+  assert.doesNotMatch(page, /你的生命，由你守护 你的传奇，由你书写/);
   assert.match(page, /A New Chapter Await/);
   assert.doesNotMatch(page, /积分与血量排行榜<\/h2><\/div><span>36<\/span>/);
   assert.match(page, /第 \{rankingPage \+ 1\} 页/);
@@ -83,7 +92,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.doesNotMatch(page, /className="right-stack"|selectedPlayer|玩家 ID<\/small>/);
   assert.match(page, /useState<string \| null>\(null\)/);
   assert.match(page, /aria-expanded=/);
-  assert.match(page, /冰山之上争夺荣耀，深海之下寻找重生<\/p>/);
+  assert.match(page, /冰山之上，强者争夺荣耀；深海之下，亡者寻找重生<\/p>/);
   assert.match(page, /className="playoff-match"/);
   assert.match(page, /roman:\s*"I"/);
   assert.match(page, /roman:\s*"V"/);
@@ -96,8 +105,13 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(css, /background-image:\s*var\(--asset-penguin-logo\)/);
   assert.doesNotMatch(css, /frosted-steel-texture|ice-shatter-burst|@keyframes ice-/);
   assert.doesNotMatch(css, /\.stage-token|\.stage-sigil/);
-  assert.doesNotMatch(css, /\.hero-metrics|\.hero-seal/);
-  assert.match(css, /\.hero-copy > p\s*\{[^}]*white-space:\s*nowrap/);
+  assert.doesNotMatch(css, /\.hero-metrics/);
+  assert.match(css, /\.hero-seal\s*\{/);
+  assert.match(css, /\.stage-relic\s*\{/);
+  assert.match(css, /\.stage-lore\s*\{/);
+  assert.match(css, /\.stage-lore\s*\{[\s\S]*background:\s*var\(--color-clear\)/);
+  assert.match(css, /\.hero-copy h1 > span\s*\{[^}]*display:\s*block/);
+  assert.match(css, /\.hero-copy > p\s*\{[^}]*white-space:\s*normal/);
   assert.match(css, /\.stage-switcher i\s*\{[^}]*inset-inline-start:\s*50%/);
   assert.match(css, /\.stage-switcher i\s*\{[^}]*transform:\s*translateX\(-50%\)/);
   assert.match(css, /\.chapter-await/);
@@ -105,6 +119,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(css, /\.rank-gem\s*\{/);
   assert.match(css, /\.pixel-health\s*\{/);
   assert.match(css, /\.blood-drop\s*\{/);
+  assert.match(css, /\.blood-drop::before\s*\{/);
   assert.doesNotMatch(css, /\.ranking-panel \.panel-title::before/);
   assert.match(css, /\.ranking-pagination/);
   assert.match(css, /\.ranking-pagination button\s*\{[^}]*clip-path:/);
