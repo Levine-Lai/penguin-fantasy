@@ -1,37 +1,20 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import "./globals.css";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "localhost:3002";
-  const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  const origin = `${protocol}://${host}`;
-  const title = "企鹅杯｜26–27 赛季联赛榜";
-  const description = "企鹅杯 26–27 赛季实时排名、本周挑战与赛制信息。";
+const basePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/[^a-zA-Z0-9/_-]/g, "");
 
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      type: "website",
-      url: origin,
-      images: [{ url: `${origin}/og.png`, width: 1792, height: 928, alt: "企鹅杯 26–27 赛季" }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [`${origin}/og.png`],
-    },
-  };
-}
+export const metadata: Metadata = {
+  title: "企鹅杯：冰渊王座之战｜2026–27",
+  description: "穿越终焉冰海的五重试炼，争夺企鹅杯冰渊王座。",
+};
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="zh-CN">
+      <head>
+        <link rel="icon" href={`${basePath}/penguin-cup-logo.png`} />
+        <style>{`:root{--asset-frozen-abyss:url("${basePath}/frozen-abyss-hero.png");--asset-penguin-logo:url("${basePath}/penguin-cup-logo.png")}`}</style>
+      </head>
       <body>{children}</body>
     </html>
   );

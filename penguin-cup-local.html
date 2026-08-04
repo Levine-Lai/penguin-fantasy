@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>企鹅杯 · 冰渊王座之战</title>
+  <style>
+    @font-face { font-family: Premier; src: url("public/fonts/premier-regular.woff2") format("woff2"); font-display: swap; }
+    @font-face { font-family: Premier; src: url("public/fonts/premier-bold.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+    :root {
+      --paper: #061522;
+      --paper-2: rgba(4, 19, 31, 0.92);
+      --paper-3: rgba(10, 33, 50, 0.88);
+      --ink: #eaf7ff;
+      --ink-2: #b8d0df;
+      --muted: #7594a8;
+      --cyan: #51d7ff;
+      --rule: rgba(97, 202, 244, 0.27);
+      --rule-bright: rgba(174, 230, 255, 0.52);
+      --gold: #e4bc56;
+      --red: #ff6672;
+      --green: #65d89a;
+      --font-body: Premier, "Microsoft YaHei", sans-serif;
+      --font-display: Georgia, "Microsoft YaHei", serif;
+      --page-veil: rgba(1, 11, 19, 0.64);
+      --header-surface: rgba(1, 12, 20, 0.94);
+      --hero-solid: rgba(3, 17, 28, 0.94);
+      --hero-clear: rgba(3, 17, 28, 0.28);
+      --metal-edge: #254052;
+      --metal-deep: #0b1b27;
+      --metal-shine: #b8c9d2;
+      --metal-mid: #314b5b;
+      --shadow-soft: rgba(0, 0, 0, 0.55);
+      --shadow-deep: rgba(0, 0, 0, 0.72);
+      --shine-soft: rgba(255, 255, 255, 0.14);
+      --shield-rule: rgba(213, 239, 251, 0.27);
+      --shield-rule-soft: rgba(213, 239, 251, 0.25);
+      --accent-glow: rgba(81, 215, 255, 0.5);
+      --accent-wash: rgba(81, 215, 255, 0.08);
+      --gold-rule: rgba(228, 188, 86, 0.7);
+      --badge-surface: rgba(4, 19, 31, 0.84);
+      --heart-glow: rgba(255, 102, 114, 0.55);
+      --chapter-surface: rgba(4, 19, 31, 0.74);
+      --space-1: .25rem;
+      --space-2: .5rem;
+      --space-3: .75rem;
+      --space-4: 1rem;
+      --space-5: 1.5rem;
+      --space-6: 2rem;
+      --space-7: 3rem;
+      --content: 92rem;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; overflow-x: clip; }
+    body {
+      min-height: 100vh;
+      background: var(--paper) url("public/frozen-abyss-hero.png") center / cover fixed no-repeat;
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-variant-numeric: tabular-nums;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background: var(--page-veil);
+    }
+    button { font: inherit; }
+    button:focus-visible, [role="button"]:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid var(--rule);
+      background: var(--header-surface);
+      backdrop-filter: blur(12px);
+    }
+    .header-inner {
+      width: min(var(--content), calc(100% - 2rem));
+      min-height: 5rem;
+      margin: auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+    }
+    .brand { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+    .brand-logo { width: 4.25rem; height: 3.75rem; object-fit: contain; flex: 0 0 auto; }
+    .brand-copy { display: flex; flex-direction: column; min-width: 0; }
+    .brand-copy strong { font-family: var(--font-display); letter-spacing: .13em; white-space: nowrap; }
+    .brand-copy small, .gameweek small { color: var(--muted); font-size: .72rem; font-weight: 700; letter-spacing: .12em; }
+    .header-side { display: flex; align-items: center; gap: var(--space-5); }
+    .nav-label { padding: .75rem 1.25rem; border: 1px solid var(--rule); color: var(--ink); font-weight: 700; white-space: nowrap; }
+    .gameweek { padding-left: var(--space-4); border-left: 1px solid var(--rule); display: flex; flex-direction: column; }
+    .gameweek strong { color: var(--cyan); letter-spacing: .08em; }
+    .hero {
+      min-height: 20rem;
+      border-bottom: 1px solid var(--rule);
+      background: linear-gradient(90deg, var(--hero-solid), var(--hero-clear));
+    }
+    .hero-inner { width: min(76rem, calc(100% - 2rem)); min-height: 20rem; margin: auto; display: flex; align-items: center; }
+    .hero-copy small { color: var(--cyan); font-size: .78rem; font-weight: 700; letter-spacing: .14em; }
+    .hero h1 { margin: var(--space-4) 0 var(--space-3); font-family: var(--font-display); font-size: clamp(3.4rem, 8vw, 6.8rem); line-height: .98; letter-spacing: -.045em; }
+    .hero p { margin: 0; color: var(--ink-2); font-family: var(--font-display); font-size: clamp(.82rem, 2vw, 1.2rem); white-space: nowrap; }
+    .stage-switcher {
+      width: min(76rem, calc(100% - 2rem));
+      margin: -2rem auto var(--space-7);
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: var(--space-4);
+      position: relative;
+      z-index: 2;
+    }
+    .stage-slot { grid-column: span 2; min-width: 0; position: relative; }
+    .stage-slot:nth-child(4) { grid-column: 2 / span 2; }
+    .stage-slot:nth-child(5) { grid-column: 4 / span 2; }
+    .stage-button {
+      width: 100%;
+      min-height: 13.5rem;
+      padding: 2rem 1.25rem 3.3rem;
+      display: grid;
+      grid-template-rows: 1fr auto auto;
+      place-items: center;
+      gap: var(--space-2);
+      overflow: hidden;
+      border: 0;
+      background: linear-gradient(110deg, var(--metal-edge), var(--metal-deep) 18%, var(--metal-shine) 34%, var(--metal-mid) 48%, var(--metal-shine) 62%, var(--metal-deep) 82%, var(--metal-edge));
+      color: var(--ink);
+      cursor: pointer;
+      clip-path: polygon(12% 0,88% 0,96% 5%,100% 19%,94% 68%,79% 84%,50% 100%,21% 84%,6% 68%,0 19%,4% 5%);
+      position: relative;
+      transition: filter .18s ease, transform .12s ease;
+    }
+    .stage-button::before {
+      content: "";
+      position: absolute;
+      inset: .42rem .48rem .65rem;
+      background: linear-gradient(152deg, var(--shadow-soft), transparent 35%, var(--shine-soft) 52%, transparent 68%, var(--shadow-deep)), url("public/frosted-steel-texture.png") center / cover;
+      background-blend-mode: multiply, normal;
+      clip-path: polygon(11% 0,89% 0,97% 9%,100% 22%,92% 67%,76% 82%,50% 97%,24% 82%,8% 67%,0 22%,3% 9%);
+    }
+    .stage-button::after {
+      content: "";
+      position: absolute;
+      inset: .82rem .9rem 1.18rem;
+      border: 1px solid var(--shield-rule);
+      clip-path: polygon(10% 0,90% 0,98% 10%,100% 23%,91% 65%,74% 80%,50% 95%,26% 80%,9% 65%,0 23%,2% 10%);
+      box-shadow: inset 0 0 1.6rem var(--shadow-soft);
+    }
+    .stage-slot.active .stage-button { filter: drop-shadow(0 0 .85rem var(--accent-glow)); }
+    .stage-button:active { transform: translateY(1px); }
+    .stage-button > * { position: relative; z-index: 2; }
+    .roman { font-family: var(--font-display); font-size: clamp(2.45rem, 5vw, 3.35rem); line-height: 1; }
+    .stage-slot.active .roman { color: var(--cyan); }
+    .stage-name { width: min(90%, 15rem); padding-top: var(--space-3); border-top: 1px solid var(--shield-rule-soft); font-family: var(--font-display); font-weight: 700; }
+    .stage-button small { color: var(--ink-2); font-weight: 700; letter-spacing: .08em; }
+    .current-badge {
+      position: absolute;
+      left: 50%;
+      bottom: 1rem;
+      transform: translateX(-50%);
+      padding: .28rem .65rem;
+      border: 1px solid var(--gold-rule);
+      background: var(--badge-surface);
+      color: var(--gold);
+      font-size: .72rem;
+      font-style: normal;
+      font-weight: 700;
+      line-height: 1;
+      white-space: nowrap;
+      z-index: 4;
+    }
+    .burst {
+      width: 22rem;
+      aspect-ratio: 1;
+      position: absolute;
+      left: 50%;
+      top: 44%;
+      z-index: 8;
+      background: url("public/ice-shatter-burst.png") center / contain no-repeat;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-50%,-50%) scale(.2) rotate(-8deg);
+    }
+    .stage-slot.bursting .burst { animation: ice-burst .82s ease-out both; }
+    @keyframes ice-burst {
+      0% { opacity: 0; transform: translate(-50%,-50%) scale(.24) rotate(-8deg); }
+      16% { opacity: .95; }
+      65% { opacity: .66; }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(1.08) rotate(5deg); }
+    }
+    .content { width: min(var(--content), calc(100% - 2rem)); margin: 0 auto var(--space-7); }
+    .boards { display: grid; grid-template-columns: minmax(0,1.22fr) minmax(24rem,.78fr); gap: var(--space-5); align-items: start; }
+    .panel { border: 1px solid var(--rule-bright); background: var(--paper-2); overflow: clip; }
+    .panel-title { min-height: 7rem; padding: var(--space-5); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--rule); background: var(--paper-3); }
+    .panel-title small { color: var(--cyan); font-size: .72rem; font-weight: 700; letter-spacing: .12em; }
+    .panel-title h2 { margin: .4rem 0 0; font-family: var(--font-display); font-size: clamp(1.45rem,3vw,2.2rem); }
+    .panel-title > strong { color: var(--gold); font-family: var(--font-display); font-size: 2rem; }
+    .ranking-head, .rank-row { display: grid; grid-template-columns: 4rem minmax(0,1fr) 8rem minmax(9rem,.8fr); align-items: center; gap: var(--space-3); padding: 0 var(--space-5); }
+    .ranking-head { min-height: 3.25rem; color: var(--muted); font-size: .75rem; font-weight: 700; }
+    .rank-row { min-height: 4.7rem; border-top: 1px solid var(--rule); cursor: pointer; }
+    .rank-row:hover, .rank-row.selected { background: var(--accent-wash); }
+    .rank { color: var(--muted); font-family: var(--font-display); font-size: 1.45rem; }
+    .player { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1rem; }
+    .score { color: var(--cyan); font-size: 1.1rem; }
+    .hearts { display: flex; flex-wrap: wrap; gap: .28rem; }
+    .heart { width: .72rem; height: .72rem; background: var(--red); clip-path: polygon(50% 92%,8% 48%,8% 25%,23% 10%,42% 10%,50% 22%,58% 10%,77% 10%,92% 25%,92% 48%); filter: drop-shadow(0 0 .25rem var(--heart-glow)); }
+    .pagination { min-height: 4.75rem; display: flex; align-items: center; justify-content: center; gap: var(--space-5); border-top: 1px solid var(--rule); }
+    .pagination button { width: 2.8rem; height: 2.8rem; border: 1px solid var(--rule-bright); background: transparent; color: var(--ink); cursor: pointer; }
+    .pagination button:disabled { opacity: .35; cursor: not-allowed; }
+    .page-label { min-width: 7rem; text-align: center; }
+    .page-label small { display: block; color: var(--muted); }
+    .selected-player { min-height: 5rem; padding: var(--space-4) var(--space-5); display: flex; flex-direction: column; justify-content: center; border-bottom: 1px solid var(--rule); }
+    .selected-player small { color: var(--muted); font-size: .72rem; }
+    .selected-player strong { margin-top: .3rem; font-size: 1.15rem; }
+    .captain-head, .captain-row { display: grid; grid-template-columns: 3rem minmax(7rem,1fr) 4.5rem 6rem 4rem; align-items: center; gap: var(--space-2); padding: 0 var(--space-4); }
+    .captain-head { min-height: 3.2rem; color: var(--muted); font-size: .68rem; font-weight: 700; }
+    .captain-row { min-height: 4rem; border-top: 1px solid var(--rule); font-size: .88rem; }
+    .captain-row .rare { color: var(--gold); }
+    .captain-row b { color: var(--cyan); }
+    .captain-row em { color: var(--green); font-style: normal; font-weight: 700; }
+    .chapter-await { min-height: 28rem; display: grid; place-items: center; border-block: 1px solid var(--rule); background: var(--chapter-surface); }
+    .chapter-await p { margin: 0; color: var(--ink-2); font-family: var(--font-display); font-size: clamp(1.5rem,5vw,3.25rem); font-weight: 700; letter-spacing: .08em; }
+    .site-footer { width: min(76rem, calc(100% - 2rem)); margin: auto; padding: var(--space-6) 0 var(--space-7); border-top: 1px solid var(--rule); }
+    .site-footer p { margin: 0; color: var(--ink-2); font-family: var(--font-display); font-size: clamp(.82rem,2vw,1.3rem); font-weight: 700; white-space: nowrap; }
+    .site-footer strong { display: block; margin-top: var(--space-5); padding-top: var(--space-4); border-top: 1px solid var(--rule); color: var(--cyan); font-size: .72rem; letter-spacing: .12em; }
+    @media (max-width: 62rem) {
+      .boards { grid-template-columns: minmax(0,1fr); }
+      .stage-switcher { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .stage-slot, .stage-slot:nth-child(4), .stage-slot:nth-child(5) { grid-column: auto; }
+      .stage-slot:last-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 42rem) {
+      .header-inner { min-height: 4.5rem; }
+      .brand-logo { width: 3.4rem; height: 3.2rem; }
+      .brand-copy small, .nav-label { display: none; }
+      .hero, .hero-inner { min-height: 17rem; }
+      .hero h1 { font-size: clamp(3.1rem,15vw,4.8rem); }
+      .stage-switcher { grid-template-columns: minmax(0,1fr); margin-top: -1.2rem; }
+      .stage-slot:last-child { grid-column: auto; }
+      .stage-button { min-height: 12.5rem; }
+      .ranking-head, .rank-row { grid-template-columns: 3rem minmax(0,1fr) 4.5rem 6.5rem; padding-inline: var(--space-3); gap: var(--space-2); }
+      .captain-panel { overflow-x: auto; }
+      .captain-head, .captain-row { min-width: 35rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .stage-slot.bursting .burst { animation: none; }
+      .stage-button { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <img class="brand-logo" src="public/penguin-cup-logo.png" alt="企鹅杯">
+        <span class="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span>
+      </div>
+      <div class="header-side"><span class="nav-label">战榜</span><span class="gameweek"><small>当前试炼</small><strong>GW 8</strong></span></div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner"><div class="hero-copy"><small>THE FROZEN ABYSS · 2026–27</small><h1>冰渊王座<br>之战</h1><p>你的生命，由你守护。你的传奇，由你书写</p></div></div>
+  </section>
+
+  <section class="stage-switcher" aria-label="选择阶段">
+    <div class="stage-slot active"><button class="stage-button" data-stage="1" aria-pressed="true"><strong class="roman">I</strong><span class="stage-name">生命之火试炼</span><small>GW1–GW8</small><i class="current-badge">当前</i></button><span class="burst" aria-hidden="true"></span></div>
+    <div class="stage-slot"><button class="stage-button" data-stage="2" aria-pressed="false"><strong class="roman">II</strong><span class="stage-name">冰海角斗场</span><small>GW9–GW20</small></button><span class="burst" aria-hidden="true"></span></div>
+    <div class="stage-slot"><button class="stage-button" data-stage="3" aria-pressed="false"><strong class="roman">III</strong><span class="stage-name">冰山与深海分界</span><small>GW21–GW30</small></button><span class="burst" aria-hidden="true"></span></div>
+    <div class="stage-slot"><button class="stage-button" data-stage="4" aria-pressed="false"><strong class="roman">IV</strong><span class="stage-name">深海大逃杀</span><small>GW31–GW34</small></button><span class="burst" aria-hidden="true"></span></div>
+    <div class="stage-slot"><button class="stage-button" data-stage="5" aria-pressed="false"><strong class="roman">V</strong><span class="stage-name">冰渊王座对决</span><small>GW35–GW38</small></button><span class="burst" aria-hidden="true"></span></div>
+  </section>
+
+  <main class="content" id="content" aria-live="polite"></main>
+
+  <footer class="site-footer"><p>冰山之上争夺荣耀，深海之下寻找重生</p><strong>PENGUIN CUP 2026–27</strong></footer>
+
+  <script>
+    const players = [
+      "企鹅1","Old Trafford","Baros15","Eva","别墅里面唱K 你想象不到","Kumanoiii","Conan","Shuo#北极K3🇺🇿","扎卡反黑小组","Gladiator Mississippi",
+      "比尔","蒂兰基尔尼","拙言","无机盐","狗蛋kk","✖Bigsix Team","acidboy","咻狗勾不在家","kusuri","Bad K","TheViolin","MutdBJ-垫底超人",
+      "香香软软的big b","AVG","Low Lik Kee","Faiaa","Wooooo","OCEAN🇪🇬","笨笨是大骗子","DDDD","HindMics","小火龙","Eric(殷少)","爱吃鱼的星喵","BB88","镜落镜落-南极🇺🇾"
+    ];
+    const captainNames = ["Haaland","B.Fernandes","Gabriel","Semenyo","Gibbs-White","Rice","Thiago","Anderson","Guéhi","João Pedro","Senesi","Virgil","Tarkowski","Rogers","Wilson","Watkins"];
+    const pointPattern = [12,4,15,2,10,7,14,3];
+    let page = 0;
+    let selected = players[0];
+
+    function captainHistory(playerIndex) {
+      return Array.from({length:8}, (_,index) => {
+        const rate = Number((((playerIndex + 1) * 4.3 + (index + 1) * 6.7) % 29 + 2.2).toFixed(1));
+        const points = pointPattern[(index + playerIndex) % pointPattern.length];
+        return { gw:index + 1, captain:captainNames[(index + playerIndex * 3) % captainNames.length], rate, points, life:points >= 10 ? (rate < 10 ? 2 : 1) : 0 };
+      });
+    }
+    function life(playerIndex) { return 1 + captainHistory(playerIndex).reduce((sum,item) => sum + item.life, 0); }
+    const ranking = players.map((name,index) => ({name,index,gpc:captainHistory(index)[7].points,tp:686-index*9-(index%3)*2,hp:life(index)}))
+      .sort((a,b) => b.hp-a.hp || b.tp-a.tp).map((item,index) => ({...item,rank:index+1}));
+
+    function hearts(count) { return `<span class="hearts" aria-label="${count} 点血量">${Array.from({length:count}, () => '<i class="heart" aria-hidden="true"></i>').join('')}</span>`; }
+    function renderCaptain(name) {
+      const index = Math.max(players.indexOf(name),0);
+      return `<aside class="panel captain-panel"><header class="panel-title"><div><small>LIFE FLAME ARCHIVE · GW1–GW8</small><h2>队长选择记录</h2></div><strong>08</strong></header>
+        <div class="selected-player"><small>玩家 ID</small><strong>${name}</strong></div>
+        <div class="captain-head"><span>轮次</span><span>FPL 队长</span><span>选择率</span><span>当周队长得分</span><span>生命变化</span></div>
+        ${captainHistory(index).map(item => `<div class="captain-row"><strong>${item.gw}</strong><span>${item.captain}</span><span class="${item.rate<10?'rare':''}">${item.rate}%</span><b>${item.points}</b><em>+${item.life}</em></div>`).join('')}</aside>`;
+    }
+    function renderStageOne() {
+      const visible = ranking.slice(page*10,(page+1)*10);
+      document.getElementById('content').innerHTML = `<section class="boards"><article class="panel"><header class="panel-title"><div><small>GW1–GW8 · 生命之火试炼</small><h2>积分与血量排行榜</h2></div><strong>36</strong></header>
+        <div class="ranking-head"><span>排名</span><span>玩家 ID</span><span>当周队长得分</span><span>血量</span></div>
+        <div>${visible.map(item => `<article class="rank-row ${item.name===selected?'selected':''}" role="button" tabindex="0" data-player="${item.name.replaceAll('"','&quot;')}"><strong class="rank">${item.rank}</strong><strong class="player">${item.name}</strong><strong class="score">${item.gpc}</strong>${hearts(item.hp)}</article>`).join('')}</div>
+        <nav class="pagination" aria-label="排行榜分页"><button id="prev" ${page===0?'disabled':''} aria-label="上一组">←</button><span class="page-label"><strong>${page*10+1}–${Math.min((page+1)*10,ranking.length)}</strong><small>共 ${ranking.length} 人</small></span><button id="next" ${page===3?'disabled':''} aria-label="下一组">→</button></nav></article>
+        <div id="captain-slot">${renderCaptain(selected)}</div></section>`;
+      document.querySelectorAll('.rank-row').forEach(row => {
+        const activate = () => { selected = row.dataset.player; renderStageOne(); };
+        row.addEventListener('click',activate);
+        row.addEventListener('keydown',event => { if(event.key==='Enter'||event.key===' '){event.preventDefault();activate();} });
+      });
+      document.getElementById('prev')?.addEventListener('click',() => { page=Math.max(0,page-1); renderStageOne(); });
+      document.getElementById('next')?.addEventListener('click',() => { page=Math.min(3,page+1); renderStageOne(); });
+    }
+    function showStage(stage) {
+      document.querySelectorAll('.stage-slot').forEach(slot => slot.classList.toggle('active',slot.querySelector('button').dataset.stage===stage));
+      document.querySelectorAll('.stage-button').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.stage===stage)));
+      if(stage==='1') renderStageOne();
+      else document.getElementById('content').innerHTML='<section class="chapter-await"><p>A New Chapter Await</p></section>';
+    }
+    document.querySelectorAll('.stage-button').forEach(button => button.addEventListener('click',() => {
+      const slot=button.closest('.stage-slot');
+      slot.classList.remove('bursting');
+      void slot.offsetWidth;
+      slot.classList.add('bursting');
+      window.setTimeout(() => slot.classList.remove('bursting'),850);
+      page=0;
+      showStage(button.dataset.stage);
+    }));
+    renderStageOne();
+  </script>
+</body>
+</html>

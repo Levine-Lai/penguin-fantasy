@@ -1,0 +1,91 @@
+:root {
+  --color-paper: oklch(12% 0.018 235);
+  --color-paper-2: oklch(16% 0.026 235);
+  --color-paper-3: oklch(20% 0.032 235);
+  --color-ink: oklch(95% 0.012 215);
+  --color-ink-2: oklch(86% 0.026 215);
+  --color-muted: oklch(72% 0.038 225);
+  --color-rule: oklch(36% 0.060 230);
+  --color-rule-2: oklch(28% 0.045 230);
+  --color-rule-bright: oklch(63% 0.105 220);
+  --color-accent: oklch(79% 0.142 210);
+  --color-accent-ink: oklch(14% 0.026 235);
+  --color-focus: oklch(88% 0.165 205);
+  --color-gold: oklch(79% 0.112 84);
+  --color-success: oklch(73% 0.158 155);
+  --color-error: oklch(68% 0.192 24);
+  --color-draw: oklch(82% 0.092 86);
+  --color-violet: oklch(64% 0.112 285);
+  --color-clear: oklch(12% 0.018 235 / 0);
+  --color-paper-a42: oklch(12% 0.018 235 / 0.42);
+  --color-paper-a58: oklch(12% 0.018 235 / 0.58);
+  --color-paper-a76: oklch(12% 0.018 235 / 0.76);
+  --color-paper-a90: oklch(12% 0.018 235 / 0.9);
+  --color-paper-a96: oklch(12% 0.018 235 / 0.96);
+  --color-paper-2-a84: oklch(16% 0.026 235 / 0.84);
+  --color-paper-2-a96: oklch(16% 0.026 235 / 0.96);
+  --color-paper-3-a46: oklch(20% 0.032 235 / 0.46);
+  --color-paper-3-a72: oklch(20% 0.032 235 / 0.72);
+  --color-accent-a06: oklch(79% 0.142 210 / 0.06);
+  --color-accent-a10: oklch(79% 0.142 210 / 0.1);
+  --color-accent-a14: oklch(79% 0.142 210 / 0.14);
+  --color-accent-a18: oklch(79% 0.142 210 / 0.18);
+  --color-accent-a28: oklch(79% 0.142 210 / 0.28);
+  --color-accent-a52: oklch(79% 0.142 210 / 0.52);
+  --color-ink-a08: oklch(95% 0.012 215 / 0.08);
+  --color-ink-a14: oklch(95% 0.012 215 / 0.14);
+  --color-ink-a24: oklch(95% 0.012 215 / 0.24);
+  --color-gold-a12: oklch(79% 0.112 84 / 0.12);
+  --color-gold-a55: oklch(79% 0.112 84 / 0.55);
+  --color-success-a14: oklch(73% 0.158 155 / 0.14);
+  --color-error-a14: oklch(68% 0.192 24 / 0.14);
+  --color-draw-a14: oklch(82% 0.092 86 / 0.14);
+  --color-shadow: oklch(6% 0.012 235 / 0.48);
+
+  --font-display: "FZShiGuangKeSongS", "方正时光刻宋 简", "方正时光刻宋", "Source Han Serif SC", "思源宋体", "Noto Serif SC", ui-serif, serif;
+  --font-body: "Source Han Serif SC", "思源宋体", "Noto Serif SC", ui-serif, serif;
+  --font-label: "Source Han Serif SC", "思源宋体", "Noto Serif SC", ui-serif, serif;
+
+  --text-xs: 0.6875rem;
+  --text-sm: 0.8rem;
+  --text-base: 1rem;
+  --text-md: 1.25rem;
+  --text-lg: 1.5625rem;
+  --text-xl: 1.953rem;
+  --text-2xl: 2.441rem;
+  --text-3xl: 3.052rem;
+  --text-display: clamp(3.2rem, 7vw, 5.4rem);
+
+  --space-3xs: 0.125rem;
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --space-2xl: 4rem;
+  --space-3xl: 6rem;
+  --space-4xl: 9rem;
+  --page-gutter: clamp(1rem, 4vw, 2.5rem);
+  --content-wide: 78.75rem;
+  --content-main: 73.75rem;
+
+  --rule-hair: 1px;
+  --rule-strong: 2px;
+  --cut-sm: 0.75rem;
+  --cut-md: 1.125rem;
+  --radius-sm: 0.5rem;
+  --radius-game: 1.5rem;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms;
+  --dur-short: 220ms;
+  --dur-long: 420ms;
+
+  --z-base: 1;
+  --z-raised: 10;
+  --z-sticky: 200;
+  --z-tooltip: 600;
+}

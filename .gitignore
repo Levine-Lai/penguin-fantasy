@@ -17,6 +17,12 @@
 /.next/
 /.vinext/
 /out/
+/tmp/
+/.hallmark/
+/penguin-cup-site.tar.gz
+/public/fpl-reference/
+/public/frosted-steel-texture.png
+/public/ice-shatter-burst.png
 
 # misc
 .DS_Store
@@ -28,6 +34,7 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 .sites-dev.*.log
+.sites-dev-*.log
 
 # env files (can opt-in for committing if needed)
 .env*
