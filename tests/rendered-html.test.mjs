@@ -32,7 +32,7 @@ test("server-renders the Penguin Cup leaderboard", async () => {
   assert.match(html, /PENGUIN CUP/);
   assert.match(html, /冰渊王座/);
   assert.match(html, /冰海角斗场/);
-  assert.match(html, /GW1 前/);
+  assert.match(html, /见习者集结/);
   assert.match(html, /当周队长得分/);
   assert.match(html, /血量/);
   assert.match(html, /aria-label="1 点血量"/);
@@ -64,7 +64,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /assets\/leaderboard\/ice-side-left\.png/);
   assert.match(page, /assets\/leaderboard\/ice-side-right\.png/);
   assert.match(page, /assets\/leaderboard\/score-slot\.png/);
-  assert.match(page, /assets\/leaderboard\/pixel-heart\.png/);
+  assert.match(page, /assets\/leaderboard\/pixel-heart\.svg/);
   assert.match(page, /className="pixel-health"/);
   assert.match(page, /className="blood-drop"/);
   assert.match(page, /Array\.from\(\{ length: hp \}/);
@@ -150,6 +150,8 @@ test("server-renders the rules route", async () => {
   const html = await response.text();
   assert.match(html, /五重试炼/);
   assert.match(html, /GW35–GW38/);
+  assert.match(html, /aria-label="返回战榜">战榜/);
+  assert.doesNotMatch(html, /href="\/rules\/"[^>]*>冰渊法典/);
 });
 
 test("ships a double-clickable local HTML edition without network or API calls", async () => {

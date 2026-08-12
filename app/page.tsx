@@ -130,7 +130,7 @@ function InlineCaptainHistory({ playerName }: { playerName: string }) {
   const history = getCaptainHistory();
   return (
     <section className="rank-history" aria-label={`${playerName} 的队长选择记录`}>
-      <header><strong>队长选择记录</strong><small>GW1 前</small></header>
+      <header><strong>队长选择记录</strong><small>见习者集结</small></header>
       <div>
         {history.length === 0 ? <p className="history-empty">尚无队长选择记录</p> : history.map((item) => (
           <article className="history-row" key={item.gw}>
@@ -208,12 +208,12 @@ export default function Home() {
     "--ledger-right-rail-image": `url("${siteBasePath}/assets/leaderboard/ice-side-right.png")`,
     "--ledger-divider-image": `url("${siteBasePath}/assets/leaderboard/ice-divider.png")`,
     "--score-slot-image": `url("${siteBasePath}/assets/leaderboard/score-slot.png")`,
-    "--pixel-heart-image": `url("${siteBasePath}/assets/leaderboard/pixel-heart.png")`,
+    "--pixel-heart-image": `url("${siteBasePath}/assets/leaderboard/pixel-heart.svg")`,
   } as CSSProperties;
 
   return (
     <main>
-      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a className="active" href={`${siteBasePath}/`}>战榜</a><a href={`${siteBasePath}/rules/`}>冰渊法典</a></nav><div className="gameweek"><small>当前试炼</small><strong>GW1 前</strong></div></div></header>
+      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a className="active" href={`${siteBasePath}/`}>战榜</a><a href={`${siteBasePath}/rules/`}>冰渊法典</a></nav><div className="gameweek"><small>当前试炼</small><strong>见习者集结</strong></div></div></header>
 
       <section className="league-hero"><div className="hero-inner"><div className="hero-copy"><span>THE FROZEN ABYSS · 2026–27</span><h1>冰渊王座<span>之战</span></h1><p className="hero-myth"><span>在世界尽头，有一片被遗忘的禁地——终焉冰海。这里没有四季，只有永恒的寒冬。传说远古巨龙陨落后，它的心脏化为了贯穿天地的巨大冰山，而它的鲜血流入深海，孕育出了无数深渊生灵。</span><span>冰山之上，是荣耀、力量与王权的象征；<br />深海之下，是黑暗、危险与未知的试炼。</span><span>千年以来，无数冒险者、骑士、法师、海妖与巨兽都曾踏入这片领域，只为寻找传说中的至高宝藏。据说，只有经历五重试炼、在冰山与深海之间活到最后的人，才能获得王座认可，成为新一代——</span><strong>冰渊之王</strong></p></div></div></section>
 

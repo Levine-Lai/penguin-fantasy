@@ -3784,3 +3784,153 @@ main > * {
     min-height: 3.7rem;
   }
 }
+
+/* Hallmark · mobile polish: a single relic shelf keeps the five artifacts optically aligned. */
+.blood-drop {
+  width: 0.9rem;
+  height: 0.78rem;
+  flex: 0 0 0.9rem;
+  background: var(--pixel-heart-image) center / 100% 100% no-repeat;
+  clip-path: none;
+  filter: drop-shadow(0 var(--rule-hair) var(--space-3xs) var(--color-error-a14));
+}
+
+.blood-drop::before { display: none; }
+
+/* Rules is a destination page; its header action always returns to the battle list. */
+.rules-return-nav {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.rules-return-nav a {
+  border-inline-start: 0 !important;
+}
+
+@media (max-width: 48rem) {
+  .rules-page .top-nav a:first-child {
+    display: grid;
+  }
+
+  .rules-return-nav {
+    display: block;
+  }
+
+  .rules-return-nav a {
+    min-width: 4.85rem;
+  }
+
+  .stage-switcher {
+    align-items: start;
+    row-gap: var(--space-lg);
+  }
+
+  .stage-slot button {
+    min-height: 10.9rem;
+    grid-template-rows: 6.35rem 1.45rem 1.45rem 1rem;
+    align-items: center;
+  }
+
+  .stage-slot .stage-relic {
+    height: 6.35rem;
+    align-self: end;
+    place-items: end center;
+    overflow: visible;
+  }
+
+  .stage-slot .stage-relic img,
+  .stage-slot-4 .stage-relic img {
+    width: min(100%, 7.8rem);
+    height: 6.1rem;
+    display: block;
+    object-fit: contain;
+    object-position: center bottom;
+    transform: none;
+  }
+
+  .stage-slot-1 .stage-relic img,
+  .stage-slot-2 .stage-relic img {
+    width: min(100%, 8.2rem);
+    transform: scale(1.48);
+  }
+
+  .stage-slot-3 .stage-relic img {
+    width: min(100%, 7.4rem);
+    transform: scale(1);
+  }
+
+  .stage-slot-4 .stage-relic img {
+    width: min(100%, 6.85rem);
+    height: 5.85rem;
+    transform: translateY(-0.1rem) scale(1.08);
+  }
+
+  .stage-slot-5 .stage-relic img {
+    width: min(100%, 7.3rem);
+    height: 6.2rem;
+    transform: scale(1.75);
+  }
+
+  .stage-slot button:hover .stage-relic img,
+  .stage-slot-3 button:hover .stage-relic img {
+    transform: translateY(-0.16rem) !important;
+  }
+
+  .stage-switcher i {
+    inset-block-start: 5.85rem;
+  }
+}
+
+@media (max-width: 32rem) {
+  .stage-switcher {
+    gap: var(--space-lg) var(--space-xs);
+  }
+
+  .stage-slot button {
+    min-height: 11rem;
+    grid-template-rows: 6.45rem 1.42rem 1.45rem 1rem;
+  }
+
+  .stage-slot .stage-relic {
+    height: 6.45rem;
+  }
+
+  .stage-slot .stage-relic img,
+  .stage-slot-4 .stage-relic img {
+    width: min(100%, 6.6rem);
+    height: 6.15rem;
+  }
+
+  .stage-slot-1 .stage-relic img,
+  .stage-slot-2 .stage-relic img {
+    width: min(100%, 6.95rem);
+    transform: scale(1.48);
+  }
+
+  .stage-slot-3 .stage-relic img {
+    width: min(100%, 6.2rem);
+    transform: scale(1);
+  }
+
+  .stage-slot-4 .stage-relic img {
+    width: min(100%, 5.85rem);
+    height: 5.65rem;
+    transform: translateY(-0.08rem) scale(1.08);
+  }
+
+  .stage-slot-5 .stage-relic img {
+    width: min(100%, 6.15rem);
+    height: 6.1rem;
+    transform: scale(1.75);
+  }
+
+  .stage-switcher i {
+    inset-block-start: 5.92rem;
+    inset-block-end: auto;
+  }
+
+  .blood-drop {
+    width: 0.6rem;
+    height: 0.52rem;
+    flex-basis: 0.6rem;
+  }
+}
