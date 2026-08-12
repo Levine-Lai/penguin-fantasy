@@ -1,20 +1,30 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useState, type CSSProperties } from "react";
 
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 type StageId = 1 | 2 | 3 | 4 | 5;
-type RankedPlayer = { name: string; rank: number; gpc: number; tp: number; hp: number };
+type RankedPlayer = { name: string; gpc: number; captainTotal: number; hp: number };
 type CaptainHistoryEntry = { gw: number; captain: string; rate: number; points: number; life: number };
 
+// Official FPL classic league 511690 Team name roster, fetched 2026-08-12.
 const players = [
-  "企鹅1", "Old Trafford", "Baros15", "Eva", "别墅里面唱K 你想象不到", "Kumanoiii",
-  "Conan", "Shuo#北极K3🇺🇿", "扎卡反黑小组", "Gladiator Mississippi", "比尔", "蒂兰基尔尼",
-  "拙言", "无机盐", "狗蛋kk", "✖ Bigsix Team", "acidboy", "咻狗勾不在家", "kusuri", "Bad K",
-  "TheViolin", "MutdBJ-垫底超人", "香香软软的big b", "AVG", "Low Lik Kee", "Faiaa",
-  "Wooooo", "OCEAN🇪🇬", "笨笨是大骗子", "DDDD", "HindMics", "小火龙", "Eric(殷少)",
-  "爱吃鱼的星喵", "BB88", "镜落镜落-南极🇺🇾",
+  "willis's Team", "Shuo Home", "传来传去不射门，阿尔特塔快走人！", "天行者不孤单", "Rainbow Desert", "礼物铺今天赢球了吗",
+  "这是团赛专用的大号", "范特西体育", "KNVB", "联曼", "FC RedMoon", "粒粒2.0", "Shanghai Port FC", "Wenbo's Team",
+  "BEK's Team", "kusuri", "YaGunnersYa", "Nicolas' XI", "Chelsea Mata", "afewgoodkids", "Bluebird", "TakahashiAki",
+  "dora ura aka aka", "Rud's Team", "Call loud Yeehc111", "绿豆猫手作", "热刺传奇教练德泽尔比", "笨雕先游",
+  "在英格兰捕猎的's Team", "逍遥小尧", "Will Alves my love", "Seawuwu", "Baros15", "镜落", "AVERAGE", "HindMics",
+  "红衫圣殿", "fpl中搁浅的哲学家", "Sakai Moka", "AMARTD", "Dream Tickets", "蒂亚鸽鸽鸽", "Hann-San", "ABC",
+  "Orange's Team", "Wei's Team", "柯北", "Verydisco", "红烧天堂", "remember", "Yemoooon", "将死之时掩以水门汀",
+  "谁是无机盐", "Team Blue", "Mind The Gap", "乔治啊啊马丁", "FRANCISTASY", "EriCherry", "lecitron", "Kw",
+  "足球离家出走了", "OOPS", "Steven's Team", "蒂兰基尔尼", "SSU - 珍惜当下❤️", "acidboy", "F.C. Chelion", "JackieGu",
+  "英超不倒翁", "MUJY", "yu99", "Team电子羊", "Trent66", "TEAM NAME", "Dongma", "开半天猪耳朵",
+  "Northcote Holdings", "Xi9Li", "Summerfan", "美式加冰", "夏初一笑 婉兒摘星", "光之围棋俱乐部", "elliott's Team",
+  "Clark's Team", "毒奶喵26", "LAD's Team", "William's Team", "Noodle FC", "MutdBJ", "ParisAintGerman", "Eva",
+  "香香软软的big b", "應該係除非唔係", "AnonTokyo", "Champion Leeds", "Pluto D", "Havertz Scores again", "谨慎分析 大胆梭哈",
+  "muscleking", "Real Madridista", "Micky VDV", "Loki7_7", "她在我耳边吹气", "John's Team", "Bill's Red Riffs", "干饭帮手",
+  "Yamine Lmao", "企鹅",
 ];
 
 const stages: Array<{ id: StageId; roman: string; title: string; range: string; tpBase: number; description: string }> = [
@@ -60,25 +70,12 @@ const stages: Array<{ id: StageId; roman: string; title: string; range: string; 
   },
 ];
 
-const captainNames = [
-  "Haaland", "B.Fernandes", "Gabriel", "Semenyo", "Gibbs-White", "Rice", "Thiago", "Anderson",
-  "Guéhi", "João Pedro", "Senesi", "Virgil", "Tarkowski", "Rogers", "Wilson", "Watkins",
-];
-
-const captainPointPattern = [12, 4, 15, 2, 10, 7, 14, 3];
-
-function getCaptainHistory(playerIndex: number): CaptainHistoryEntry[] {
-  return Array.from({ length: 8 }, (_, index) => {
-    const rate = Number((((playerIndex + 1) * 4.3 + (index + 1) * 6.7) % 29 + 2.2).toFixed(1));
-    const points = captainPointPattern[(index + playerIndex) % captainPointPattern.length];
-    const life = points >= 10 ? (rate < 10 ? 2 : 1) : 0;
-    const captain = captainNames[(index + playerIndex * 3) % captainNames.length];
-    return { gw: index + 1, captain, rate, points, life };
-  });
+function getCaptainHistory(): CaptainHistoryEntry[] {
+  return [];
 }
 
-function getLifeAfterGw8(playerIndex: number) {
-  return 1 + getCaptainHistory(playerIndex).reduce((total, gameweek) => total + gameweek.life, 0);
+function getLifeAfterGw8() {
+  return 1;
 }
 
 const challenges = [
@@ -130,17 +127,26 @@ function ChallengePanel({ melee = false, gameweek = "GW12" }: { melee?: boolean;
 }
 
 function InlineCaptainHistory({ playerName }: { playerName: string }) {
-  const playerIndex = Math.max(players.indexOf(playerName), 0);
-  const history = getCaptainHistory(playerIndex);
+  const history = getCaptainHistory();
   return (
     <section className="rank-history" aria-label={`${playerName} 的队长选择记录`}>
-      <header><strong>队长选择记录</strong><small>GW1–GW8</small></header>
+      <header><strong>队长选择记录</strong><small>GW1 前</small></header>
       <div>
-        {history.map((item) => (
+        {history.length === 0 ? <p className="history-empty">尚无队长选择记录</p> : history.map((item) => (
           <article className="history-row" key={item.gw}>
             <strong className="history-gw">GW{item.gw}</strong>
             <div className="history-captain"><b>{item.captain}</b><small className={item.rate < 10 ? "rare-pick" : ""}>选择率 {item.rate}%</small></div>
-            <div className="history-result"><b>{item.points} 分</b><em className={item.life === 2 ? "life-rare" : ""}>+{item.life} 血</em></div>
+            <div
+              className="history-result"
+              aria-label={`${item.points} 分，增加 ${item.life} 滴血`}
+            >
+              <span className="history-result-box history-points" aria-hidden="true">
+                <b>{item.points}</b><em>分</em>
+              </span>
+              <span className={`history-result-box history-life ${item.life === 2 ? "life-rare" : ""}`} aria-hidden="true">
+                <b>+{item.life}</b><em>血</em>
+              </span>
+            </div>
           </article>
         ))}
       </div>
@@ -184,26 +190,32 @@ export default function Home() {
   };
 
   const ranking = useMemo<RankedPlayer[]>(() => players
-    .map((name, index) => {
-      const captainHistory = getCaptainHistory(index);
-      return {
-        name,
-        gpc: activeStage === 1 ? captainHistory[7].points : 2 + ((index * 5 + stage.id * 3) % 14),
-        tp: stage.tpBase - index * 9 - (index % 3) * 2,
-        hp: getLifeAfterGw8(index),
-      };
-    })
-    .sort((a, b) => b.hp - a.hp || b.tp - a.tp)
-    .map((player, index) => ({ ...player, rank: index + 1 })), [activeStage, stage.id, stage.tpBase]);
-  const pageSize = 10;
+    .map((name) => ({
+      name,
+      gpc: 0,
+      captainTotal: 0,
+      hp: getLifeAfterGw8(),
+    })), []);
+  const pageSize = 20;
   const pageCount = Math.ceil(ranking.length / pageSize);
   const visibleRanking = ranking.slice(rankingPage * pageSize, (rankingPage + 1) * pageSize);
+  const rankingPanelAssets = {
+    "--ledger-complete-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.png")`,
+    "--ledger-row-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-row-frame.png")`,
+    "--ledger-history-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-history-frame.png")`,
+    "--ledger-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-ledger-frame.png")`,
+    "--ledger-left-rail-image": `url("${siteBasePath}/assets/leaderboard/ice-side-left.png")`,
+    "--ledger-right-rail-image": `url("${siteBasePath}/assets/leaderboard/ice-side-right.png")`,
+    "--ledger-divider-image": `url("${siteBasePath}/assets/leaderboard/ice-divider.png")`,
+    "--score-slot-image": `url("${siteBasePath}/assets/leaderboard/score-slot.png")`,
+    "--pixel-heart-image": `url("${siteBasePath}/assets/leaderboard/pixel-heart.png")`,
+  } as CSSProperties;
 
   return (
     <main>
-      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a className="active" href={`${siteBasePath}/`}>战榜</a><a href={`${siteBasePath}/rules/`}>冰渊法典</a></nav><div className="gameweek"><small>当前试炼</small><strong>GW 8</strong></div></div></header>
+      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a className="active" href={`${siteBasePath}/`}>战榜</a><a href={`${siteBasePath}/rules/`}>冰渊法典</a></nav><div className="gameweek"><small>当前试炼</small><strong>GW1 前</strong></div></div></header>
 
-      <section className="league-hero"><div className="hero-inner"><div className="hero-copy"><span>THE FROZEN ABYSS · 2026–27</span><h1>冰渊王座<span>之战</span></h1><p className="hero-myth"><span>在世界尽头，有一片被遗忘的禁地——终焉冰海。这里没有四季，只有永恒的寒冬。传说远古巨龙陨落后，它的心脏化为了贯穿天地的巨大冰山，而它的鲜血流入深海，孕育出了无数深渊生灵。</span><span>冰山之上，是荣耀、力量与王权的象征；<br />深海之下，是黑暗、危险与未知的试炼。</span><span>千年以来，无数冒险者、骑士、法师、海妖与巨兽都曾踏入这片领域，只为寻找传说中的至高宝藏。据说，只有经历五重试炼、在冰山与深海之间活到最后的人，才能获得王座认可，成为新一代——</span><strong>冰渊之王</strong></p></div><div className="hero-seal" aria-label="Frozen Five Trials"><small>FROZEN</small><strong>V</strong><small>TRIALS</small></div></div></section>
+      <section className="league-hero"><div className="hero-inner"><div className="hero-copy"><span>THE FROZEN ABYSS · 2026–27</span><h1>冰渊王座<span>之战</span></h1><p className="hero-myth"><span>在世界尽头，有一片被遗忘的禁地——终焉冰海。这里没有四季，只有永恒的寒冬。传说远古巨龙陨落后，它的心脏化为了贯穿天地的巨大冰山，而它的鲜血流入深海，孕育出了无数深渊生灵。</span><span>冰山之上，是荣耀、力量与王权的象征；<br />深海之下，是黑暗、危险与未知的试炼。</span><span>千年以来，无数冒险者、骑士、法师、海妖与巨兽都曾踏入这片领域，只为寻找传说中的至高宝藏。据说，只有经历五重试炼、在冰山与深海之间活到最后的人，才能获得王座认可，成为新一代——</span><strong>冰渊之王</strong></p></div></div></section>
 
       <section className="stage-switcher" aria-label="选择阶段">
         {stages.map((item) => (
@@ -234,11 +246,11 @@ export default function Home() {
       </section>
 
       {activeStage === 1 ? <section className="boards">
-        <article className="panel ranking-panel" id="ranking" key={`ranking-${activeStage}`}>
+        <article className="panel ranking-panel" id="ranking" key={`ranking-${activeStage}`} style={rankingPanelAssets}>
           <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>
-          <div className="ranking-head"><span>阶位</span><span>玩家 ID</span><span>当周队长得分</span><span>血量</span></div>
+          <div className="ranking-head"><span>阶位</span><span>玩家 ID</span><span>当周队长得分</span><span>队长总分</span><span>血量</span></div>
           <div className="ranking-list">
-            {visibleRanking.map(({ name, rank, gpc, hp }) => (
+            {visibleRanking.map(({ name, gpc, captainTotal, hp }) => (
               <Fragment key={name}>
                 <article
                   className={`rank-row selectable ${expandedPlayer === name ? "selected" : ""}`}
@@ -255,11 +267,15 @@ export default function Home() {
                   tabIndex={0}
                   aria-expanded={expandedPlayer === name}
                 >
-                  <strong className="rank-gem" aria-label={`第 ${rank} 名`}><span aria-hidden="true">{rank}</span></strong>
+                  <strong
+                    className="rank-gem rank-gem-4"
+                    aria-label="暂未排名"
+                  ><span aria-hidden="true">—</span></strong>
                   <div className="player-id-cell">
                     <strong className="player-id">{name}</strong>
                   </div>
                   <strong className="stat-score"><span>{gpc}</span></strong>
+                  <strong className="stat-score stat-captain-total"><span>{captainTotal}</span></strong>
                   <div className="hp-cell" aria-label={`${hp} 点血量`}>
                     <span className="pixel-health" aria-hidden="true">
                       {Array.from({ length: hp }, (_, index) => <i className="blood-drop" key={index}></i>)}

@@ -52,7 +52,8 @@
   --color-draw-a14: oklch(82% 0.092 86 / 0.14);
   --color-shadow: oklch(6% 0.012 235 / 0.48);
 
-  --font-display: "FZShiGuangKeSongS", "方正时光刻宋 简", "方正时光刻宋", "Source Han Serif SC", "思源宋体", "Noto Serif SC", ui-serif, serif;
+  /* Noto Serif SC is loaded by the application, so local and deployed pages share the same CJK metrics. */
+  --font-display: "Noto Serif SC", "Source Han Serif SC", "思源宋体", ui-serif, serif;
   --font-body: "Source Han Serif SC", "思源宋体", "Noto Serif SC", ui-serif, serif;
   --font-label: "Source Han Serif SC", "思源宋体", "Noto Serif SC", ui-serif, serif;
   --font-hero: Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
