@@ -1,12 +1,27 @@
 "use client";
 
-import { Fragment, useMemo, useState, type CSSProperties } from "react";
+import { Fragment, useEffect, useMemo, useState, type CSSProperties } from "react";
 
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const fplApiBase = "https://penguin-cup-fpl-api.nbafantasy.workers.dev";
 
 type StageId = 1 | 2 | 3 | 4 | 5;
-type RankedPlayer = { name: string; gpc: number; captainTotal: number; hp: number };
+type RankedPlayer = { entryId: number; name: string; rank: number | null; gpc: number; captainTotal: number; hp: number; history: CaptainHistoryEntry[] };
 type CaptainHistoryEntry = { gw: number; captain: string; rate: number; points: number; life: number };
+type LeagueTeam = { entryId: number; teamName: string };
+type ApiTeam = LeagueTeam & {
+  captainName: string | null;
+  captainPoints: number;
+  captainPickRate: number | null;
+};
+type GwSnapshot = {
+  ready: boolean;
+  gw: number;
+  deadlineHasPassed: boolean;
+  teams: ApiTeam[];
+};
+type ApiStatus = { gw?: number };
+type LeagueResponse = { ready: boolean; teams: LeagueTeam[] };
 
 // Official FPL classic league 511690 Team name roster, fetched 2026-08-12.
 const players = [
@@ -70,12 +85,11 @@ const stages: Array<{ id: StageId; roman: string; title: string; range: string; 
   },
 ];
 
-function getCaptainHistory(): CaptainHistoryEntry[] {
-  return [];
-}
+const fallbackTeams: LeagueTeam[] = players.map((teamName, index) => ({ entryId: -(index + 1), teamName }));
 
-function getLifeAfterGw8() {
-  return 1;
+function lifeEarned(points: number, rate: number | null): number {
+  if (points < 10) return 0;
+  return rate !== null && rate < 10 ? 2 : 1;
 }
 
 const challenges = [
@@ -126,8 +140,7 @@ function ChallengePanel({ melee = false, gameweek = "GW12" }: { melee?: boolean;
   );
 }
 
-function InlineCaptainHistory({ playerName }: { playerName: string }) {
-  const history = getCaptainHistory();
+function InlineCaptainHistory({ playerName, history }: { playerName: string; history: CaptainHistoryEntry[] }) {
   return (
     <section className="rank-history" aria-label={`${playerName} 的队长选择记录`}>
       <header><strong>队长选择记录</strong><small>见习者集结</small></header>
@@ -179,9 +192,48 @@ function KnockoutPanel() {
 
 export default function Home() {
   const [activeStage, setActiveStage] = useState<StageId>(1);
-  const [expandedPlayer, setExpandedPlayer] = useState<string | null>(null);
+  const [expandedPlayer, setExpandedPlayer] = useState<number | null>(null);
   const [rankingPage, setRankingPage] = useState(0);
+  const [leagueTeams, setLeagueTeams] = useState<LeagueTeam[]>(fallbackTeams);
+  const [gwSnapshots, setGwSnapshots] = useState<GwSnapshot[]>([]);
+  const [currentGw, setCurrentGw] = useState(1);
   const stage = stages.find((item) => item.id === activeStage) ?? stages[1];
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadFplData = async () => {
+      try {
+        const [leagueResponse, statusResponse] = await Promise.all([
+          fetch(`${fplApiBase}/api/league`, { cache: "no-store" }),
+          fetch(`${fplApiBase}/api/status`, { cache: "no-store" }),
+        ]);
+        if (!leagueResponse.ok || !statusResponse.ok) return;
+
+        const league = await leagueResponse.json() as LeagueResponse;
+        const status = await statusResponse.json() as ApiStatus;
+        const relevantGw = Math.max(1, Math.min(38, status.gw ?? 1));
+        const snapshots = await Promise.all(
+          Array.from({ length: relevantGw }, async (_, index) => {
+            const response = await fetch(`${fplApiBase}/api/gw/${index + 1}`, { cache: "no-store" });
+            return response.ok ? response.json() as Promise<GwSnapshot> : null;
+          }),
+        );
+
+        if (cancelled) return;
+        if (league.ready && league.teams.length > 0) setLeagueTeams(league.teams);
+        setCurrentGw(relevantGw);
+        setGwSnapshots(snapshots.filter((snapshot): snapshot is GwSnapshot => Boolean(snapshot?.teams)));
+      } catch {
+        // Keep the server-rendered roster if the remote API is temporarily unavailable.
+      }
+    };
+
+    void loadFplData();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const selectStage = (stageId: StageId) => {
     setActiveStage(stageId);
@@ -189,16 +241,43 @@ export default function Home() {
     setExpandedPlayer(null);
   };
 
-  const ranking = useMemo<RankedPlayer[]>(() => players
-    .map((name) => ({
-      name,
-      gpc: 0,
-      captainTotal: 0,
-      hp: getLifeAfterGw8(),
-    })), []);
+  const ranking = useMemo<RankedPlayer[]>(() => {
+    const hasPublishedPicks = gwSnapshots.some((snapshot) => snapshot.teams.some((team) => team.captainName));
+    const rows = leagueTeams.map((team) => {
+      const history = gwSnapshots.flatMap<CaptainHistoryEntry>((snapshot) => {
+        const result = snapshot.teams.find((entry) => entry.entryId === team.entryId);
+        if (!result?.captainName) return [];
+        const life = lifeEarned(result.captainPoints, result.captainPickRate);
+        return [{
+          gw: snapshot.gw,
+          captain: result.captainName,
+          rate: result.captainPickRate ?? 0,
+          points: result.captainPoints,
+          life,
+        }];
+      });
+      const latest = history.at(-1);
+      return {
+        entryId: team.entryId,
+        name: team.teamName,
+        rank: null,
+        gpc: latest?.points ?? 0,
+        captainTotal: history.reduce((total, item) => total + item.points, 0),
+        hp: 1 + history.reduce((total, item) => total + item.life, 0),
+        history,
+      };
+    });
+
+    if (!hasPublishedPicks) return rows;
+    return rows
+      .sort((left, right) => right.hp - left.hp || right.captainTotal - left.captainTotal || left.name.localeCompare(right.name, "zh-CN"))
+      .map((player, index) => ({ ...player, rank: index + 1 }));
+  }, [gwSnapshots, leagueTeams]);
   const pageSize = 20;
   const pageCount = Math.ceil(ranking.length / pageSize);
   const visibleRanking = ranking.slice(rankingPage * pageSize, (rankingPage + 1) * pageSize);
+  const latestSnapshot = gwSnapshots.find((snapshot) => snapshot.gw === currentGw);
+  const currentTrialLabel = latestSnapshot?.deadlineHasPassed ? `GW ${currentGw}` : "见习者集结";
   const rankingPanelAssets = {
     "--ledger-complete-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.png")`,
     "--ledger-row-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-row-frame.png")`,
@@ -213,7 +292,7 @@ export default function Home() {
 
   return (
     <main>
-      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a className="active" href={`${siteBasePath}/`}>战榜</a><a href={`${siteBasePath}/rules/`}>冰渊法典</a></nav><div className="gameweek"><small>当前试炼</small><strong>见习者集结</strong></div></div></header>
+      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a className="active" href={`${siteBasePath}/`}>战榜</a><a href={`${siteBasePath}/rules/`}>冰渊法典</a></nav><div className="gameweek"><small>当前试炼</small><strong>{currentTrialLabel}</strong></div></div></header>
 
       <section className="league-hero"><div className="hero-inner"><div className="hero-copy"><span>THE FROZEN ABYSS · 2026–27</span><h1>冰渊王座<span>之战</span></h1><p className="hero-myth"><span>在世界尽头，有一片被遗忘的禁地——终焉冰海。这里没有四季，只有永恒的寒冬。传说远古巨龙陨落后，它的心脏化为了贯穿天地的巨大冰山，而它的鲜血流入深海，孕育出了无数深渊生灵。</span><span>冰山之上，是荣耀、力量与王权的象征；<br />深海之下，是黑暗、危险与未知的试炼。</span><span>千年以来，无数冒险者、骑士、法师、海妖与巨兽都曾踏入这片领域，只为寻找传说中的至高宝藏。据说，只有经历五重试炼、在冰山与深海之间活到最后的人，才能获得王座认可，成为新一代——</span><strong>冰渊之王</strong></p></div></div></section>
 
@@ -250,27 +329,28 @@ export default function Home() {
           <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>
           <div className="ranking-head"><span>阶位</span><span>玩家 ID</span><span>当周队长得分</span><span>队长总分</span><span>血量</span></div>
           <div className="ranking-list">
-            {visibleRanking.map(({ name, gpc, captainTotal, hp }) => (
-              <Fragment key={name}>
+            {visibleRanking.map(({ entryId, name, rank, gpc, captainTotal, hp, history }) => (
+              <Fragment key={entryId}>
                 <article
-                  className={`rank-row selectable ${expandedPlayer === name ? "selected" : ""}`}
+                  className={`rank-row selectable ${expandedPlayer === entryId ? "selected" : ""}`}
                   onClick={() => {
-                    setExpandedPlayer((current) => current === name ? null : name);
+                    setExpandedPlayer((current) => current === entryId ? null : entryId);
                   }}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
-                      setExpandedPlayer((current) => current === name ? null : name);
+                      setExpandedPlayer((current) => current === entryId ? null : entryId);
                     }
                   }}
                   role="button"
                   tabIndex={0}
-                  aria-expanded={expandedPlayer === name}
+                  aria-expanded={expandedPlayer === entryId}
                 >
                   <strong
-                    className="rank-gem rank-gem-4"
-                    aria-label="暂未排名"
-                  ><span aria-hidden="true">—</span></strong>
+                    className={`rank-gem rank-gem-${rank && rank <= 3 ? rank : 4}`}
+                    aria-label={rank ? `第 ${rank} 名` : "暂未排名"}
+                    style={rank && rank <= 3 ? { "--rank-badge-image": `url("${siteBasePath}/assets/leaderboard/rank-${rank}-ice.png")` } as CSSProperties : undefined}
+                  ><span aria-hidden="true">{rank ?? "—"}</span></strong>
                   <div className="player-id-cell">
                     <strong className="player-id">{name}</strong>
                   </div>
@@ -282,7 +362,7 @@ export default function Home() {
                     </span>
                   </div>
                 </article>
-                {expandedPlayer === name ? <div className="rank-history-wrap"><InlineCaptainHistory playerName={name} /></div> : null}
+                {expandedPlayer === entryId ? <div className="rank-history-wrap"><InlineCaptainHistory playerName={name} history={history} /></div> : null}
               </Fragment>
             ))}
           </div>

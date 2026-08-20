@@ -12,7 +12,10 @@
     "start": "vinext start",
     "test": "npm run build && node --test tests/rendered-html.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern out --ignore-pattern tmp",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "fpl:dev": "wrangler dev --config cloudflare/fpl-proxy/wrangler.jsonc",
+    "fpl:deploy": "wrangler deploy --config cloudflare/fpl-proxy/wrangler.jsonc",
+    "fpl:tail": "wrangler tail --config cloudflare/fpl-proxy/wrangler.jsonc"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",

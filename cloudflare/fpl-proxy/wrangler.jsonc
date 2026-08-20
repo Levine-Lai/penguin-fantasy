@@ -1,0 +1,24 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "penguin-cup-fpl-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-08-19",
+  "workers_dev": true,
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "LEAGUE_ID": "511690",
+    "ALLOWED_ORIGINS": "*"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "FPL_CACHE",
+      "id": "cb91e950c5d84f7b9f87c638d1ccdc25",
+      "remote": true
+    }
+  ],
+  "triggers": {
+    "crons": ["30 23 * * *", "31 23 * * *", "32 23 * * *"]
+  }
+}

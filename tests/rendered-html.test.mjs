@@ -55,7 +55,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.equal((page.match(/id:\s*[1-5],\s*roman:/g) ?? []).length, 5);
   assert.match(page, /key=\{`ranking-\$\{activeStage\}`\}/);
   assert.match(page, /className="stage-switcher"/);
-  assert.match(page, /className="rank-gem rank-gem-4"/);
+  assert.match(page, /rank-gem rank-gem-/);
   assert.match(page, /assets\/leaderboard\/ice-ledger-frame\.png/);
   assert.match(page, /assets\/leaderboard\/ice-frame-complete\.png/);
   assert.match(page, /assets\/leaderboard\/ice-row-frame\.png/);
@@ -70,10 +70,12 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /Array\.from\(\{ length: hp \}/);
   assert.match(page, /className="ranking-pagination"/);
   assert.match(page, /const pageSize = 20/);
-  assert.match(page, /function getLifeAfterGw8/);
-  assert.match(page, /return 1;/);
-  assert.doesNotMatch(page, /rate < 10 \? 2 : 1/);
-  assert.doesNotMatch(page, /\.sort\(/);
+  assert.match(page, /function lifeEarned/);
+  assert.match(page, /rate !== null && rate < 10 \? 2 : 1/);
+  assert.match(page, /right\.hp - left\.hp \|\| right\.captainTotal - left\.captainTotal/);
+  assert.match(page, /penguin-cup-fpl-api\.nbafantasy\.workers\.dev/);
+  assert.match(page, /\/api\/league/);
+  assert.match(page, /\/api\/gw\/\$\{index \+ 1\}/);
   assert.match(page, /尚无队长选择记录/);
   assert.match(page, /useState<StageId>\(1\)/);
   assert.match(page, /item\.id === 1 \? <i>当前<\/i>/);
@@ -99,7 +101,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /function InlineCaptainHistory/);
   assert.match(page, /className="rank-history-wrap"/);
   assert.doesNotMatch(page, /className="right-stack"|selectedPlayer|玩家 ID<\/small>/);
-  assert.match(page, /useState<string \| null>\(null\)/);
+  assert.match(page, /useState<number \| null>\(null\)/);
   assert.match(page, /aria-expanded=/);
   assert.match(page, /冰山之上，强者争夺荣耀；深海之下，亡者寻找重生<\/p>/);
   assert.match(page, /className="playoff-match"/);
