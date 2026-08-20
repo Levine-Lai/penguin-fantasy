@@ -1,6 +1,14 @@
 # 企鹅杯：冰渊王座之战
 
-2026–27 企鹅杯 Fantasy Premier League 前端榜单。当前以 GW8 模拟数据展示生命值排名、队长选择记录与五阶段赛制，后续可接入官方 FPL API。
+2026–27 企鹅杯 Fantasy Premier League 实时榜单。网站已接入企鹅杯 FPL API，展示联赛名单、当前比赛周、队长得分、队长选择率、累计生命值与五阶段赛制；API 暂时不可用时会保留本地名单作为降级展示。
+
+## 数据服务
+
+- API：<https://penguin-cup-fpl-api.nbafantasy.workers.dev>
+- 健康检查：`GET /api/health`
+- 当前状态：`GET /api/status`
+- 联赛名单：`GET /api/league`
+- 比赛周快照：`GET /api/gw/:gw`
 
 ## 在线访问
 

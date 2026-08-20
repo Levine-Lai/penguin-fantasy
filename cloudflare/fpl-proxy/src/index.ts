@@ -59,7 +59,7 @@ const FPL_ORIGIN = "https://fantasy.premierleague.com/api";
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
 const PICKS_BATCH_SIZE = 40;
 
-export default {
+const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContextLike): Promise<Response> {
     const url = new URL(request.url);
 
@@ -123,6 +123,8 @@ export default {
     ctx.waitUntil(sync(env, undefined, publishSnapshot));
   },
 };
+
+export default worker;
 
 async function sync(env: Env, requestedGw?: number, publishSnapshot = true): Promise<void> {
   const startedAt = new Date().toISOString();
