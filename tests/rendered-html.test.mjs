@@ -162,7 +162,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(css, /main::before\s*\{[\s\S]*position:\s*fixed/);
 });
 
-test("publishes one daily 07:30 snapshot from cached preparation batches", async () => {
+test("locks captain picks after DDL and publishes base points once at 07:30", async () => {
   const [worker, config, exampleConfig, workerReadme] = await Promise.all([
     readFile(new URL("../cloudflare/fpl-proxy/src/index.ts", import.meta.url), "utf8"),
     readFile(new URL("../cloudflare/fpl-proxy/wrangler.jsonc", import.meta.url), "utf8"),
@@ -171,15 +171,23 @@ test("publishes one daily 07:30 snapshot from cached preparation batches", async
   ]);
 
   for (const source of [config, exampleConfig]) {
-    assert.match(source, /"crons": \["28 23 \* \* \*", "29 23 \* \* \*", "30 23 \* \* \*"\]/);
-    assert.doesNotMatch(source, /"31 23 \* \* \*"|"32 23 \* \* \*"/);
+    assert.match(source, /"crons": \["\*\/5 \* \* \* \*", "30 23 \* \* \*"\]/);
   }
-  assert.match(worker, /publishSnapshot = controller\.cron === "30 23 \* \* \*"/);
+  assert.match(worker, /controller\.cron === "30 23 \* \* \*"/);
+  assert.match(worker, /captureDueCaptainPicks\(env, controller\.scheduledTime\)/);
+  assert.match(worker, /90 \* 60 \* 1000/);
+  assert.match(worker, /if \(picksDocument\.completedAt\) return/);
+  assert.match(worker, /checked\.size >= roster\.length && !document\.completedAt/);
+  assert.match(worker, /PICKS_BATCH_SIZE = 40/);
+  assert.match(worker, /state: "waiting_for_picks"/);
+  assert.match(worker, /pointsDefinition: "队长球员在 FPL 的基础得分，不计算队长双倍或三倍倍率"/);
+  assert.doesNotMatch(worker, /captainPointsWithMultiplier/);
   assert.match(worker, /url\.pathname === "\/api\/history"/);
   assert.match(worker, /getSeasonDeadlines\(env\)/);
   assert.match(worker, /deadlineTime: event\.deadline_time/);
   assert.match(worker, /FPL_CACHE\.put\("snapshot:history"/);
-  assert.match(workerReadme, /single public snapshot is published at 07:30/);
+  assert.match(workerReadme, /Starting 90 minutes after each official GW/);
+  assert.match(workerReadme, /At Beijing time 07:30/);
 });
 
 test("server-renders the rules route", async () => {

@@ -48,6 +48,7 @@ type PicksDocument = {
   checkedEntryIds: number[];
   picksByEntry: Record<string, PickRecord | null>;
   updatedAt: string;
+  completedAt?: string;
 };
 
 type CachedValue<T> = {
@@ -75,7 +76,6 @@ const worker = {
       if (url.pathname === "/api/league") {
         const roster = await env.FPL_CACHE.get<LeagueMember[]>("league:roster", "json");
         if (!roster) {
-          ctx.waitUntil(sync(env));
           return json({ ready: false, message: "联赛名单正在首次同步" }, request, env, 5, 202);
         }
         return json({ ready: true, leagueId: Number(env.LEAGUE_ID), teams: roster }, request, env, 300);
@@ -91,8 +91,7 @@ const worker = {
         const gw = Number(gwMatch[1]);
         const snapshot = await env.FPL_CACHE.get(`snapshot:gw:${gw}`, "json");
         if (!snapshot) {
-          ctx.waitUntil(sync(env, gw));
-          return json({ ready: false, gw, message: "该周数据正在同步" }, request, env, 5, 202);
+          return json({ ready: false, gw, message: "该周数据尚未发布" }, request, env, 5, 202);
         }
         return json(snapshot, request, env, 60);
       }
@@ -107,7 +106,7 @@ const worker = {
         if (!env.ADMIN_TOKEN || token !== env.ADMIN_TOKEN) {
           return json({ error: "Unauthorized" }, request, env, 0, 401);
         }
-        ctx.waitUntil(sync(env));
+        ctx.waitUntil(publishDailySnapshot(env));
         return json({ accepted: true }, request, env, 0, 202);
       }
 
@@ -124,14 +123,44 @@ const worker = {
   },
 
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContextLike): Promise<void> {
-    const publishSnapshot = controller.cron === "30 23 * * *";
-    ctx.waitUntil(sync(env, undefined, publishSnapshot));
+    if (controller.cron === "30 23 * * *") {
+      ctx.waitUntil(publishDailySnapshot(env));
+      return;
+    }
+    ctx.waitUntil(captureDueCaptainPicks(env, controller.scheduledTime));
   },
 };
 
 export default worker;
 
-async function sync(env: Env, requestedGw?: number, publishSnapshot = true): Promise<void> {
+async function captureDueCaptainPicks(env: Env, scheduledTime = Date.now()): Promise<void> {
+  const cachedBootstrap = await env.FPL_CACHE.get<CachedValue<Bootstrap>>("fpl:bootstrap", "json");
+  const bootstrap = cachedBootstrap?.value
+    ?? await cachedFetch<Bootstrap>(env, "fpl:bootstrap", "/bootstrap-static/", 6 * 60 * 60);
+  const event = selectLatestCaptureEvent(bootstrap.events, scheduledTime);
+  if (!event) return;
+
+  let picksDocument = await getPicksDocument(env, event.id);
+  if (picksDocument.completedAt) return;
+
+  const roster = await getRoster(env);
+  picksDocument = await syncPicksBatch(env, event.id, roster, picksDocument);
+  const completed = picksDocument.checkedEntryIds.length >= roster.length;
+  await env.FPL_CACHE.put(
+    "sync:status",
+    JSON.stringify({
+      state: completed ? "picks_ready" : "capturing_picks",
+      gw: event.id,
+      picksChecked: picksDocument.checkedEntryIds.length,
+      teams: roster.length,
+      completed,
+      picksCapturedAt: picksDocument.completedAt ?? null,
+      updatedAt: new Date().toISOString(),
+    }),
+  );
+}
+
+async function publishDailySnapshot(env: Env, requestedGw?: number): Promise<void> {
   const startedAt = new Date().toISOString();
   const previousStatus = await env.FPL_CACHE.get<Record<string, unknown>>("sync:status", "json");
   await env.FPL_CACHE.put("sync:status", JSON.stringify({ ...previousStatus, state: "running", startedAt }));
@@ -141,28 +170,23 @@ async function sync(env: Env, requestedGw?: number, publishSnapshot = true): Pro
     const roster = await getRoster(env);
     const event = requestedGw
       ? bootstrap.events.find((item) => item.id === requestedGw)
-      : selectRelevantEvent(bootstrap.events);
+      : selectLatestPassedEvent(bootstrap.events, Date.now());
 
     if (!event) {
       throw new Error("No relevant FPL event found");
     }
 
     const deadlineHasPassed = Date.now() >= Date.parse(event.deadline_time);
-    let picksDocument = await getPicksDocument(env, event.id);
-
-    if (deadlineHasPassed) {
-      picksDocument = await syncPicksBatch(env, event.id, roster, picksDocument);
-    }
-
-    if (!publishSnapshot) {
+    const picksDocument = await getPicksDocument(env, event.id);
+    if (!picksDocument.completedAt || picksDocument.checkedEntryIds.length < roster.length) {
       await env.FPL_CACHE.put(
         "sync:status",
         JSON.stringify({
-          state: "running",
+          state: "waiting_for_picks",
           gw: event.id,
           picksChecked: picksDocument.checkedEntryIds.length,
           teams: roster.length,
-          completed: picksDocument.checkedEntryIds.length >= roster.length,
+          completed: false,
           updatedAt: new Date().toISOString(),
         }),
       );
@@ -193,9 +217,7 @@ async function sync(env: Env, requestedGw?: number, publishSnapshot = true): Pro
         ...member,
         captainId: pick?.captainId ?? null,
         captainName: pick ? playerNames[pick.captainId] ?? `Player ${pick.captainId}` : null,
-        captainMultiplier: pick?.multiplier ?? null,
         captainPoints: rawPoints,
-        captainPointsWithMultiplier: pick ? rawPoints * pick.multiplier : 0,
         captainPickRate,
       };
     });
@@ -213,7 +235,9 @@ async function sync(env: Env, requestedGw?: number, publishSnapshot = true): Pro
         total: roster.length,
         valid: denominator,
         completed,
+        capturedAt: picksDocument.completedAt,
       },
+      pointsDefinition: "队长球员在 FPL 的基础得分，不计算队长双倍或三倍倍率",
       captainPickRateDefinition: "本联赛中选择该球员为当周队长的有效队伍数 / 本联赛当周可读取队长选择的队伍数",
       teams,
       updatedAt: new Date().toISOString(),
@@ -316,7 +340,14 @@ async function syncPicksBatch(
 ): Promise<PicksDocument> {
   const checked = new Set(document.checkedEntryIds);
   const pending = roster.filter((member) => !checked.has(member.entryId)).slice(0, PICKS_BATCH_SIZE);
-  if (pending.length === 0) return document;
+  if (pending.length === 0) {
+    if (checked.size >= roster.length && !document.completedAt) {
+      document.updatedAt = new Date().toISOString();
+      document.completedAt = document.updatedAt;
+      await env.FPL_CACHE.put(`picks:gw:${gw}`, JSON.stringify(document));
+    }
+    return document;
+  }
 
   const results = await mapWithConcurrency(pending, 6, async (member) => {
     try {
@@ -342,6 +373,7 @@ async function syncPicksBatch(
   }
   document.checkedEntryIds = [...checked];
   document.updatedAt = new Date().toISOString();
+  if (document.checkedEntryIds.length >= roster.length) document.completedAt = document.updatedAt;
   await env.FPL_CACHE.put(`picks:gw:${gw}`, JSON.stringify(document));
   return document;
 }
@@ -371,8 +403,19 @@ class FplHttpError extends Error {
   }
 }
 
-function selectRelevantEvent(events: FplEvent[]): FplEvent | undefined {
-  return events.find((event) => event.is_current) ?? events.find((event) => event.is_next) ?? events.at(-1);
+function selectLatestPassedEvent(events: FplEvent[], now: number): FplEvent | undefined {
+  return events
+    .filter((event) => Date.parse(event.deadline_time) <= now)
+    .sort((left, right) => left.id - right.id)
+    .at(-1);
+}
+
+function selectLatestCaptureEvent(events: FplEvent[], now: number): FplEvent | undefined {
+  const captureDelayMs = 90 * 60 * 1000;
+  return events
+    .filter((event) => Date.parse(event.deadline_time) + captureDelayMs <= now)
+    .sort((left, right) => left.id - right.id)
+    .at(-1);
 }
 
 async function mapWithConcurrency<T, U>(items: T[], concurrency: number, mapper: (item: T) => Promise<U>): Promise<U[]> {

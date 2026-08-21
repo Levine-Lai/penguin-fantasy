@@ -13,14 +13,19 @@ teams in this league selecting the player as captain
 teams in this league with readable picks for the GW
 ```
 
-## Free-plan sync strategy
+## Low-request sync strategy
 
 The league has more than 50 entries, while a Workers Free invocation can make
-at most 50 external subrequests. The cron therefore fetches at most 40 entry
-pick endpoints per run. Internal preparation batches run at Beijing time 07:28
-and 07:29, then the single public snapshot is published at 07:30. Once picks
-for a GW are cached, they are not fetched again; subsequent daily refreshes
-mainly require the single FPL live endpoint.
+at most 50 external subrequests. Starting 90 minutes after each official GW
+deadline, a five-minute gate fetches at most 40 still-missing entry pick
+endpoints. A normal league is therefore locked in three batches over roughly
+ten minutes. Completed captain choices are stored once in KV and never fetched
+again for that GW.
+
+At Beijing time 07:30, the Worker reads the single FPL live endpoint, records
+each captain's base points before any captain multiplier, and publishes one
+complete snapshot. Player page views only read KV-backed API responses and do
+not call the official FPL API.
 
 ## Endpoints
 
