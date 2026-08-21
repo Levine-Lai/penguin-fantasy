@@ -81,6 +81,11 @@ const worker = {
         return json({ ready: true, leagueId: Number(env.LEAGUE_ID), teams: roster }, request, env, 300);
       }
 
+      if (url.pathname === "/api/history") {
+        const [history, deadlines] = await Promise.all([getSnapshotHistory(env), getSeasonDeadlines(env)]);
+        return json({ ready: history.length > 0, snapshots: history, deadlines }, request, env, 60);
+      }
+
       const gwMatch = url.pathname.match(/^\/api\/gw\/(\d{1,2})$/);
       if (gwMatch) {
         const gw = Number(gwMatch[1]);
@@ -119,7 +124,7 @@ const worker = {
   },
 
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContextLike): Promise<void> {
-    const publishSnapshot = controller.cron === "32 23 * * *";
+    const publishSnapshot = controller.cron === "30 23 * * *";
     ctx.waitUntil(sync(env, undefined, publishSnapshot));
   },
 };
@@ -128,7 +133,8 @@ export default worker;
 
 async function sync(env: Env, requestedGw?: number, publishSnapshot = true): Promise<void> {
   const startedAt = new Date().toISOString();
-  await env.FPL_CACHE.put("sync:status", JSON.stringify({ state: "running", startedAt }));
+  const previousStatus = await env.FPL_CACHE.get<Record<string, unknown>>("sync:status", "json");
+  await env.FPL_CACHE.put("sync:status", JSON.stringify({ ...previousStatus, state: "running", startedAt }));
 
   try {
     const bootstrap = await cachedFetch<Bootstrap>(env, "fpl:bootstrap", "/bootstrap-static/", 6 * 60 * 60);
@@ -214,6 +220,10 @@ async function sync(env: Env, requestedGw?: number, publishSnapshot = true): Pro
     };
 
     await env.FPL_CACHE.put(`snapshot:gw:${event.id}`, JSON.stringify(snapshot));
+    const history = await getSnapshotHistory(env);
+    const nextHistory = [...history.filter((item) => item.gw !== event.id), snapshot]
+      .sort((left, right) => left.gw - right.gw);
+    await env.FPL_CACHE.put("snapshot:history", JSON.stringify(nextHistory));
     await env.FPL_CACHE.put(
       "sync:status",
       JSON.stringify({
@@ -237,6 +247,22 @@ async function sync(env: Env, requestedGw?: number, publishSnapshot = true): Pro
     );
     throw error;
   }
+}
+
+async function getSnapshotHistory(env: Env): Promise<Array<{ gw: number } & Record<string, unknown>>> {
+  const history = await env.FPL_CACHE.get<Array<{ gw: number } & Record<string, unknown>>>("snapshot:history", "json");
+  if (history) return history;
+
+  const status = await env.FPL_CACHE.get<{ gw?: number }>("sync:status", "json");
+  if (!status?.gw) return [];
+  const current = await env.FPL_CACHE.get<{ gw: number } & Record<string, unknown>>(`snapshot:gw:${status.gw}`, "json");
+  return current ? [current] : [];
+}
+
+async function getSeasonDeadlines(env: Env): Promise<Array<{ gw: number; deadlineTime: string }>> {
+  const cached = await env.FPL_CACHE.get<CachedValue<Bootstrap>>("fpl:bootstrap", "json");
+  const bootstrap = cached?.value ?? await cachedFetch<Bootstrap>(env, "fpl:bootstrap", "/bootstrap-static/", 6 * 60 * 60);
+  return bootstrap.events.map((event) => ({ gw: event.id, deadlineTime: event.deadline_time }));
 }
 
 async function getRoster(env: Env): Promise<LeagueMember[]> {

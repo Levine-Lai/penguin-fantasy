@@ -17,16 +17,17 @@ teams in this league with readable picks for the GW
 
 The league has more than 50 entries, while a Workers Free invocation can make
 at most 50 external subrequests. The cron therefore fetches at most 40 entry
-pick endpoints per run. One daily Beijing-time 07:30 refresh window uses three
-one-minute batches and publishes the completed snapshot at about 07:32. Once
-picks for a GW are cached, they are not fetched again; subsequent daily
-refreshes mainly require the single FPL live endpoint.
+pick endpoints per run. Internal preparation batches run at Beijing time 07:28
+and 07:29, then the single public snapshot is published at 07:30. Once picks
+for a GW are cached, they are not fetched again; subsequent daily refreshes
+mainly require the single FPL live endpoint.
 
 ## Endpoints
 
 - `GET /api/health`
 - `GET /api/status`
 - `GET /api/league`
+- `GET /api/history`
 - `GET /api/gw/:gw`
 - `POST /api/refresh` with `Authorization: Bearer <ADMIN_TOKEN>`
 

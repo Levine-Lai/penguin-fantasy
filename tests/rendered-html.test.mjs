@@ -83,7 +83,13 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, />\{rank\}<\/span>/);
   assert.match(page, /penguin-cup-fpl-api\.nbafantasy\.workers\.dev/);
   assert.match(page, /\/api\/league/);
-  assert.match(page, /\/api\/gw\/\$\{index \+ 1\}/);
+  assert.match(page, /\/api\/history/);
+  assert.doesNotMatch(page, /Array\.from\(\{ length: relevantGw \}/);
+  assert.match(page, /history\.deadlines \?\? \[\]/);
+  assert.match(page, /Date\.parse\(event\.deadlineTime\)/);
+  assert.match(page, /deadline <= currentTime/);
+  assert.match(page, /latestStartedGw > 0 \? `GW \$\{latestStartedGw\}`/);
+  assert.match(page, /setInterval\(\(\) => setCurrentTime\(Date\.now\(\)\), 30_000\)/);
   assert.match(page, /尚无队长选择记录/);
   assert.match(page, /useState<StageId>\(1\)/);
   assert.match(page, /item\.id === 1 \? <i>当前<\/i>/);
@@ -154,6 +160,26 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(css, /\.playoff-match/);
   assert.match(css, /@media \(max-width:\s*32rem\)/);
   assert.match(css, /main::before\s*\{[\s\S]*position:\s*fixed/);
+});
+
+test("publishes one daily 07:30 snapshot from cached preparation batches", async () => {
+  const [worker, config, exampleConfig, workerReadme] = await Promise.all([
+    readFile(new URL("../cloudflare/fpl-proxy/src/index.ts", import.meta.url), "utf8"),
+    readFile(new URL("../cloudflare/fpl-proxy/wrangler.jsonc", import.meta.url), "utf8"),
+    readFile(new URL("../cloudflare/fpl-proxy/wrangler.example.jsonc", import.meta.url), "utf8"),
+    readFile(new URL("../cloudflare/fpl-proxy/README.md", import.meta.url), "utf8"),
+  ]);
+
+  for (const source of [config, exampleConfig]) {
+    assert.match(source, /"crons": \["28 23 \* \* \*", "29 23 \* \* \*", "30 23 \* \* \*"\]/);
+    assert.doesNotMatch(source, /"31 23 \* \* \*"|"32 23 \* \* \*"/);
+  }
+  assert.match(worker, /publishSnapshot = controller\.cron === "30 23 \* \* \*"/);
+  assert.match(worker, /url\.pathname === "\/api\/history"/);
+  assert.match(worker, /getSeasonDeadlines\(env\)/);
+  assert.match(worker, /deadlineTime: event\.deadline_time/);
+  assert.match(worker, /FPL_CACHE\.put\("snapshot:history"/);
+  assert.match(workerReadme, /single public snapshot is published at 07:30/);
 });
 
 test("server-renders the rules route", async () => {

@@ -17,11 +17,13 @@ type ApiTeam = LeagueTeam & {
 type GwSnapshot = {
   ready: boolean;
   gw: number;
+  deadlineTime: string;
   deadlineHasPassed: boolean;
   teams: ApiTeam[];
 };
-type ApiStatus = { gw?: number };
 type LeagueResponse = { ready: boolean; teams: LeagueTeam[] };
+type GwDeadline = { gw: number; deadlineTime: string };
+type HistoryResponse = { ready: boolean; snapshots: GwSnapshot[]; deadlines: GwDeadline[] };
 
 // Official FPL classic league 511690 roster, refreshed from the live API.
 const players = [
@@ -297,7 +299,8 @@ export default function Home() {
   const [rankingPage, setRankingPage] = useState(0);
   const [leagueTeams, setLeagueTeams] = useState<LeagueTeam[]>(fallbackTeams);
   const [gwSnapshots, setGwSnapshots] = useState<GwSnapshot[]>([]);
-  const [currentGw, setCurrentGw] = useState(1);
+  const [gwDeadlines, setGwDeadlines] = useState<GwDeadline[]>([]);
+  const [currentTime, setCurrentTime] = useState<number | null>(null);
   const stage = stages.find((item) => item.id === activeStage) ?? stages[1];
 
   useEffect(() => {
@@ -305,26 +308,19 @@ export default function Home() {
 
     const loadFplData = async () => {
       try {
-        const [leagueResponse, statusResponse] = await Promise.all([
+        const [leagueResponse, historyResponse] = await Promise.all([
           fetch(`${fplApiBase}/api/league`, { cache: "no-store" }),
-          fetch(`${fplApiBase}/api/status`, { cache: "no-store" }),
+          fetch(`${fplApiBase}/api/history`, { cache: "no-store" }),
         ]);
-        if (!leagueResponse.ok || !statusResponse.ok) return;
+        if (!leagueResponse.ok || !historyResponse.ok) return;
 
         const league = await leagueResponse.json() as LeagueResponse;
-        const status = await statusResponse.json() as ApiStatus;
-        const relevantGw = Math.max(1, Math.min(38, status.gw ?? 1));
-        const snapshots = await Promise.all(
-          Array.from({ length: relevantGw }, async (_, index) => {
-            const response = await fetch(`${fplApiBase}/api/gw/${index + 1}`, { cache: "no-store" });
-            return response.ok ? response.json() as Promise<GwSnapshot> : null;
-          }),
-        );
+        const history = await historyResponse.json() as HistoryResponse;
 
         if (cancelled) return;
         if (league.ready && league.teams.length > 0) setLeagueTeams(league.teams);
-        setCurrentGw(relevantGw);
-        setGwSnapshots(snapshots.filter((snapshot): snapshot is GwSnapshot => Boolean(snapshot?.teams)));
+        if (history.ready) setGwSnapshots(history.snapshots.filter((snapshot) => Boolean(snapshot?.teams)));
+        setGwDeadlines(history.deadlines ?? []);
       } catch {
         // Keep the server-rendered roster if the remote API is temporarily unavailable.
       }
@@ -333,6 +329,15 @@ export default function Home() {
     void loadFplData();
     return () => {
       cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const initialClock = window.setTimeout(() => setCurrentTime(Date.now()), 0);
+    const clock = window.setInterval(() => setCurrentTime(Date.now()), 30_000);
+    return () => {
+      window.clearTimeout(initialClock);
+      window.clearInterval(clock);
     };
   }, []);
 
@@ -379,8 +384,15 @@ export default function Home() {
   const pageSize = 20;
   const pageCount = Math.ceil(ranking.length / pageSize);
   const visibleRanking = ranking.slice(rankingPage * pageSize, (rankingPage + 1) * pageSize);
-  const latestSnapshot = gwSnapshots.find((snapshot) => snapshot.gw === currentGw);
-  const currentTrialLabel = latestSnapshot?.deadlineHasPassed ? `GW ${currentGw}` : "见习者集结";
+  const deadlineSchedule = gwDeadlines.length > 0
+    ? gwDeadlines
+    : gwSnapshots.map((snapshot) => ({ gw: snapshot.gw, deadlineTime: snapshot.deadlineTime }));
+  const latestStartedGw = deadlineSchedule.reduce((latestGw, event) => {
+    const deadline = Date.parse(event.deadlineTime);
+    const hasStarted = currentTime !== null && Number.isFinite(deadline) && deadline <= currentTime;
+    return hasStarted ? Math.max(latestGw, event.gw) : latestGw;
+  }, 0);
+  const currentTrialLabel = latestStartedGw > 0 ? `GW ${latestStartedGw}` : "见习者集结";
   const rankingPanelAssets = {
     "--ledger-complete-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.png")`,
     "--ledger-row-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-row-frame.png")`,
