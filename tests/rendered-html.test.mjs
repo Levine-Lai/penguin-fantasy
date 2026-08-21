@@ -60,7 +60,10 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /assets\/leaderboard\/ice-frame-complete\.png/);
   assert.match(page, /assets\/leaderboard\/ice-row-frame\.png/);
   assert.match(page, /assets\/leaderboard\/ice-history-frame\.png/);
-  assert.match(page, /Official FPL classic league 511690 Team name roster/);
+  assert.match(page, /Official FPL classic league 511690 roster/);
+  const rosterBlock = page.match(/const players = \[([\s\S]*?)\n\];/)?.[1] ?? "";
+  assert.equal((rosterBlock.match(/^\s*".*",\s*$/gm) ?? []).length, 112);
+  assert.match(rosterBlock, /"JZhuoyan"/);
   assert.match(page, /assets\/leaderboard\/ice-side-left\.png/);
   assert.match(page, /assets\/leaderboard\/ice-side-right\.png/);
   assert.match(page, /assets\/leaderboard\/score-slot\.png/);
@@ -73,6 +76,11 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /function lifeEarned/);
   assert.match(page, /rate !== null && rate < 10 \? 2 : 1/);
   assert.match(page, /right\.hp - left\.hp \|\| right\.captainTotal - left\.captainTotal/);
+  assert.match(page, /\["SSU - Sakai Moka", 0\]/);
+  assert.match(page, /\["企鹅", 1\]/);
+  assert.match(page, /featuredTeamOrder\.has\(name\) \? "featured-player"/);
+  assert.match(page, /rank: index \+ 1/);
+  assert.match(page, />\{rank\}<\/span>/);
   assert.match(page, /penguin-cup-fpl-api\.nbafantasy\.workers\.dev/);
   assert.match(page, /\/api\/league/);
   assert.match(page, /\/api\/gw\/\$\{index \+ 1\}/);
@@ -117,6 +125,8 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.doesNotMatch(css, /frosted-steel-texture|ice-shatter-burst|@keyframes ice-/);
   assert.doesNotMatch(css, /\.stage-token|\.stage-sigil/);
   assert.doesNotMatch(css, /\.hero-metrics/);
+  assert.match(css, /\.player-id\.featured-player\s*\{[\s\S]*color:\s*var\(--color-gold\)/);
+  assert.doesNotMatch(css, /\.rank-row:nth-of-type\(-n\+3\) \.rank-gem/);
   assert.match(css, /\.hero-seal\s*\{/);
   assert.match(css, /\.stage-relic\s*\{/);
   assert.match(css, /\.stage-lore\s*\{/);

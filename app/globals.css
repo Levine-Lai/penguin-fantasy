@@ -577,7 +577,7 @@ main > * {
   clip-path: inherit;
 }
 .rank-gem > span { position: relative; z-index: var(--z-raised); text-shadow: 0 var(--rule-strong) 0 var(--color-shadow); }
-.rank-row:nth-of-type(-n+3) .rank-gem { color: var(--color-gold); }
+.rank-gem-1, .rank-gem-2, .rank-gem-3 { color: var(--color-gold); }
 .player-id-cell { min-width: 0; display: flex; align-items: center; gap: var(--space-xs); }
 .player-id {
   width: 100%;
@@ -3515,6 +3515,10 @@ main > * {
   font-family: var(--font-label);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+.player-id.featured-player {
+  color: var(--color-gold);
+  text-shadow: 0 var(--rule-strong) 0 var(--color-shadow), 0 0 var(--space-xs) var(--color-gold-a55);
 }
 
 .history-result-box b,

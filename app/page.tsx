@@ -23,23 +23,120 @@ type GwSnapshot = {
 type ApiStatus = { gw?: number };
 type LeagueResponse = { ready: boolean; teams: LeagueTeam[] };
 
-// Official FPL classic league 511690 Team name roster, fetched 2026-08-12.
+// Official FPL classic league 511690 roster, refreshed from the live API.
 const players = [
-  "willis's Team", "Shuo Home", "传来传去不射门，阿尔特塔快走人！", "天行者不孤单", "Rainbow Desert", "礼物铺今天赢球了吗",
-  "这是团赛专用的大号", "范特西体育", "KNVB", "联曼", "FC RedMoon", "粒粒2.0", "Shanghai Port FC", "Wenbo's Team",
-  "BEK's Team", "kusuri", "YaGunnersYa", "Nicolas' XI", "Chelsea Mata", "afewgoodkids", "Bluebird", "TakahashiAki",
-  "dora ura aka aka", "Rud's Team", "Call loud Yeehc111", "绿豆猫手作", "热刺传奇教练德泽尔比", "笨雕先游",
-  "在英格兰捕猎的's Team", "逍遥小尧", "Will Alves my love", "Seawuwu", "Baros15", "镜落", "AVERAGE", "HindMics",
-  "红衫圣殿", "fpl中搁浅的哲学家", "Sakai Moka", "AMARTD", "Dream Tickets", "蒂亚鸽鸽鸽", "Hann-San", "ABC",
-  "Orange's Team", "Wei's Team", "柯北", "Verydisco", "红烧天堂", "remember", "Yemoooon", "将死之时掩以水门汀",
-  "谁是无机盐", "Team Blue", "Mind The Gap", "乔治啊啊马丁", "FRANCISTASY", "EriCherry", "lecitron", "Kw",
-  "足球离家出走了", "OOPS", "Steven's Team", "蒂兰基尔尼", "SSU - 珍惜当下❤️", "acidboy", "F.C. Chelion", "JackieGu",
-  "英超不倒翁", "MUJY", "yu99", "Team电子羊", "Trent66", "TEAM NAME", "Dongma", "开半天猪耳朵",
-  "Northcote Holdings", "Xi9Li", "Summerfan", "美式加冰", "夏初一笑 婉兒摘星", "光之围棋俱乐部", "elliott's Team",
-  "Clark's Team", "毒奶喵26", "LAD's Team", "William's Team", "Noodle FC", "MutdBJ", "ParisAintGerman", "Eva",
-  "香香软软的big b", "應該係除非唔係", "AnonTokyo", "Champion Leeds", "Pluto D", "Havertz Scores again", "谨慎分析 大胆梭哈",
-  "muscleking", "Real Madridista", "Micky VDV", "Loki7_7", "她在我耳边吹气", "John's Team", "Bill's Red Riffs", "干饭帮手",
-  "Yamine Lmao", "企鹅",
+  "JZhuoyan",
+  "好堡",
+  "NBS TEAM",
+  "Fitz",
+  "willis's Team",
+  "Shuo Home",
+  "传来传去不射门，阿尔特塔快走人！",
+  "New Trafford",
+  "Rainbow Desert",
+  "礼物铺今天赢球了吗",
+  "这是团赛专用的大号",
+  "范特西体育",
+  "KNVB",
+  "联曼",
+  "奏响最绝望的乐章",
+  "粒粒2.0",
+  "Shanghai Port FC",
+  "Wenbo's Team",
+  "BEK's Team",
+  "kusuri",
+  "YaGunnersYa",
+  "Nicolas' XI",
+  "Chelsea Mata",
+  "afewgoodkids",
+  "Cuipi",
+  "TakahashiAki",
+  "dora ura aka aka",
+  "咻狗勾不在家",
+  "Call loud Yeehc111",
+  "绿豆猫手作",
+  "热刺传奇教练德泽尔比",
+  "笨雕先游",
+  "在英格兰捕猎的's Team",
+  "逍遥小尧",
+  "Will Alves my love",
+  "Seawuwu",
+  "Baros15",
+  "镜落",
+  "AVERAGE",
+  "HindMics",
+  "红衫圣殿",
+  "fpl中搁浅的哲学家",
+  "SSU - Sakai Moka",
+  "AMARTD",
+  "Dream Tickets",
+  "蒂亚鸽鸽鸽",
+  "Hann-San",
+  "ABC",
+  "Orange's Team",
+  "Wei's Team",
+  "柯北",
+  "Verydisco",
+  "红烧天堂",
+  "remember",
+  "Yemoooon",
+  "将死之时掩以水门汀",
+  "谁是无机盐",
+  "Team Blue",
+  "Mind The Gap",
+  "乔治啊啊马丁",
+  "FRANCISTASY",
+  "EriCherry",
+  "lecitron",
+  "Kw",
+  "足球离家出走了",
+  "OOPS",
+  "Steven's Team",
+  "蒂兰基尔尼",
+  "SSU - 珍惜当下❤️",
+  "acidboy",
+  "F.C. Chelion",
+  "JackieGu",
+  "英超不倒翁",
+  "MUJY",
+  "yu99",
+  "Team电子羊",
+  "Trent66",
+  "TEAM NAME",
+  "Dongma",
+  "开半天猪耳朵",
+  "Northcote Holdings",
+  "Xi9Li",
+  "Summerfan",
+  "美式加冰",
+  "夏初一笑 婉兒摘星",
+  "光之围棋俱乐部",
+  "elliott's Team",
+  "Clark's Team",
+  "毒奶喵26",
+  "LAD's Team",
+  "William's Team",
+  "Noodle FC",
+  "MutdBJ",
+  "ParisAintGerman",
+  "Eva",
+  "香香软软的big b",
+  "應該係除非唔係",
+  "AnonTokyo",
+  "Champion Leeds",
+  "Pluto D",
+  "Havertz Scores again",
+  "谨慎分析 大胆梭哈",
+  "muscleking",
+  "Real Madridista",
+  "Micky VDV",
+  "Loki7_7",
+  "她在我耳边吹气",
+  "换汤不换药",
+  "Bill's Red Riffs",
+  "干饭帮手",
+  "Yamine Lmao",
+  "企鹅",
 ];
 
 const stages: Array<{ id: StageId; roman: string; title: string; range: string; tpBase: number; description: string }> = [
@@ -86,6 +183,10 @@ const stages: Array<{ id: StageId; roman: string; title: string; range: string; 
 ];
 
 const fallbackTeams: LeagueTeam[] = players.map((teamName, index) => ({ entryId: -(index + 1), teamName }));
+const featuredTeamOrder = new Map([
+  ["SSU - Sakai Moka", 0],
+  ["企鹅", 1],
+]);
 
 function lifeEarned(points: number, rate: number | null): number {
   if (points < 10) return 0;
@@ -268,9 +369,11 @@ export default function Home() {
       };
     });
 
-    if (!hasPublishedPicks) return rows;
-    return rows
-      .sort((left, right) => right.hp - left.hp || right.captainTotal - left.captainTotal || left.name.localeCompare(right.name, "zh-CN"))
+    const orderedRows = hasPublishedPicks
+      ? rows.sort((left, right) => right.hp - left.hp || right.captainTotal - left.captainTotal || left.name.localeCompare(right.name, "zh-CN"))
+      : rows.sort((left, right) => (featuredTeamOrder.get(left.name) ?? Number.MAX_SAFE_INTEGER) - (featuredTeamOrder.get(right.name) ?? Number.MAX_SAFE_INTEGER));
+
+    return orderedRows
       .map((player, index) => ({ ...player, rank: index + 1 }));
   }, [gwSnapshots, leagueTeams]);
   const pageSize = 20;
@@ -348,11 +451,11 @@ export default function Home() {
                 >
                   <strong
                     className={`rank-gem rank-gem-${rank && rank <= 3 ? rank : 4}`}
-                    aria-label={rank ? `第 ${rank} 名` : "暂未排名"}
+                    aria-label={`第 ${rank} 名`}
                     style={rank && rank <= 3 ? { "--rank-badge-image": `url("${siteBasePath}/assets/leaderboard/rank-${rank}-ice.png")` } as CSSProperties : undefined}
-                  ><span aria-hidden="true">{rank ?? "—"}</span></strong>
+                  ><span aria-hidden="true">{rank}</span></strong>
                   <div className="player-id-cell">
-                    <strong className="player-id">{name}</strong>
+                    <strong className={`player-id ${featuredTeamOrder.has(name) ? "featured-player" : ""}`}>{name}</strong>
                   </div>
                   <strong className="stat-score"><span>{gpc}</span></strong>
                   <strong className="stat-score stat-captain-total"><span>{captainTotal}</span></strong>

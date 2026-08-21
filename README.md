@@ -1,40 +1,20 @@
 # 企鹅杯：冰渊王座之战
 
-2026–27 企鹅杯 Fantasy Premier League 实时榜单。网站已接入企鹅杯 FPL API，展示联赛名单、当前比赛周、队长得分、队长选择率、累计生命值与五阶段赛制；API 暂时不可用时会保留本地名单作为降级展示。
+企鹅杯 2026–27 是一场贯穿 Fantasy Premier League 全赛季的生存竞赛。所有参赛者从终焉冰海出发，以每轮队长表现积累生命值，在五重试炼中争夺最后的冰渊王座。
 
-## 数据服务
+## 五重试炼
 
-- API：<https://penguin-cup-fpl-api.nbafantasy.workers.dev>
-- 健康检查：`GET /api/health`
-- 当前状态：`GET /api/status`
-- 联赛名单：`GET /api/league`
-- 比赛周快照：`GET /api/gw/:gw`
+1. **生命之火试炼（GW1–GW8）**：所有玩家从 1 点生命值起步，依靠队长得分点燃生命之火。
+2. **冰海角斗场（GW9–GW20）**：玩家进入决斗阶段，以队长得分决定胜负与生命值变化。
+3. **冰山与深海分界（GW21–GW30）**：排名决定玩家进入冰冠阵营或深渊阵营。
+4. **深海大逃杀（GW31–GW34）**：幸存者在高风险决斗中争夺最后八个挑战席位。
+5. **冰渊王座对决（GW35–GW38）**：十六名晋级者进行单场淘汰，最终胜者加冕冰渊之王。
 
-## 在线访问
+## 生命之火
 
-[https://levine-lai.github.io/penguin-fantasy/](https://levine-lai.github.io/penguin-fantasy/)
+- 所有玩家初始拥有 1 点生命值。
+- 队长单轮得分达到 10 分，可获得 1 点生命值。
+- 队长得分达到 10 分且联赛内选择率低于 10%，本轮共获得 2 点生命值。
+- 后续阶段还会通过决斗胜负增加或失去生命值。
 
-## 本地开发
-
-需要 Node.js 22 或更高版本。
-
-```bash
-npm install
-npm run dev
-```
-
-## 验证
-
-```bash
-npm test
-npm run lint
-npm run build:pages
-```
-
-- `npm run build`：生成 vinext 构建
-- `npm run build:pages`：在 `out/` 生成 GitHub Pages 静态站
-- 推送至 `main` 后，GitHub Actions 会自动更新 Pages
-
-## 本地单文件版
-
-直接打开 `penguin-cup-local.html` 可以查看不依赖 API 的本地版本。
+排行榜会随比赛周更新队长得分、累计队长分与生命值。点击玩家行可以展开查看每轮队长选择记录。
