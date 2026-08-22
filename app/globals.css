@@ -3810,57 +3810,6 @@ main > * {
   border-inline-start: 0 !important;
 }
 
-.data-refresh {
-  min-width: 7.25rem;
-  min-height: 2.75rem;
-  padding: var(--space-xs) var(--space-sm);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-xs);
-  flex: 0 0 auto;
-  border: var(--rule-hair) solid var(--color-rule-2);
-  border-radius: var(--radius-sm);
-  background: linear-gradient(180deg, var(--color-paper-2-a96), var(--color-accent-a10));
-  color: var(--color-ink);
-  font-family: var(--font-label);
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  touch-action: manipulation;
-}
-
-.data-refresh span {
-  color: var(--color-accent);
-  font-size: 1.15rem;
-  line-height: 1;
-}
-
-.data-refresh:disabled {
-  cursor: wait;
-  opacity: 0.62;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .data-refresh:hover:not(:disabled) {
-    border-color: var(--color-accent);
-    background: linear-gradient(180deg, var(--color-paper-2), var(--color-accent-a14));
-  }
-}
-
-@media (max-width: 32rem) {
-  .data-refresh {
-    min-width: 2.75rem;
-    width: 2.75rem;
-    padding: 0;
-    font-size: 0;
-  }
-
-  .data-refresh span {
-    font-size: 1.25rem;
-  }
-}
-
 @media (max-width: 48rem) {
   .rules-page .top-nav a:first-child {
     display: grid;

@@ -32,7 +32,7 @@ test("server-renders the Penguin Cup leaderboard", async () => {
   assert.match(html, /PENGUIN CUP/);
   assert.match(html, /冰渊王座/);
   assert.match(html, /冰海角斗场/);
-  assert.match(html, /刷新排行榜数据/);
+  assert.doesNotMatch(html, /刷新排行榜数据|刷新数据|数据已更新|更新失败/);
   assert.match(html, /见习者集结/);
   assert.match(html, /当周队长得分/);
   assert.match(html, /血量/);
@@ -84,7 +84,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /featuredTeamOrder\.has\(name\) \? "featured-player"/);
   assert.match(page, /rank: index \+ 1/);
   assert.match(page, />\{rank\}<\/span>/);
-  assert.match(page, /penguin-cup-fpl-api\.nbafantasy\.workers\.dev/);
+  assert.match(page, /penguin-fantasy\.pages\.dev/);
   assert.match(page, /\/api\/league/);
   assert.match(page, /\/api\/history/);
   assert.match(page, /visibilitychange/);
@@ -92,7 +92,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /beijingSnapshotDay/);
   assert.match(page, /nextBeijingSnapshotRefreshDelay/);
   assert.match(page, /scheduleDailyRefresh/);
-  assert.match(page, /className="data-refresh"/);
+  assert.doesNotMatch(page, /data-refresh|refresh-status|刷新排行榜数据/);
   assert.doesNotMatch(page, /\.at\(-1\)/);
   assert.doesNotMatch(page, /Array\.from\(\{ length: relevantGw \}/);
   assert.match(page, /history\.deadlines \?\? \[\]/);
@@ -159,7 +159,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(css, /\.blood-drop::before\s*\{/);
   assert.doesNotMatch(css, /\.ranking-panel \.panel-title::before/);
   assert.match(css, /\.ranking-pagination/);
-  assert.match(css, /\.data-refresh\s*\{/);
+  assert.doesNotMatch(css, /\.data-refresh|\.refresh-status/);
   assert.match(css, /\.ranking-pagination button\s*\{[^}]*clip-path:/);
   assert.match(css, /transparent relic frame \+ compact desktop roster/);
   assert.match(css, /\.ranking-panel\s*\{\s*background-clip:\s*padding-box;\s*box-shadow:\s*none;/);
@@ -199,6 +199,19 @@ test("locks captain picks after DDL and publishes base points once at 07:30", as
   assert.match(worker, /FPL_CACHE\.put\("snapshot:history"/);
   assert.match(workerReadme, /Starting 90 minutes after each official GW/);
   assert.match(workerReadme, /At Beijing time 07:30/);
+});
+
+test("proxies public API reads through Cloudflare Pages", async () => {
+  const [proxy, routes] = await Promise.all([
+    readFile(new URL("../functions/api/[[path]].js", import.meta.url), "utf8"),
+    readFile(new URL("../public/_routes.json", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(proxy, /penguin-cup-fpl-api\.nbafantasy\.workers\.dev/);
+  assert.match(proxy, /health\|status\|league\|history\|gw/);
+  assert.match(proxy, /x-penguin-api-proxy/);
+  assert.match(proxy, /access-control-allow-origin/);
+  assert.deepEqual(JSON.parse(routes), { version: 1, include: ["/api/*"], exclude: [] });
 });
 
 test("server-renders the rules route", async () => {

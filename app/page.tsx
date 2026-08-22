@@ -3,7 +3,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const fplApiBase = "https://penguin-cup-fpl-api.nbafantasy.workers.dev";
+const fplApiBase = "https://penguin-fantasy.pages.dev";
 
 type StageId = 1 | 2 | 3 | 4 | 5;
 type RankedPlayer = { entryId: number; name: string; rank: number | null; gpc: number; captainTotal: number; hp: number; history: CaptainHistoryEntry[] };
@@ -319,7 +319,6 @@ export default function Home() {
   const [gwSnapshots, setGwSnapshots] = useState<GwSnapshot[]>([]);
   const [gwDeadlines, setGwDeadlines] = useState<GwDeadline[]>([]);
   const [currentTime, setCurrentTime] = useState<number | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const mountedRef = useRef(false);
   const refreshInFlightRef = useRef<Promise<void> | null>(null);
   const lastRefreshAttemptRef = useRef(0);
@@ -336,14 +335,13 @@ export default function Home() {
     lastRefreshAttemptRef.current = requestedAt;
 
     const request = Promise.resolve().then(async () => {
-      if (mountedRef.current) setIsRefreshing(true);
       try {
         const cacheKey = requestedAt.toString();
         const [leagueResponse, historyResponse] = await Promise.all([
           fetch(`${fplApiBase}/api/league?refresh=${cacheKey}`, { cache: "no-store" }),
           fetch(`${fplApiBase}/api/history?refresh=${cacheKey}`, { cache: "no-store" }),
         ]);
-        if (!leagueResponse.ok || !historyResponse.ok) return;
+        if (!leagueResponse.ok || !historyResponse.ok) throw new Error("Snapshot request failed");
 
         const league = await leagueResponse.json() as LeagueResponse;
         const history = await historyResponse.json() as HistoryResponse;
@@ -357,7 +355,6 @@ export default function Home() {
         // Keep the server-rendered roster if the remote API is temporarily unavailable.
       } finally {
         refreshInFlightRef.current = null;
-        if (mountedRef.current) setIsRefreshing(false);
       }
     });
 
@@ -510,7 +507,7 @@ export default function Home() {
 
       {activeStage === 1 ? <section className="boards">
         <article className="panel ranking-panel" id="ranking" key={`ranking-${activeStage}`} style={rankingPanelAssets}>
-          <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div><button className="data-refresh" type="button" onClick={() => void loadFplData(true)} disabled={isRefreshing} aria-label={isRefreshing ? "正在刷新排行榜数据" : "刷新排行榜数据"}><span aria-hidden="true">↻</span>{isRefreshing ? "更新中" : "刷新数据"}</button></header>
+          <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>
           <div className="ranking-head"><span>阶位</span><span>玩家 ID</span><span>当周队长得分</span><span>队长总分</span><span>血量</span></div>
           <div className="ranking-list">
             {visibleRanking.map(({ entryId, name, rank, gpc, captainTotal, hp, history }) => (
