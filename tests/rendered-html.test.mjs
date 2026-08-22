@@ -171,6 +171,8 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(css, /\.captain-rate-panel/);
   assert.match(css, /\.captain-rate-head/);
   assert.match(css, /\.captain-rate-row/);
+  assert.match(css, /\.captain-rate-head,[\s\S]*\.captain-rate-row\s*\{[\s\S]*justify-items:\s*center;[\s\S]*text-align:\s*center;/);
+  assert.doesNotMatch(css, /\.captain-rate-(?:head|row)[\s\S]{0,180}justify-self:\s*end/);
   assert.match(css, /\.ranking-pagination button\s*\{[^}]*clip-path:/);
   assert.match(css, /transparent relic frame \+ compact desktop roster/);
   assert.match(css, /\.ranking-panel\s*\{\s*background-clip:\s*padding-box;\s*box-shadow:\s*none;/);
