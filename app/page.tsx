@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const fplApiBase = "https://penguin-cup-fpl-api.nbafantasy.workers.dev";
@@ -32,10 +32,9 @@ const players = [
   "NBS TEAM",
   "Fitz",
   "willis's Team",
-  "Shuo Home",
+  "Shuo City",
   "传来传去不射门，阿尔特塔快走人！",
   "New Trafford",
-  "Rainbow Desert",
   "礼物铺今天赢球了吗",
   "这是团赛专用的大号",
   "范特西体育",
@@ -195,6 +194,25 @@ function lifeEarned(points: number, rate: number | null): number {
   return rate !== null && rate < 10 ? 2 : 1;
 }
 
+const refreshRetryDelay = 60_000;
+
+function beijingSnapshotDay(timestamp: number): number {
+  const beijingOffset = 8 * 60 * 60 * 1000;
+  const publishTime = (7 * 60 + 30) * 60 * 1000;
+  return Math.floor((timestamp + beijingOffset - publishTime) / (24 * 60 * 60 * 1000));
+}
+
+function nextBeijingSnapshotRefreshDelay(timestamp: number): number {
+  const day = 24 * 60 * 60 * 1000;
+  const beijingOffset = 8 * 60 * 60 * 1000;
+  const safeRefreshTime = (7 * 60 + 31) * 60 * 1000;
+  const beijingTimestamp = timestamp + beijingOffset;
+  const beijingDayStart = Math.floor(beijingTimestamp / day) * day;
+  let nextRefresh = beijingDayStart + safeRefreshTime - beijingOffset;
+  if (nextRefresh <= timestamp) nextRefresh += day;
+  return nextRefresh - timestamp;
+}
+
 const challenges = [
   { id: 1, challenger: "Baros15", challengerScore: 12, target: "Old Trafford", targetScore: 8, day: "周一", time: "21:08" },
   { id: 2, challenger: "Eva", challengerScore: 15, target: "企鹅1", targetScore: 11, day: "周二", time: "09:42" },
@@ -301,36 +319,87 @@ export default function Home() {
   const [gwSnapshots, setGwSnapshots] = useState<GwSnapshot[]>([]);
   const [gwDeadlines, setGwDeadlines] = useState<GwDeadline[]>([]);
   const [currentTime, setCurrentTime] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const mountedRef = useRef(false);
+  const refreshInFlightRef = useRef<Promise<void> | null>(null);
+  const lastRefreshAttemptRef = useRef(0);
+  const lastSuccessfulRefreshRef = useRef<number | null>(null);
   const stage = stages.find((item) => item.id === activeStage) ?? stages[1];
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadFplData = useCallback((force = false) => {
+    if (refreshInFlightRef.current) return refreshInFlightRef.current;
 
-    const loadFplData = async () => {
+    const requestedAt = Date.now();
+    if (!force && requestedAt - lastRefreshAttemptRef.current < refreshRetryDelay) {
+      return Promise.resolve();
+    }
+    lastRefreshAttemptRef.current = requestedAt;
+
+    const request = Promise.resolve().then(async () => {
+      if (mountedRef.current) setIsRefreshing(true);
       try {
+        const cacheKey = requestedAt.toString();
         const [leagueResponse, historyResponse] = await Promise.all([
-          fetch(`${fplApiBase}/api/league`, { cache: "no-store" }),
-          fetch(`${fplApiBase}/api/history`, { cache: "no-store" }),
+          fetch(`${fplApiBase}/api/league?refresh=${cacheKey}`, { cache: "no-store" }),
+          fetch(`${fplApiBase}/api/history?refresh=${cacheKey}`, { cache: "no-store" }),
         ]);
         if (!leagueResponse.ok || !historyResponse.ok) return;
 
         const league = await leagueResponse.json() as LeagueResponse;
         const history = await historyResponse.json() as HistoryResponse;
 
-        if (cancelled) return;
+        if (!mountedRef.current) return;
         if (league.ready && league.teams.length > 0) setLeagueTeams(league.teams);
         if (history.ready) setGwSnapshots(history.snapshots.filter((snapshot) => Boolean(snapshot?.teams)));
         setGwDeadlines(history.deadlines ?? []);
+        lastSuccessfulRefreshRef.current = Date.now();
       } catch {
         // Keep the server-rendered roster if the remote API is temporarily unavailable.
+      } finally {
+        refreshInFlightRef.current = null;
+        if (mountedRef.current) setIsRefreshing(false);
+      }
+    });
+
+    refreshInFlightRef.current = request;
+    return request;
+  }, []);
+
+  useEffect(() => {
+    mountedRef.current = true;
+
+    const refreshAfterSnapshotBoundary = () => {
+      const lastSuccessfulRefresh = lastSuccessfulRefreshRef.current;
+      if (lastSuccessfulRefresh === null || beijingSnapshotDay(Date.now()) > beijingSnapshotDay(lastSuccessfulRefresh)) {
+        void loadFplData();
       }
     };
 
-    void loadFplData();
-    return () => {
-      cancelled = true;
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") refreshAfterSnapshotBoundary();
     };
-  }, []);
+
+    const handlePageShow = () => refreshAfterSnapshotBoundary();
+
+    let dailyRefreshTimer = 0;
+    const scheduleDailyRefresh = () => {
+      dailyRefreshTimer = window.setTimeout(() => {
+        void loadFplData();
+        scheduleDailyRefresh();
+      }, nextBeijingSnapshotRefreshDelay(Date.now()));
+    };
+
+    void loadFplData(true);
+    scheduleDailyRefresh();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pageshow", handlePageShow);
+    return () => {
+      mountedRef.current = false;
+      window.clearTimeout(dailyRefreshTimer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pageshow", handlePageShow);
+    };
+  }, [loadFplData]);
 
   useEffect(() => {
     const initialClock = window.setTimeout(() => setCurrentTime(Date.now()), 0);
@@ -362,7 +431,7 @@ export default function Home() {
           life,
         }];
       });
-      const latest = history.at(-1);
+      const latest = history.length > 0 ? history[history.length - 1] : undefined;
       return {
         entryId: team.entryId,
         name: team.teamName,
@@ -441,7 +510,7 @@ export default function Home() {
 
       {activeStage === 1 ? <section className="boards">
         <article className="panel ranking-panel" id="ranking" key={`ranking-${activeStage}`} style={rankingPanelAssets}>
-          <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>
+          <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div><button className="data-refresh" type="button" onClick={() => void loadFplData(true)} disabled={isRefreshing} aria-label={isRefreshing ? "正在刷新排行榜数据" : "刷新排行榜数据"}><span aria-hidden="true">↻</span>{isRefreshing ? "更新中" : "刷新数据"}</button></header>
           <div className="ranking-head"><span>阶位</span><span>玩家 ID</span><span>当周队长得分</span><span>队长总分</span><span>血量</span></div>
           <div className="ranking-list">
             {visibleRanking.map(({ entryId, name, rank, gpc, captainTotal, hp, history }) => (

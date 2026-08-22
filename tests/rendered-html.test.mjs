@@ -32,6 +32,7 @@ test("server-renders the Penguin Cup leaderboard", async () => {
   assert.match(html, /PENGUIN CUP/);
   assert.match(html, /冰渊王座/);
   assert.match(html, /冰海角斗场/);
+  assert.match(html, /刷新排行榜数据/);
   assert.match(html, /见习者集结/);
   assert.match(html, /当周队长得分/);
   assert.match(html, /血量/);
@@ -39,7 +40,7 @@ test("server-renders the Penguin Cup leaderboard", async () => {
   assert.match(html, /class="rank-gem rank-gem-/);
   assert.match(html, /class="pixel-health"/);
   assert.match(html, /class="blood-drop"/);
-  assert.ok(html.indexOf("willis's Team") < html.indexOf("Shuo Home"));
+  assert.ok(html.indexOf("willis's Team") < html.indexOf("Shuo City"));
   assert.match(html, /队长总分/);
   assert.doesNotMatch(html, />GPC<|>TP<|>HP</);
   assert.equal((html.match(/class="rank-row/g) ?? []).length, 20);
@@ -62,8 +63,10 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /assets\/leaderboard\/ice-history-frame\.png/);
   assert.match(page, /Official FPL classic league 511690 roster/);
   const rosterBlock = page.match(/const players = \[([\s\S]*?)\n\];/)?.[1] ?? "";
-  assert.equal((rosterBlock.match(/^\s*".*",\s*$/gm) ?? []).length, 112);
+  assert.equal((rosterBlock.match(/^\s*".*",\s*$/gm) ?? []).length, 111);
   assert.match(rosterBlock, /"JZhuoyan"/);
+  assert.match(rosterBlock, /"Shuo City"/);
+  assert.doesNotMatch(rosterBlock, /"Shuo Home"|"Rainbow Desert"/);
   assert.match(page, /assets\/leaderboard\/ice-side-left\.png/);
   assert.match(page, /assets\/leaderboard\/ice-side-right\.png/);
   assert.match(page, /assets\/leaderboard\/score-slot\.png/);
@@ -84,6 +87,13 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /penguin-cup-fpl-api\.nbafantasy\.workers\.dev/);
   assert.match(page, /\/api\/league/);
   assert.match(page, /\/api\/history/);
+  assert.match(page, /visibilitychange/);
+  assert.match(page, /window\.addEventListener\("pageshow"/);
+  assert.match(page, /beijingSnapshotDay/);
+  assert.match(page, /nextBeijingSnapshotRefreshDelay/);
+  assert.match(page, /scheduleDailyRefresh/);
+  assert.match(page, /className="data-refresh"/);
+  assert.doesNotMatch(page, /\.at\(-1\)/);
   assert.doesNotMatch(page, /Array\.from\(\{ length: relevantGw \}/);
   assert.match(page, /history\.deadlines \?\? \[\]/);
   assert.match(page, /Date\.parse\(event\.deadlineTime\)/);
@@ -149,6 +159,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(css, /\.blood-drop::before\s*\{/);
   assert.doesNotMatch(css, /\.ranking-panel \.panel-title::before/);
   assert.match(css, /\.ranking-pagination/);
+  assert.match(css, /\.data-refresh\s*\{/);
   assert.match(css, /\.ranking-pagination button\s*\{[^}]*clip-path:/);
   assert.match(css, /transparent relic frame \+ compact desktop roster/);
   assert.match(css, /\.ranking-panel\s*\{\s*background-clip:\s*padding-box;\s*box-shadow:\s*none;/);
