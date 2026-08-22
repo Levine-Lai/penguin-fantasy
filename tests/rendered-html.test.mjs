@@ -93,6 +93,14 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /nextBeijingSnapshotRefreshDelay/);
   assert.match(page, /scheduleDailyRefresh/);
   assert.doesNotMatch(page, /data-refresh|refresh-status|刷新排行榜数据/);
+  assert.match(page, /type CaptainPopularity/);
+  assert.match(page, /className="panel ranking-panel captain-rate-panel"/);
+  assert.match(page, />队长名字</);
+  assert.match(page, />当轮分数</);
+  assert.match(page, />选择人数</);
+  assert.match(page, />选择率</);
+  assert.match(page, /captain\.selections \/ selections\.length \* 100/);
+  assert.match(page, /right\.selections - left\.selections/);
   assert.doesNotMatch(page, /\.at\(-1\)/);
   assert.doesNotMatch(page, /Array\.from\(\{ length: relevantGw \}/);
   assert.match(page, /history\.deadlines \?\? \[\]/);
@@ -160,6 +168,9 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.doesNotMatch(css, /\.ranking-panel \.panel-title::before/);
   assert.match(css, /\.ranking-pagination/);
   assert.doesNotMatch(css, /\.data-refresh|\.refresh-status/);
+  assert.match(css, /\.captain-rate-panel/);
+  assert.match(css, /\.captain-rate-head/);
+  assert.match(css, /\.captain-rate-row/);
   assert.match(css, /\.ranking-pagination button\s*\{[^}]*clip-path:/);
   assert.match(css, /transparent relic frame \+ compact desktop roster/);
   assert.match(css, /\.ranking-panel\s*\{\s*background-clip:\s*padding-box;\s*box-shadow:\s*none;/);

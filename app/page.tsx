@@ -8,6 +8,7 @@ const fplApiBase = "https://penguin-fantasy.pages.dev";
 type StageId = 1 | 2 | 3 | 4 | 5;
 type RankedPlayer = { entryId: number; name: string; rank: number | null; gpc: number; captainTotal: number; hp: number; history: CaptainHistoryEntry[] };
 type CaptainHistoryEntry = { gw: number; captain: string; rate: number; points: number; life: number };
+type CaptainPopularity = { name: string; points: number; selections: number; rate: number };
 type LeagueTeam = { entryId: number; teamName: string };
 type ApiTeam = LeagueTeam & {
   captainName: string | null;
@@ -450,6 +451,32 @@ export default function Home() {
   const pageSize = 20;
   const pageCount = Math.ceil(ranking.length / pageSize);
   const visibleRanking = ranking.slice(rankingPage * pageSize, (rankingPage + 1) * pageSize);
+  const latestCaptainSnapshot = useMemo(() => gwSnapshots.reduce<GwSnapshot | null>(
+    (latest, snapshot) => latest === null || snapshot.gw > latest.gw ? snapshot : latest,
+    null,
+  ), [gwSnapshots]);
+  const captainPopularity = useMemo<CaptainPopularity[]>(() => {
+    if (!latestCaptainSnapshot) return [];
+
+    const selections = latestCaptainSnapshot.teams.filter((team) => team.captainName);
+    const grouped = new Map<string, { points: number; selections: number }>();
+    for (const team of selections) {
+      const name = team.captainName;
+      if (!name) continue;
+      const current = grouped.get(name);
+      grouped.set(name, {
+        points: team.captainPoints,
+        selections: (current?.selections ?? 0) + 1,
+      });
+    }
+
+    return Array.from(grouped, ([name, captain]) => ({
+      name,
+      points: captain.points,
+      selections: captain.selections,
+      rate: selections.length > 0 ? captain.selections / selections.length * 100 : 0,
+    })).sort((left, right) => right.selections - left.selections || right.points - left.points || left.name.localeCompare(right.name, "zh-CN"));
+  }, [latestCaptainSnapshot]);
   const deadlineSchedule = gwDeadlines.length > 0
     ? gwDeadlines
     : gwSnapshots.map((snapshot) => ({ gw: snapshot.gw, deadlineTime: snapshot.deadlineTime }));
@@ -552,6 +579,20 @@ export default function Home() {
             <span><strong>第 {rankingPage + 1} 页</strong></span>
             <button onClick={() => { setExpandedPlayer(null); setRankingPage((page) => Math.min(pageCount - 1, page + 1)); }} disabled={rankingPage === pageCount - 1} aria-label="下一页"><span aria-hidden="true">›</span></button>
           </nav>
+        </article>
+        <article className="panel ranking-panel captain-rate-panel" style={rankingPanelAssets}>
+          <header className="panel-title"><div><small>{latestCaptainSnapshot ? `GW${latestCaptainSnapshot.gw}` : "CURRENT GW"} · CAPTAIN PICKS</small><h2>队长选择率</h2></div></header>
+          <div className="captain-rate-head"><span>队长名字</span><span>当轮分数</span><span>选择人数</span><span>选择率</span></div>
+          <div className="captain-rate-list">
+            {captainPopularity.map((captain) => (
+              <article className="captain-rate-row" key={captain.name}>
+                <strong className="captain-rate-name">{captain.name}</strong>
+                <strong>{captain.points}</strong>
+                <strong>{captain.selections} 人</strong>
+                <strong>{captain.rate.toFixed(1)}%</strong>
+              </article>
+            ))}
+          </div>
         </article>
       </section> : <section className="chapter-await" aria-live="polite"><p>A New Chapter Await</p></section>}
 

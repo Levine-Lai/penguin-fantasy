@@ -1003,6 +1003,96 @@ main > * {
   .score-high, .score-low, .score-draw { min-width: 2.35rem; min-height: 2.6rem; }
 }
 
+/* Current-GW captain popularity uses the same carved ledger language as the player ranking. */
+.captain-rate-panel {
+  margin-block-start: var(--space-lg);
+}
+
+.captain-rate-head,
+.captain-rate-row {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) 7rem 7rem 9rem;
+  align-items: center;
+  column-gap: var(--space-md);
+  padding-inline: var(--space-lg);
+}
+
+.captain-rate-head {
+  min-height: 3.45rem;
+  margin: 0 var(--space-lg);
+  border: var(--rule-hair) solid var(--color-rule-2);
+  border-block-end-color: var(--color-rule-bright);
+  background: linear-gradient(180deg, var(--color-paper-2-a84), var(--color-paper-a76));
+  color: var(--color-muted);
+  font-family: var(--font-label);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.captain-rate-head > span:not(:first-child),
+.captain-rate-row > strong:not(:first-child) {
+  justify-self: end;
+  text-align: end;
+}
+
+.captain-rate-list {
+  margin-inline: var(--space-lg);
+  border-inline: var(--rule-hair) solid var(--color-rule-2);
+  border-block-end: var(--rule-hair) solid var(--color-rule-2);
+  background: linear-gradient(180deg, var(--color-paper-3-a46), var(--color-paper-a42));
+}
+
+.captain-rate-row {
+  min-height: 3.9rem;
+  border-block-end: var(--rule-hair) solid var(--color-rule-2);
+  color: var(--color-ink);
+  font-family: var(--font-label);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.82rem;
+}
+
+.captain-rate-row:last-child { border-block-end: 0; }
+.captain-rate-row:nth-child(even) { background: var(--color-accent-a06); }
+
+.captain-rate-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-family: var(--font-display);
+  font-size: 0.94rem;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 48rem) {
+  .captain-rate-panel { margin-block-start: var(--space-sm); }
+
+  .captain-rate-head,
+  .captain-rate-row {
+    grid-template-columns: minmax(0, 1fr) 3.4rem 4rem 4.25rem;
+    column-gap: var(--space-xs);
+    padding-inline: var(--space-sm);
+  }
+
+  .captain-rate-head,
+  .captain-rate-list { margin-inline: var(--space-sm); }
+  .captain-rate-row { min-height: 3.65rem; font-size: 0.74rem; }
+  .captain-rate-name { font-size: 0.82rem; }
+}
+
+@media (max-width: 32rem) {
+  .captain-rate-head,
+  .captain-rate-row {
+    grid-template-columns: minmax(0, 1fr) 2.75rem 3.25rem 3.55rem;
+    column-gap: var(--space-3xs);
+    padding-inline: var(--space-2xs);
+  }
+
+  .captain-rate-head,
+  .captain-rate-list { margin-inline: var(--space-2xs); }
+  .captain-rate-head { font-size: 0.66rem; }
+  .captain-rate-row { min-height: 3.55rem; font-size: 0.68rem; }
+  .captain-rate-name { font-size: 0.76rem; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 150ms !important;
