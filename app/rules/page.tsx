@@ -13,7 +13,6 @@ export default function RulesPage() {
     <main className="rules-page">
       <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav rules-return-nav" aria-label="返回导航"><a className="active" href={`${siteBasePath}/`} aria-label="返回战榜">战榜</a></nav><div className="gameweek"><small>五重试炼</small><strong>RULES</strong></div></div></header>
       <section className="rules-hero"><div><span>THE CODEX OF THE FROZEN ABYSS</span><h1>冰渊法典</h1><p>五重试炼，十六位传奇，一座王座。</p></div><a href={`${siteBasePath}/`}>← 返回战榜</a></section>
-      <section className="rules-summary" aria-label="赛制流程"><div className="summary-head"><span>阶段</span><span>Gameweeks</span><span>核心玩法</span><span>晋级方式</span></div>{phases.map((phase) => <div className="summary-row" key={phase.id}><strong>{phase.id}</strong><span>{phase.range}</span><span>{phase.title.split("｜")[1]}</span><span>{phase.advance}</span></div>)}</section>
       <section className="rules-grid">{phases.map((phase) => <article className="rule-stage" key={phase.id}><header><strong>{phase.id}</strong><div><small>{phase.range}</small><h2>{phase.title}</h2></div></header><ul>{phase.rules.map((rule) => <li key={rule}>{rule}</li>)}</ul><footer><span>晋级</span><strong>{phase.advance}</strong></footer></article>)}</section>
     </main>
   );

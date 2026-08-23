@@ -6,7 +6,7 @@ const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const fplApiBase = "https://penguin-fantasy.pages.dev";
 
 type StageId = 1 | 2 | 3 | 4 | 5;
-type RankedPlayer = { entryId: number; name: string; rank: number | null; gpc: number; captainTotal: number; hp: number; history: CaptainHistoryEntry[] };
+type RankedPlayer = { entryId: number; name: string; rank: number | null; gpc: number; captainTotal: number; captainRateTotal: number; hp: number; history: CaptainHistoryEntry[] };
 type CaptainHistoryEntry = { gw: number; captain: string; rate: number; points: number; life: number };
 type CaptainPopularity = { name: string; points: number; selections: number; rate: number };
 type LeagueTeam = { entryId: number; teamName: string };
@@ -25,6 +25,57 @@ type GwSnapshot = {
 type LeagueResponse = { ready: boolean; teams: LeagueTeam[] };
 type GwDeadline = { gw: number; deadlineTime: string };
 type HistoryResponse = { ready: boolean; snapshots: GwSnapshot[]; deadlines: GwDeadline[] };
+
+// Official 2026–27 deadlines keep the first painted frame on the correct GW;
+// the API schedule replaces this fallback as soon as the snapshot loads.
+const fallbackGwDeadlines: GwDeadline[] = [
+  { gw: 1, deadlineTime: "2026-08-21T17:30:00Z" },
+  { gw: 2, deadlineTime: "2026-08-28T17:30:00Z" },
+  { gw: 3, deadlineTime: "2026-09-04T17:30:00Z" },
+  { gw: 4, deadlineTime: "2026-09-12T12:30:00Z" },
+  { gw: 5, deadlineTime: "2026-09-18T17:30:00Z" },
+  { gw: 6, deadlineTime: "2026-10-10T10:00:00Z" },
+  { gw: 7, deadlineTime: "2026-10-17T10:00:00Z" },
+  { gw: 8, deadlineTime: "2026-10-23T17:30:00Z" },
+  { gw: 9, deadlineTime: "2026-10-31T11:00:00Z" },
+  { gw: 10, deadlineTime: "2026-11-07T13:30:00Z" },
+  { gw: 11, deadlineTime: "2026-11-21T13:30:00Z" },
+  { gw: 12, deadlineTime: "2026-11-28T13:30:00Z" },
+  { gw: 13, deadlineTime: "2026-12-02T18:30:00Z" },
+  { gw: 14, deadlineTime: "2026-12-05T13:30:00Z" },
+  { gw: 15, deadlineTime: "2026-12-12T13:30:00Z" },
+  { gw: 16, deadlineTime: "2026-12-19T13:30:00Z" },
+  { gw: 17, deadlineTime: "2026-12-26T13:30:00Z" },
+  { gw: 18, deadlineTime: "2026-12-30T18:30:00Z" },
+  { gw: 19, deadlineTime: "2027-01-02T13:30:00Z" },
+  { gw: 20, deadlineTime: "2027-01-06T18:30:00Z" },
+  { gw: 21, deadlineTime: "2027-01-16T13:30:00Z" },
+  { gw: 22, deadlineTime: "2027-01-23T13:30:00Z" },
+  { gw: 23, deadlineTime: "2027-01-30T13:30:00Z" },
+  { gw: 24, deadlineTime: "2027-02-06T13:30:00Z" },
+  { gw: 25, deadlineTime: "2027-02-10T18:30:00Z" },
+  { gw: 26, deadlineTime: "2027-02-20T13:30:00Z" },
+  { gw: 27, deadlineTime: "2027-02-27T13:30:00Z" },
+  { gw: 28, deadlineTime: "2027-03-03T18:30:00Z" },
+  { gw: 29, deadlineTime: "2027-03-13T13:30:00Z" },
+  { gw: 30, deadlineTime: "2027-03-20T13:30:00Z" },
+  { gw: 31, deadlineTime: "2027-04-10T12:30:00Z" },
+  { gw: 32, deadlineTime: "2027-04-17T12:30:00Z" },
+  { gw: 33, deadlineTime: "2027-04-24T12:30:00Z" },
+  { gw: 34, deadlineTime: "2027-05-01T12:30:00Z" },
+  { gw: 35, deadlineTime: "2027-05-08T12:30:00Z" },
+  { gw: 36, deadlineTime: "2027-05-15T12:30:00Z" },
+  { gw: 37, deadlineTime: "2027-05-23T12:30:00Z" },
+  { gw: 38, deadlineTime: "2027-05-30T13:30:00Z" },
+];
+
+const currentTrialBootstrapScript = `(() => {
+  const deadlines = ${JSON.stringify(fallbackGwDeadlines)};
+  const now = Date.now();
+  const currentGw = deadlines.reduce((latest, event) => Date.parse(event.deadlineTime) <= now ? Math.max(latest, event.gw) : latest, 0);
+  const label = document.querySelector("[data-current-trial]");
+  if (label) label.textContent = currentGw > 0 ? \`GW \${currentGw}\` : "见习者集结";
+})();`;
 
 // Official FPL classic league 511690 roster, refreshed from the live API.
 const players = [
@@ -190,6 +241,14 @@ const featuredTeamOrder = new Map([
   ["企鹅", 1],
 ]);
 
+function compareRankedPlayers(left: RankedPlayer, right: RankedPlayer): number {
+  return right.hp - left.hp
+    || right.captainTotal - left.captainTotal
+    || left.captainRateTotal - right.captainRateTotal
+    || (featuredTeamOrder.get(left.name) ?? Number.MAX_SAFE_INTEGER) - (featuredTeamOrder.get(right.name) ?? Number.MAX_SAFE_INTEGER)
+    || left.name.localeCompare(right.name, "zh-CN");
+}
+
 function lifeEarned(points: number, rate: number | null): number {
   if (points < 10) return 0;
   return rate !== null && rate < 10 ? 2 : 1;
@@ -262,10 +321,10 @@ function ChallengePanel({ melee = false, gameweek = "GW12" }: { melee?: boolean;
   );
 }
 
-function InlineCaptainHistory({ playerName, history }: { playerName: string; history: CaptainHistoryEntry[] }) {
+function InlineCaptainHistory({ playerName, history, currentGwLabel }: { playerName: string; history: CaptainHistoryEntry[]; currentGwLabel: string }) {
   return (
     <section className="rank-history" aria-label={`${playerName} 的队长选择记录`}>
-      <header><strong>队长选择记录</strong><small>见习者集结</small></header>
+      <header><strong>队长选择记录</strong><small>{currentGwLabel}</small></header>
       <div>
         {history.length === 0 ? <p className="history-empty">尚无队长选择记录</p> : history.map((item) => (
           <article className="history-row" key={item.gw}>
@@ -319,7 +378,7 @@ export default function Home() {
   const [leagueTeams, setLeagueTeams] = useState<LeagueTeam[]>(fallbackTeams);
   const [gwSnapshots, setGwSnapshots] = useState<GwSnapshot[]>([]);
   const [gwDeadlines, setGwDeadlines] = useState<GwDeadline[]>([]);
-  const [currentTime, setCurrentTime] = useState<number | null>(null);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
   const mountedRef = useRef(false);
   const refreshInFlightRef = useRef<Promise<void> | null>(null);
   const lastRefreshAttemptRef = useRef(0);
@@ -400,10 +459,8 @@ export default function Home() {
   }, [loadFplData]);
 
   useEffect(() => {
-    const initialClock = window.setTimeout(() => setCurrentTime(Date.now()), 0);
     const clock = window.setInterval(() => setCurrentTime(Date.now()), 30_000);
     return () => {
-      window.clearTimeout(initialClock);
       window.clearInterval(clock);
     };
   }, []);
@@ -415,7 +472,6 @@ export default function Home() {
   };
 
   const ranking = useMemo<RankedPlayer[]>(() => {
-    const hasPublishedPicks = gwSnapshots.some((snapshot) => snapshot.teams.some((team) => team.captainName));
     const rows = leagueTeams.map((team) => {
       const history = gwSnapshots.flatMap<CaptainHistoryEntry>((snapshot) => {
         const result = snapshot.teams.find((entry) => entry.entryId === team.entryId);
@@ -436,14 +492,13 @@ export default function Home() {
         rank: null,
         gpc: latest?.points ?? 0,
         captainTotal: history.reduce((total, item) => total + item.points, 0),
+        captainRateTotal: history.reduce((total, item) => total + item.rate, 0),
         hp: 1 + history.reduce((total, item) => total + item.life, 0),
         history,
       };
     });
 
-    const orderedRows = hasPublishedPicks
-      ? rows.sort((left, right) => right.hp - left.hp || right.captainTotal - left.captainTotal || left.name.localeCompare(right.name, "zh-CN"))
-      : rows.sort((left, right) => (featuredTeamOrder.get(left.name) ?? Number.MAX_SAFE_INTEGER) - (featuredTeamOrder.get(right.name) ?? Number.MAX_SAFE_INTEGER));
+    const orderedRows = rows.sort(compareRankedPlayers);
 
     return orderedRows
       .map((player, index) => ({ ...player, rank: index + 1 }));
@@ -479,10 +534,12 @@ export default function Home() {
   }, [latestCaptainSnapshot]);
   const deadlineSchedule = gwDeadlines.length > 0
     ? gwDeadlines
-    : gwSnapshots.map((snapshot) => ({ gw: snapshot.gw, deadlineTime: snapshot.deadlineTime }));
+    : gwSnapshots.length > 0
+      ? gwSnapshots.map((snapshot) => ({ gw: snapshot.gw, deadlineTime: snapshot.deadlineTime }))
+      : fallbackGwDeadlines;
   const latestStartedGw = deadlineSchedule.reduce((latestGw, event) => {
     const deadline = Date.parse(event.deadlineTime);
-    const hasStarted = currentTime !== null && Number.isFinite(deadline) && deadline <= currentTime;
+    const hasStarted = Number.isFinite(deadline) && deadline <= currentTime;
     return hasStarted ? Math.max(latestGw, event.gw) : latestGw;
   }, 0);
   const currentTrialLabel = latestStartedGw > 0 ? `GW ${latestStartedGw}` : "见习者集结";
@@ -500,7 +557,8 @@ export default function Home() {
 
   return (
     <main>
-      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a className="active" href={`${siteBasePath}/`}>战榜</a><a href={`${siteBasePath}/rules/`}>冰渊法典</a></nav><div className="gameweek"><small>当前试炼</small><strong>{currentTrialLabel}</strong></div></div></header>
+      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a className="active" href={`${siteBasePath}/`}>战榜</a><a href={`${siteBasePath}/rules/`}>冰渊法典</a></nav><div className="gameweek"><small>当前试炼</small><strong data-current-trial suppressHydrationWarning>{currentTrialLabel}</strong></div></div></header>
+      <script dangerouslySetInnerHTML={{ __html: currentTrialBootstrapScript }} />
 
       <section className="league-hero"><div className="hero-inner"><div className="hero-copy"><span>THE FROZEN ABYSS · 2026–27</span><h1>冰渊王座<span>之战</span></h1><p className="hero-myth"><span>在世界尽头，有一片被遗忘的禁地——终焉冰海。这里没有四季，只有永恒的寒冬。传说远古巨龙陨落后，它的心脏化为了贯穿天地的巨大冰山，而它的鲜血流入深海，孕育出了无数深渊生灵。</span><span>冰山之上，是荣耀、力量与王权的象征；<br />深海之下，是黑暗、危险与未知的试炼。</span><span>千年以来，无数冒险者、骑士、法师、海妖与巨兽都曾踏入这片领域，只为寻找传说中的至高宝藏。据说，只有经历五重试炼、在冰山与深海之间活到最后的人，才能获得王座认可，成为新一代——</span><strong>冰渊之王</strong></p></div></div></section>
 
@@ -570,7 +628,7 @@ export default function Home() {
                     </span>
                   </div>
                 </article>
-                {expandedPlayer === entryId ? <div className="rank-history-wrap"><InlineCaptainHistory playerName={name} history={history} /></div> : null}
+                {expandedPlayer === entryId ? <div className="rank-history-wrap"><InlineCaptainHistory playerName={name} history={history} currentGwLabel={currentTrialLabel} /></div> : null}
               </Fragment>
             ))}
           </div>

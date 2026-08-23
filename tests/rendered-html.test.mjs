@@ -33,14 +33,15 @@ test("server-renders the Penguin Cup leaderboard", async () => {
   assert.match(html, /冰渊王座/);
   assert.match(html, /冰海角斗场/);
   assert.doesNotMatch(html, /刷新排行榜数据|刷新数据|数据已更新|更新失败/);
-  assert.match(html, /见习者集结/);
+  assert.match(html, /data-current-trial[^>]*>GW \d+/);
   assert.match(html, /当周队长得分/);
   assert.match(html, /血量/);
   assert.match(html, /aria-label="1 点血量"/);
   assert.match(html, /class="rank-gem rank-gem-/);
   assert.match(html, /class="pixel-health"/);
   assert.match(html, /class="blood-drop"/);
-  assert.ok(html.indexOf("willis's Team") < html.indexOf("Shuo City"));
+  const renderedPlayerNames = [...html.matchAll(/class="player-id[^"]*"[^>]*>([^<]+)<\/strong>/g)].map((match) => match[1]);
+  assert.deepEqual(renderedPlayerNames.slice(0, 2), ["SSU - Sakai Moka", "企鹅"]);
   assert.match(html, /队长总分/);
   assert.doesNotMatch(html, />GPC<|>TP<|>HP</);
   assert.equal((html.match(/class="rank-row/g) ?? []).length, 20);
@@ -78,7 +79,9 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /const pageSize = 20/);
   assert.match(page, /function lifeEarned/);
   assert.match(page, /rate !== null && rate < 10 \? 2 : 1/);
-  assert.match(page, /right\.hp - left\.hp \|\| right\.captainTotal - left\.captainTotal/);
+  assert.match(page, /right\.hp - left\.hp[\s\S]*right\.captainTotal - left\.captainTotal[\s\S]*left\.captainRateTotal - right\.captainRateTotal/);
+  assert.match(page, /featuredTeamOrder\.get\(left\.name\)[\s\S]*featuredTeamOrder\.get\(right\.name\)/);
+  assert.match(page, /captainRateTotal:\s*history\.reduce\(\(total, item\) => total \+ item\.rate, 0\)/);
   assert.match(page, /\["SSU - Sakai Moka", 0\]/);
   assert.match(page, /\["企鹅", 1\]/);
   assert.match(page, /featuredTeamOrder\.has\(name\) \? "featured-player"/);
@@ -108,7 +111,12 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /deadline <= currentTime/);
   assert.match(page, /latestStartedGw > 0 \? `GW \$\{latestStartedGw\}`/);
   assert.match(page, /setInterval\(\(\) => setCurrentTime\(Date\.now\(\)\), 30_000\)/);
+  assert.match(page, /const fallbackGwDeadlines:[\s\S]*gw:\s*38/);
+  assert.match(page, /data-current-trial suppressHydrationWarning/);
+  assert.match(page, /currentTrialBootstrapScript/);
   assert.match(page, /尚无队长选择记录/);
+  assert.match(page, /InlineCaptainHistory playerName=\{name\} history=\{history\} currentGwLabel=\{currentTrialLabel\}/);
+  assert.doesNotMatch(page, /<header><strong>队长选择记录<\/strong><small>见习者集结<\/small><\/header>/);
   assert.match(page, /useState<StageId>\(1\)/);
   assert.match(page, /item\.id === 1 \? <i>当前<\/i>/);
   assert.match(page, /className="brand-emblem"/);
@@ -235,6 +243,7 @@ test("server-renders the rules route", async () => {
   assert.match(html, /GW35–GW38/);
   assert.match(html, /aria-label="返回战榜">战榜/);
   assert.doesNotMatch(html, /href="\/rules\/"[^>]*>冰渊法典/);
+  assert.doesNotMatch(html, /class="rules-summary"|赛制流程|<span>Gameweeks<\/span>/);
 });
 
 test("ships a double-clickable local HTML edition without network or API calls", async () => {
