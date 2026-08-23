@@ -22,6 +22,12 @@ endpoints. A normal league is therefore locked in three batches over roughly
 ten minutes. Completed captain choices are stored once in KV and never fetched
 again for that GW.
 
+Completion is checked against the current roster by entry ID rather than raw
+array length. If players join or leave after a batch completes, the next cron
+captures only newly missing entries and excludes departed entries from the
+captain-rate denominator. Once the current GW is complete, the same cron also
+backfills any older due GW left incomplete by a prolonged FPL outage.
+
 At Beijing time 07:30, the Worker reads the single FPL live endpoint, records
 each captain's base points before any captain multiplier, and publishes one
 complete snapshot. Player page views only read KV-backed API responses and do

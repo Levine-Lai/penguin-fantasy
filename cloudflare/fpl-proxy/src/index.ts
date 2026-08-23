@@ -124,7 +124,7 @@ const worker = {
 
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContextLike): Promise<void> {
     if (controller.cron === "30 23 * * *") {
-      ctx.waitUntil(publishDailySnapshot(env));
+      ctx.waitUntil(publishDailySnapshot(env, undefined, controller.scheduledTime));
       return;
     }
     ctx.waitUntil(captureDueCaptainPicks(env, controller.scheduledTime));
@@ -137,21 +137,22 @@ async function captureDueCaptainPicks(env: Env, scheduledTime = Date.now()): Pro
   const cachedBootstrap = await env.FPL_CACHE.get<CachedValue<Bootstrap>>("fpl:bootstrap", "json");
   const bootstrap = cachedBootstrap?.value
     ?? await cachedFetch<Bootstrap>(env, "fpl:bootstrap", "/bootstrap-static/", 6 * 60 * 60);
-  const event = selectLatestCaptureEvent(bootstrap.events, scheduledTime);
-  if (!event) return;
-
-  let picksDocument = await getPicksDocument(env, event.id);
-  if (picksDocument.completedAt) return;
-
   const roster = await getRoster(env);
+  const captureTarget = await selectCaptureTarget(env, bootstrap.events, roster, scheduledTime);
+  if (!captureTarget) return;
+
+  const { event } = captureTarget;
+  let { picksDocument } = captureTarget;
+  if (picksDocument.completedAt) delete picksDocument.completedAt;
   picksDocument = await syncPicksBatch(env, event.id, roster, picksDocument);
-  const completed = picksDocument.checkedEntryIds.length >= roster.length;
+  const picksChecked = countCheckedRosterEntries(picksDocument, roster);
+  const completed = isPicksCompleteForRoster(picksDocument, roster);
   await env.FPL_CACHE.put(
     "sync:status",
     JSON.stringify({
       state: completed ? "picks_ready" : "capturing_picks",
       gw: event.id,
-      picksChecked: picksDocument.checkedEntryIds.length,
+      picksChecked,
       teams: roster.length,
       completed,
       picksCapturedAt: picksDocument.completedAt ?? null,
@@ -160,7 +161,7 @@ async function captureDueCaptainPicks(env: Env, scheduledTime = Date.now()): Pro
   );
 }
 
-async function publishDailySnapshot(env: Env, requestedGw?: number): Promise<void> {
+async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.now()): Promise<void> {
   const startedAt = new Date().toISOString();
   const previousStatus = await env.FPL_CACHE.get<Record<string, unknown>>("sync:status", "json");
   await env.FPL_CACHE.put("sync:status", JSON.stringify({ ...previousStatus, state: "running", startedAt }));
@@ -170,21 +171,22 @@ async function publishDailySnapshot(env: Env, requestedGw?: number): Promise<voi
     const roster = await getRoster(env);
     const event = requestedGw
       ? bootstrap.events.find((item) => item.id === requestedGw)
-      : selectLatestPassedEvent(bootstrap.events, Date.now());
+      : selectLatestPassedEvent(bootstrap.events, now);
 
     if (!event) {
       throw new Error("No relevant FPL event found");
     }
 
-    const deadlineHasPassed = Date.now() >= Date.parse(event.deadline_time);
+    const deadlineHasPassed = now >= Date.parse(event.deadline_time);
     const picksDocument = await getPicksDocument(env, event.id);
-    if (!picksDocument.completedAt || picksDocument.checkedEntryIds.length < roster.length) {
+    const picksChecked = countCheckedRosterEntries(picksDocument, roster);
+    if (!picksDocument.completedAt || !isPicksCompleteForRoster(picksDocument, roster)) {
       await env.FPL_CACHE.put(
         "sync:status",
         JSON.stringify({
           state: "waiting_for_picks",
           gw: event.id,
-          picksChecked: picksDocument.checkedEntryIds.length,
+          picksChecked,
           teams: roster.length,
           completed: false,
           updatedAt: new Date().toISOString(),
@@ -199,7 +201,9 @@ async function publishDailySnapshot(env: Env, requestedGw?: number): Promise<voi
 
     const playerNames = Object.fromEntries(bootstrap.elements.map((player) => [player.id, player.web_name]));
     const livePoints = Object.fromEntries(live.elements.map((player) => [player.id, player.stats.total_points]));
-    const validPicks = Object.values(picksDocument.picksByEntry).filter((pick): pick is PickRecord => Boolean(pick));
+    const validPicks = roster
+      .map((member) => picksDocument.picksByEntry[member.entryId] ?? null)
+      .filter((pick): pick is PickRecord => Boolean(pick));
     const captainCounts = validPicks.reduce<Record<string, number>>((counts, pick) => {
       counts[pick.captainId] = (counts[pick.captainId] ?? 0) + 1;
       return counts;
@@ -222,7 +226,7 @@ async function publishDailySnapshot(env: Env, requestedGw?: number): Promise<voi
       };
     });
 
-    const completed = picksDocument.checkedEntryIds.length >= roster.length;
+    const completed = isPicksCompleteForRoster(picksDocument, roster);
     const snapshot = {
       ready: deadlineHasPassed && denominator > 0,
       leagueId: Number(env.LEAGUE_ID),
@@ -231,7 +235,7 @@ async function publishDailySnapshot(env: Env, requestedGw?: number): Promise<voi
       deadlineTime: event.deadline_time,
       deadlineHasPassed,
       picksSync: {
-        checked: picksDocument.checkedEntryIds.length,
+        checked: picksChecked,
         total: roster.length,
         valid: denominator,
         completed,
@@ -253,7 +257,7 @@ async function publishDailySnapshot(env: Env, requestedGw?: number): Promise<voi
       JSON.stringify({
         state: "ready",
         gw: event.id,
-        picksChecked: picksDocument.checkedEntryIds.length,
+        picksChecked,
         teams: roster.length,
         completed,
         updatedAt: new Date().toISOString(),
@@ -341,7 +345,7 @@ async function syncPicksBatch(
   const checked = new Set(document.checkedEntryIds);
   const pending = roster.filter((member) => !checked.has(member.entryId)).slice(0, PICKS_BATCH_SIZE);
   if (pending.length === 0) {
-    if (checked.size >= roster.length && !document.completedAt) {
+    if (isPicksCompleteForRoster(document, roster) && !document.completedAt) {
       document.updatedAt = new Date().toISOString();
       document.completedAt = document.updatedAt;
       await env.FPL_CACHE.put(`picks:gw:${gw}`, JSON.stringify(document));
@@ -373,9 +377,38 @@ async function syncPicksBatch(
   }
   document.checkedEntryIds = [...checked];
   document.updatedAt = new Date().toISOString();
-  if (document.checkedEntryIds.length >= roster.length) document.completedAt = document.updatedAt;
+  if (isPicksCompleteForRoster(document, roster)) document.completedAt = document.updatedAt;
   await env.FPL_CACHE.put(`picks:gw:${gw}`, JSON.stringify(document));
   return document;
+}
+
+function countCheckedRosterEntries(document: PicksDocument, roster: LeagueMember[]): number {
+  const checked = new Set(document.checkedEntryIds);
+  return roster.reduce((total, member) => total + Number(checked.has(member.entryId)), 0);
+}
+
+function isPicksCompleteForRoster(document: PicksDocument, roster: LeagueMember[]): boolean {
+  const checked = new Set(document.checkedEntryIds);
+  return roster.length > 0 && roster.every((member) => checked.has(member.entryId));
+}
+
+async function selectCaptureTarget(
+  env: Env,
+  events: FplEvent[],
+  roster: LeagueMember[],
+  now: number,
+): Promise<{ event: FplEvent; picksDocument: PicksDocument } | undefined> {
+  const captureDelayMs = 90 * 60 * 1000;
+  const dueEvents = events
+    .filter((event) => Date.parse(event.deadline_time) + captureDelayMs <= now)
+    .sort((left, right) => right.id - left.id);
+
+  for (const event of dueEvents) {
+    const picksDocument = await getPicksDocument(env, event.id);
+    if (!isPicksCompleteForRoster(picksDocument, roster)) return { event, picksDocument };
+  }
+
+  return undefined;
 }
 
 async function cachedFetch<T>(env: Env, key: string, path: string, ttlSeconds: number): Promise<T> {
@@ -398,8 +431,11 @@ async function fetchFpl<T>(path: string): Promise<T> {
 }
 
 class FplHttpError extends Error {
-  constructor(public status: number, message: string) {
+  status: number;
+
+  constructor(status: number, message: string) {
     super(message);
+    this.status = status;
   }
 }
 
@@ -417,6 +453,15 @@ function selectLatestCaptureEvent(events: FplEvent[], now: number): FplEvent | u
     .sort((left, right) => left.id - right.id)
     .at(-1);
 }
+
+export {
+  captureDueCaptainPicks,
+  countCheckedRosterEntries,
+  isPicksCompleteForRoster,
+  publishDailySnapshot,
+  selectLatestCaptureEvent,
+  selectLatestPassedEvent,
+};
 
 async function mapWithConcurrency<T, U>(items: T[], concurrency: number, mapper: (item: T) => Promise<U>): Promise<U[]> {
   const results: U[] = new Array(items.length);

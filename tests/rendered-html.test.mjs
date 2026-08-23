@@ -208,9 +208,12 @@ test("locks captain picks after DDL and publishes base points once at 07:30", as
   assert.match(worker, /controller\.cron === "30 23 \* \* \*"/);
   assert.match(worker, /captureDueCaptainPicks\(env, controller\.scheduledTime\)/);
   assert.match(worker, /90 \* 60 \* 1000/);
-  assert.match(worker, /if \(picksDocument\.completedAt\) return/);
-  assert.match(worker, /checked\.size >= roster\.length && !document\.completedAt/);
   assert.match(worker, /PICKS_BATCH_SIZE = 40/);
+  assert.match(worker, /roster\.every\(\(member\) => checked\.has\(member\.entryId\)\)/);
+  assert.match(worker, /if \(picksDocument\.completedAt\) delete picksDocument\.completedAt/);
+  assert.match(worker, /countCheckedRosterEntries/);
+  assert.match(worker, /roster\s*\.map\(\(member\) => picksDocument\.picksByEntry\[member\.entryId\]/);
+  assert.match(worker, /sort\(\(left, right\) => right\.id - left\.id\)/);
   assert.match(worker, /state: "waiting_for_picks"/);
   assert.match(worker, /pointsDefinition: "队长球员在 FPL 的基础得分，不计算队长双倍或三倍倍率"/);
   assert.doesNotMatch(worker, /captainPointsWithMultiplier/);
