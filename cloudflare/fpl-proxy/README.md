@@ -27,6 +27,8 @@ array length. If players join or leave after a batch completes, the next cron
 captures only newly missing entries and excludes departed entries from the
 captain-rate denominator. Once the current GW is complete, the same cron also
 backfills any older due GW left incomplete by a prolonged FPL outage.
+The next daily publish also creates any missing historical snapshots whose picks
+were recovered, so an outage spanning a later DDL cannot leave a permanent gap.
 
 At Beijing time 07:30, the Worker reads the single FPL live endpoint, records
 each captain's base points before any captain multiplier, and publishes one

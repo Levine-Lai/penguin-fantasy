@@ -211,7 +211,7 @@ test("reconciles a same-size roster replacement without polluting captain rates"
   }
 });
 
-test("captures the current GW first, then backfills an older incomplete GW", async () => {
+test("captures the current GW first, then backfills an older incomplete GW and its snapshot", async () => {
   const events = createEvents(2);
   const roster = createRoster(1, 111);
   const env = await seedEnv(events, roster);
@@ -228,6 +228,11 @@ test("captures the current GW first, then backfills an older incomplete GW", asy
     assert.ok(pickCalls.slice(111).every((path) => path.includes("/event/1/")));
     assert.ok((await env.FPL_CACHE.get("picks:gw:1", "json")).completedAt);
     assert.ok((await env.FPL_CACHE.get("picks:gw:2", "json")).completedAt);
+
+    await publishDailySnapshot(env, undefined, gw2CaptureTime + 24 * 60 * 60 * 1000);
+    const history = await env.FPL_CACHE.get("snapshot:history", "json");
+    assert.deepEqual(history.map((snapshot) => snapshot.gw), [1, 2]);
+    assert.equal((await env.FPL_CACHE.get("sync:status", "json")).gw, 2);
   } finally {
     mock.restore();
   }

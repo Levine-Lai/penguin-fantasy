@@ -252,6 +252,21 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
     const nextHistory = [...history.filter((item) => item.gw !== event.id), snapshot]
       .sort((left, right) => left.gw - right.gw);
     await env.FPL_CACHE.put("snapshot:history", JSON.stringify(nextHistory));
+
+    if (requestedGw === undefined) {
+      const passedEvents = bootstrap.events
+        .filter((item) => item.id !== event.id && now >= Date.parse(item.deadline_time))
+        .sort((left, right) => left.id - right.id);
+      for (const passedEvent of passedEvents) {
+        const existingSnapshot = await env.FPL_CACHE.get(`snapshot:gw:${passedEvent.id}`, "json");
+        if (existingSnapshot) continue;
+        const backfillPicks = await getPicksDocument(env, passedEvent.id);
+        if (isPicksCompleteForRoster(backfillPicks, roster)) {
+          await publishDailySnapshot(env, passedEvent.id, now);
+        }
+      }
+    }
+
     await env.FPL_CACHE.put(
       "sync:status",
       JSON.stringify({
