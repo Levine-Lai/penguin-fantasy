@@ -25,6 +25,80 @@ type GwSnapshot = {
 type LeagueResponse = { ready: boolean; teams: LeagueTeam[] };
 type GwDeadline = { gw: number; deadlineTime: string };
 type HistoryResponse = { ready: boolean; snapshots: GwSnapshot[]; deadlines: GwDeadline[] };
+type CachedFplPayload<T> = { cachedAt: number; value: T };
+
+const leagueCacheKey = "penguin-fantasy:league:v1";
+const historyCacheKey = "penguin-fantasy:history:v1";
+const cachedDataMaxAge = 7 * 24 * 60 * 60 * 1000;
+const requestTimeout = 15_000;
+const requestRetryDelays = [0, 2_000, 5_000];
+
+function isLeagueResponse(value: unknown): value is LeagueResponse {
+  const candidate = value as LeagueResponse | null;
+  return candidate?.ready === true
+    && Array.isArray(candidate.teams)
+    && candidate.teams.length > 0
+    && candidate.teams.every((team) => Number.isFinite(team?.entryId) && typeof team?.teamName === "string");
+}
+
+function isHistoryResponse(value: unknown): value is HistoryResponse {
+  const candidate = value as HistoryResponse | null;
+  return candidate?.ready === true
+    && Array.isArray(candidate.snapshots)
+    && candidate.snapshots.some((snapshot) => Array.isArray(snapshot?.teams) && snapshot.teams.length > 0)
+    && Array.isArray(candidate.deadlines);
+}
+
+function readCachedFplPayload<T>(key: string): CachedFplPayload<T> | null {
+  try {
+    const cached = JSON.parse(window.localStorage.getItem(key) ?? "null") as CachedFplPayload<T> | null;
+    if (!cached || !Number.isFinite(cached.cachedAt) || Date.now() - cached.cachedAt > cachedDataMaxAge) return null;
+    return cached;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedFplPayload<T>(key: string, value: T): void {
+  try {
+    window.localStorage.setItem(key, JSON.stringify({ cachedAt: Date.now(), value } satisfies CachedFplPayload<T>));
+  } catch {
+    // Storage can be unavailable in private or embedded browsers; live data still works.
+  }
+}
+
+function leagueTeamsFromHistory(history: HistoryResponse): LeagueTeam[] {
+  const latestSnapshot = history.snapshots.reduce<GwSnapshot | null>(
+    (latest, snapshot) => latest === null || snapshot.gw > latest.gw ? snapshot : latest,
+    null,
+  );
+  return latestSnapshot?.teams.map(({ entryId, teamName }) => ({ entryId, teamName })) ?? [];
+}
+
+async function fetchFplJsonWithRetry<T>(path: string): Promise<T> {
+  let lastError: unknown = new Error("FPL request failed");
+
+  for (const delay of requestRetryDelays) {
+    if (delay > 0) await new Promise<void>((resolve) => window.setTimeout(resolve, delay));
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), requestTimeout);
+    try {
+      const response = await fetch(`${fplApiBase}${path}`, {
+        headers: { accept: "application/json" },
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error(`${path}: ${response.status}`);
+      return await response.json() as T;
+    } catch (error) {
+      lastError = error;
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  }
+
+  throw lastError;
+}
 
 // Official 2026–27 deadlines keep the first painted frame on the correct GW;
 // the API schedule replaces this fallback as soon as the snapshot loads.
@@ -395,27 +469,38 @@ export default function Home() {
     lastRefreshAttemptRef.current = requestedAt;
 
     const request = Promise.resolve().then(async () => {
-      try {
-        const cacheKey = requestedAt.toString();
-        const [leagueResponse, historyResponse] = await Promise.all([
-          fetch(`${fplApiBase}/api/league?refresh=${cacheKey}`, { cache: "no-store" }),
-          fetch(`${fplApiBase}/api/history?refresh=${cacheKey}`, { cache: "no-store" }),
-        ]);
-        if (!leagueResponse.ok || !historyResponse.ok) throw new Error("Snapshot request failed");
+      const [leagueResult, historyResult] = await Promise.allSettled([
+        fetchFplJsonWithRetry<LeagueResponse>("/api/league"),
+        fetchFplJsonWithRetry<HistoryResponse>("/api/history"),
+      ]);
 
-        const league = await leagueResponse.json() as LeagueResponse;
-        const history = await historyResponse.json() as HistoryResponse;
+      if (!mountedRef.current) return;
 
-        if (!mountedRef.current) return;
-        if (league.ready && league.teams.length > 0) setLeagueTeams(league.teams);
-        if (history.ready) setGwSnapshots(history.snapshots.filter((snapshot) => Boolean(snapshot?.teams)));
-        setGwDeadlines(history.deadlines ?? []);
-        lastSuccessfulRefreshRef.current = Date.now();
-      } catch {
-        // Keep the server-rendered roster if the remote API is temporarily unavailable.
-      } finally {
-        refreshInFlightRef.current = null;
+      const league = leagueResult.status === "fulfilled" && isLeagueResponse(leagueResult.value)
+        ? leagueResult.value
+        : null;
+      const history = historyResult.status === "fulfilled" && isHistoryResponse(historyResult.value)
+        ? historyResult.value
+        : null;
+
+      if (league) {
+        setLeagueTeams(league.teams);
+        writeCachedFplPayload(leagueCacheKey, league);
       }
+      if (history) {
+        const snapshots = history.snapshots.filter((snapshot) => Array.isArray(snapshot?.teams));
+        setGwSnapshots(snapshots);
+        setGwDeadlines(history.deadlines ?? []);
+        writeCachedFplPayload(historyCacheKey, history);
+        lastSuccessfulRefreshRef.current = Date.now();
+
+        if (!league) {
+          const snapshotTeams = leagueTeamsFromHistory(history);
+          if (snapshotTeams.length > 0) setLeagueTeams(snapshotTeams);
+        }
+      }
+    }).finally(() => {
+      refreshInFlightRef.current = null;
     });
 
     refreshInFlightRef.current = request;
@@ -424,6 +509,27 @@ export default function Home() {
 
   useEffect(() => {
     mountedRef.current = true;
+
+    void Promise.resolve().then(() => {
+      if (!mountedRef.current) return;
+
+      const cachedLeague = readCachedFplPayload<LeagueResponse>(leagueCacheKey);
+      const cachedHistory = readCachedFplPayload<HistoryResponse>(historyCacheKey);
+      const validCachedLeague = cachedLeague && isLeagueResponse(cachedLeague.value) ? cachedLeague : null;
+      const validCachedHistory = cachedHistory && isHistoryResponse(cachedHistory.value) ? cachedHistory : null;
+
+      if (validCachedLeague) setLeagueTeams(validCachedLeague.value.teams);
+      if (validCachedHistory) {
+        setGwSnapshots(validCachedHistory.value.snapshots.filter((snapshot) => Array.isArray(snapshot?.teams)));
+        setGwDeadlines(validCachedHistory.value.deadlines ?? []);
+        lastSuccessfulRefreshRef.current = validCachedHistory.cachedAt;
+
+        if (!validCachedLeague) {
+          const snapshotTeams = leagueTeamsFromHistory(validCachedHistory.value);
+          if (snapshotTeams.length > 0) setLeagueTeams(snapshotTeams);
+        }
+      }
+    });
 
     const refreshAfterSnapshotBoundary = () => {
       const lastSuccessfulRefresh = lastSuccessfulRefreshRef.current;

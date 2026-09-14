@@ -90,6 +90,13 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /penguin-fantasy\.pages\.dev/);
   assert.match(page, /\/api\/league/);
   assert.match(page, /\/api\/history/);
+  assert.match(page, /Promise\.allSettled/);
+  assert.match(page, /AbortController/);
+  assert.match(page, /requestRetryDelays = \[0, 2_000, 5_000\]/);
+  assert.match(page, /window\.localStorage\.setItem/);
+  assert.match(page, /readCachedFplPayload<HistoryResponse>/);
+  assert.match(page, /leagueTeamsFromHistory/);
+  assert.doesNotMatch(page, /\?refresh=\$\{cacheKey\}/);
   assert.match(page, /visibilitychange/);
   assert.match(page, /window\.addEventListener\("pageshow"/);
   assert.match(page, /beijingSnapshotDay/);
