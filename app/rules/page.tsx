@@ -1,3 +1,6 @@
+import { currentTrialBootstrapScript } from "../current-trial";
+import RulesPlayerLink from "./rules-player-link";
+
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
 const phases = [
@@ -11,7 +14,8 @@ const phases = [
 export default function RulesPage() {
   return (
     <main className="rules-page">
-      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav rules-return-nav" aria-label="返回导航"><a className="active" href={`${siteBasePath}/`} aria-label="返回战榜">战榜</a></nav><div className="gameweek"><small>五重试炼</small><strong>RULES</strong></div></div></header>
+      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a href={`${siteBasePath}/`}>战榜</a><a className="active" href={`${siteBasePath}/rules/`}>冰渊法典</a></nav><RulesPlayerLink siteBasePath={siteBasePath} /><div className="gameweek"><small>当前试炼</small><strong data-current-trial suppressHydrationWarning>见习者集结</strong></div></div></header>
+      <script dangerouslySetInnerHTML={{ __html: currentTrialBootstrapScript }} />
       <section className="rules-hero"><div><span>THE CODEX OF THE FROZEN ABYSS</span><h1>冰渊法典</h1><p>五重试炼，十六位传奇，一座王座。</p></div><a href={`${siteBasePath}/`}>← 返回战榜</a></section>
       <section className="rules-grid">{phases.map((phase) => <article className="rule-stage" key={phase.id}><header><strong>{phase.id}</strong><div><small>{phase.range}</small><h2>{phase.title}</h2></div></header><ul>{phase.rules.map((rule) => <li key={rule}>{rule}</li>)}</ul><footer><span>晋级</span><strong>{phase.advance}</strong></footer></article>)}</section>
     </main>

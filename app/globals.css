@@ -3989,3 +3989,351 @@ main > * {
     flex-basis: 0.6rem;
   }
 }
+
+/* Remembered player identity and personal standing */
+.header-inner {
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+}
+
+.top-nav { grid-column: auto; }
+
+.player-login-button {
+  min-width: 5.5rem;
+  min-height: 2.75rem;
+  padding: var(--space-xs) var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: var(--rule-hair) solid var(--color-rule-2);
+  background: linear-gradient(180deg, var(--color-paper-2-a84), var(--color-accent-a06));
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.player-login-button small {
+  color: var(--color-muted);
+  font-family: var(--font-label);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.player-login-button strong {
+  margin-block-start: var(--space-3xs);
+  color: var(--color-accent);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+}
+
+.player-login-button.player-login-active {
+  border-color: var(--color-rule-bright);
+  background: linear-gradient(180deg, var(--color-accent-a14), var(--color-paper-2-a84));
+}
+
+.my-ranking-strip {
+  margin: 0 var(--space-md) var(--space-sm);
+  padding: var(--space-sm);
+  border: var(--rule-strong) solid var(--color-rule-bright);
+  background: linear-gradient(100deg, var(--color-accent-a18), var(--color-paper-2-a84) 58%, var(--color-accent-a10));
+  box-shadow: inset 0 0 var(--space-xl) var(--color-accent-a10);
+}
+
+.my-ranking-strip > header {
+  min-height: 2.5rem;
+  padding: 0 var(--space-sm) var(--space-xs);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.my-ranking-strip > header > div {
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+}
+
+.my-ranking-strip > header small {
+  color: var(--color-accent);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+}
+
+.my-ranking-strip > header strong {
+  overflow: hidden;
+  color: var(--color-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.my-ranking-strip > header button {
+  padding: var(--space-2xs) var(--space-sm);
+  flex: 0 0 auto;
+  border: var(--rule-hair) solid var(--color-rule-2);
+  background: var(--color-paper-a42);
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.my-ranking-strip .rank-row { border-block-end: 0; }
+
+.rank-row.current-player-row,
+.rank-row.current-player-row:nth-of-type(even),
+.rank-row.current-player-row.selected,
+.rank-row.current-player-row:hover {
+  outline: var(--rule-strong) solid var(--color-accent);
+  outline-offset: calc(-1 * var(--rule-strong));
+  border-color: var(--color-rule-bright);
+  background-color: var(--color-accent-a14);
+  background-image:
+    radial-gradient(circle at 16% 50%, var(--color-accent-a28), var(--color-clear) 34%),
+    linear-gradient(102deg, var(--color-paper-2-a84), var(--color-accent-a18) 52%, var(--color-paper-2-a84));
+  box-shadow: inset 0 0 var(--space-lg) var(--color-accent-a14);
+}
+
+.my-ranking-strip .rank-history-wrap {
+  margin-block-start: var(--space-2xs);
+}
+
+.captain-rate-row.selectable {
+  cursor: pointer;
+}
+
+.captain-rate-row .rare-captain-rate {
+  color: var(--color-accent);
+}
+
+.captain-rate-row.selectable:focus-visible {
+  outline: var(--rule-strong) solid var(--color-ink);
+  outline-offset: calc(-1 * var(--rule-strong));
+}
+
+.captain-selector-detail {
+  margin: 0 var(--space-lg) var(--space-sm);
+  border: var(--rule-hair) solid var(--color-rule-bright);
+  background: linear-gradient(180deg, var(--color-paper-2-a96), var(--color-paper-3-a72));
+}
+
+.captain-selector-detail > header {
+  min-height: 3.2rem;
+  padding-inline: var(--space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-block-end: var(--rule-hair) solid var(--color-rule-2);
+}
+
+.captain-selector-detail > header strong { color: var(--color-ink); }
+.captain-selector-detail > header small { color: var(--color-accent); }
+
+.captain-selector-detail ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.captain-selector-detail li {
+  min-height: 2.9rem;
+  padding-inline: var(--space-lg);
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-sm);
+  border-block-end: var(--rule-hair) solid var(--color-rule-2);
+}
+
+.captain-selector-detail li span {
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.captain-selector-detail li strong {
+  min-width: 0;
+  color: var(--color-ink-2);
+  overflow-wrap: anywhere;
+}
+
+.captain-selector-pagination {
+  min-height: 4rem;
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) 3rem;
+  align-items: center;
+  justify-items: center;
+  gap: var(--space-sm);
+}
+
+.captain-selector-pagination button {
+  width: 2.7rem;
+  height: 2.7rem;
+  border: var(--rule-hair) solid var(--color-rule-bright);
+  background: var(--color-paper-3-a72);
+  color: var(--color-accent);
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+.captain-selector-pagination button:disabled {
+  color: var(--color-muted);
+  cursor: default;
+  opacity: 0.45;
+}
+
+.captain-selector-pagination > strong {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+}
+
+.player-login-overlay {
+  padding: var(--space-md);
+  display: grid;
+  place-items: center;
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-tooltip) + 10);
+  background: var(--color-shadow);
+  backdrop-filter: blur(var(--space-2xs));
+}
+
+.player-login-dialog {
+  width: min(100%, 29rem);
+  padding: var(--space-xl);
+  position: relative;
+  border: var(--rule-strong) solid var(--color-rule-bright);
+  background:
+    radial-gradient(circle at 10% 0, var(--color-accent-a18), var(--color-clear) 38%),
+    var(--color-paper-2-a96);
+  box-shadow: 0 var(--space-lg) var(--space-3xl) var(--color-shadow), inset 0 0 var(--space-xl) var(--color-accent-a06);
+}
+
+.player-login-dialog > small {
+  color: var(--color-accent);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.player-login-dialog h2 {
+  margin: var(--space-xs) 0 var(--space-sm);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+}
+
+.player-login-dialog p {
+  margin: 0 0 var(--space-lg);
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.player-login-found strong { color: var(--color-ink); }
+
+.player-login-close {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: grid;
+  place-items: center;
+  position: absolute;
+  inset-block-start: var(--space-sm);
+  inset-inline-end: var(--space-sm);
+  border: var(--rule-hair) solid var(--color-rule-2);
+  background: var(--color-paper-a42);
+  color: var(--color-muted);
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.player-login-dialog form,
+.player-login-dialog label {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.player-login-dialog label {
+  color: var(--color-ink-2);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.player-login-dialog input {
+  min-height: 3.25rem;
+  padding-inline: var(--space-md);
+  border: var(--rule-strong) solid var(--color-rule);
+  border-radius: 0;
+  background: var(--color-paper-a90);
+  color: var(--color-ink);
+  font-family: var(--font-label);
+  font-size: 1.1rem;
+}
+
+.player-login-dialog form > small {
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  line-height: 1.55;
+}
+
+.player-login-error {
+  color: var(--color-error);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.player-login-actions {
+  margin-block-start: var(--space-md);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-sm);
+}
+
+.player-login-actions button {
+  min-height: 2.9rem;
+  border: var(--rule-hair) solid var(--color-rule-2);
+  background: var(--color-paper-3-a72);
+  color: var(--color-muted);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.player-login-actions button[type="submit"] {
+  border-color: var(--color-rule-bright);
+  background: var(--color-accent-a18);
+  color: var(--color-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .player-login-button:hover,
+  .player-login-actions button:hover,
+  .my-ranking-strip > header button:hover,
+  .player-login-close:hover {
+    border-color: var(--color-accent);
+    color: var(--color-ink);
+  }
+}
+
+@media (max-width: 48rem) {
+  .header-inner { grid-template-columns: minmax(0, 1fr) auto auto auto; }
+  .player-login-button { min-width: 4.5rem; min-height: 2.5rem; padding-inline: var(--space-xs); }
+  .player-login-button strong { font-size: 0.7rem; }
+  .my-ranking-strip { margin-inline: var(--space-2xs); padding: var(--space-xs) var(--space-2xs); }
+  .captain-selector-detail { margin-inline: var(--space-sm); }
+}
+
+@media (max-width: 32rem) {
+  .brand-copy { display: none; }
+  .player-login-button { min-width: 3.7rem; }
+  .player-login-button small { display: none; }
+  .player-login-button strong { margin: 0; font-size: 0.68rem; }
+  .my-ranking-strip > header { padding-inline: var(--space-2xs); }
+  .my-ranking-strip > header > div { gap: var(--space-xs); }
+  .my-ranking-strip > header small { font-size: 0.56rem; }
+  .my-ranking-strip > header strong { max-width: 9rem; font-size: 0.74rem; }
+  .player-login-dialog { padding: var(--space-lg); }
+  .player-login-dialog h2 { padding-inline-end: var(--space-xl); font-size: 1.5rem; }
+  .captain-selector-detail { margin-inline: var(--space-2xs); }
+  .captain-selector-detail > header,
+  .captain-selector-detail li { padding-inline: var(--space-sm); }
+}

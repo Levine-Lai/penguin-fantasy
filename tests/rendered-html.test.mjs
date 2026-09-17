@@ -49,9 +49,10 @@ test("server-renders the Penguin Cup leaderboard", async () => {
 });
 
 test("keeps the five-stage interaction and unified ranking contracts", async () => {
-  const [page, css] = await Promise.all([
+  const [page, css, currentTrial] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/current-trial.ts", import.meta.url), "utf8"),
   ]);
 
   assert.equal((page.match(/id:\s*[1-5],\s*roman:/g) ?? []).length, 5);
@@ -97,6 +98,17 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /readCachedFplPayload<HistoryResponse>/);
   assert.match(page, /leagueTeamsFromHistory/);
   assert.doesNotMatch(page, /\?refresh=\$\{cacheKey\}/);
+  assert.match(page, /penguin-fantasy:player-id:v1/);
+  assert.match(page, /type LoginStep = "closed" \| "identify" \| "confirm"/);
+  assert.match(page, /没有找到这个 FPL ID/);
+  assert.match(page, /排行榜数据尚未加载，请稍后再试/);
+  assert.match(page, /两次输入的 FPL ID 不一致/);
+  assert.match(page, /window\.localStorage\.setItem\(playerIdentityKey/);
+  assert.match(page, /window\.localStorage\.removeItem\(playerIdentityKey/);
+  assert.match(page, /className="my-ranking-strip"/);
+  assert.match(page, /current-player-row/);
+  assert.match(page, /aria-modal="true"/);
+  assert.doesNotMatch(page, /type="password"/);
   assert.match(page, /visibilitychange/);
   assert.match(page, /window\.addEventListener\("pageshow"/);
   assert.match(page, /beijingSnapshotDay/);
@@ -110,6 +122,14 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, />选择人数</);
   assert.match(page, />选择率</);
   assert.match(page, /captain\.selections \/ selections\.length \* 100/);
+  assert.match(page, /selectors: \[\.\.\.\(current\?\.selectors \?\? \[\]\), team\.teamName\]/);
+  assert.match(page, /function CaptainSelectorList/);
+  assert.match(page, /const pageSize = 10/);
+  assert.match(page, /rare-captain-rate/);
+  assert.match(page, /className={`captain-rate-row selectable/);
+  assert.match(page, /选择该队长的玩家/);
+  assert.match(page, /myStandingExpanded/);
+  assert.match(page, /setRankingPage\(0\);[\s\S]*closeLogin/);
   assert.match(page, /right\.selections - left\.selections/);
   assert.doesNotMatch(page, /\.at\(-1\)/);
   assert.doesNotMatch(page, /Array\.from\(\{ length: relevantGw \}/);
@@ -118,7 +138,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /deadline <= currentTime/);
   assert.match(page, /latestStartedGw > 0 \? `GW \$\{latestStartedGw\}`/);
   assert.match(page, /setInterval\(\(\) => setCurrentTime\(Date\.now\(\)\), 30_000\)/);
-  assert.match(page, /const fallbackGwDeadlines:[\s\S]*gw:\s*38/);
+  assert.match(currentTrial, /fallbackGwDeadlines:[\s\S]*gw:\s*38/);
   assert.match(page, /data-current-trial suppressHydrationWarning/);
   assert.match(page, /currentTrialBootstrapScript/);
   assert.match(page, /尚无队长选择记录/);
@@ -191,6 +211,12 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(css, /\.ranking-pagination button\s*\{[^}]*clip-path:/);
   assert.match(css, /transparent relic frame \+ compact desktop roster/);
   assert.match(css, /\.ranking-panel\s*\{\s*background-clip:\s*padding-box;\s*box-shadow:\s*none;/);
+  assert.match(css, /\.player-login-overlay\s*\{/);
+  assert.match(css, /\.player-login-dialog\s*\{/);
+  assert.match(css, /\.my-ranking-strip\s*\{/);
+  assert.match(css, /\.rank-row\.current-player-row/);
+  assert.match(css, /\.captain-selector-detail\s*\{/);
+  assert.match(css, /\.captain-rate-row \.rare-captain-rate/);
   assert.match(css, /\.rank-row\.selected\s*\{\s*min-height:\s*4rem;\s*padding-block:\s*0;/);
   assert.match(css, /@media \(max-width:\s*48rem\)[\s\S]*\.stage-switcher\s*\{[\s\S]*grid-template-columns:\s*repeat\(6/);
   assert.match(css, /\.rank-history\s*\{/);
@@ -250,9 +276,14 @@ test("server-renders the rules route", async () => {
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /五重试炼/);
+  assert.match(html, /当前试炼/);
+  assert.match(html, /data-current-trial/);
+  assert.doesNotMatch(html, /五重试炼<\/small><strong>RULES/);
   assert.match(html, /GW35–GW38/);
-  assert.match(html, /aria-label="返回战榜">战榜/);
-  assert.doesNotMatch(html, /href="\/rules\/"[^>]*>冰渊法典/);
+  assert.match(html, /aria-label="主导航"/);
+  assert.match(html, /href="\/">战榜/);
+  assert.match(html, /href="\/rules\/"[^>]*>冰渊法典/);
+  assert.match(html, /PLAYER/);
   assert.doesNotMatch(html, /class="rules-summary"|赛制流程|<span>Gameweeks<\/span>/);
 });
 

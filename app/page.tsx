@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { currentTrialBootstrapScript, fallbackGwDeadlines, type GwDeadline } from "./current-trial";
 
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const fplApiBase = "https://penguin-fantasy.pages.dev";
@@ -8,7 +9,7 @@ const fplApiBase = "https://penguin-fantasy.pages.dev";
 type StageId = 1 | 2 | 3 | 4 | 5;
 type RankedPlayer = { entryId: number; name: string; rank: number | null; gpc: number; captainTotal: number; captainRateTotal: number; hp: number; history: CaptainHistoryEntry[] };
 type CaptainHistoryEntry = { gw: number; captain: string; rate: number; points: number; life: number };
-type CaptainPopularity = { name: string; points: number; selections: number; rate: number };
+type CaptainPopularity = { name: string; points: number; selections: number; rate: number; selectors: string[] };
 type LeagueTeam = { entryId: number; teamName: string };
 type ApiTeam = LeagueTeam & {
   captainName: string | null;
@@ -23,12 +24,13 @@ type GwSnapshot = {
   teams: ApiTeam[];
 };
 type LeagueResponse = { ready: boolean; teams: LeagueTeam[] };
-type GwDeadline = { gw: number; deadlineTime: string };
 type HistoryResponse = { ready: boolean; snapshots: GwSnapshot[]; deadlines: GwDeadline[] };
 type CachedFplPayload<T> = { cachedAt: number; value: T };
+type LoginStep = "closed" | "identify" | "confirm";
 
 const leagueCacheKey = "penguin-fantasy:league:v1";
 const historyCacheKey = "penguin-fantasy:history:v1";
+const playerIdentityKey = "penguin-fantasy:player-id:v1";
 const cachedDataMaxAge = 7 * 24 * 60 * 60 * 1000;
 const requestTimeout = 15_000;
 const requestRetryDelays = [0, 2_000, 5_000];
@@ -67,6 +69,21 @@ function writeCachedFplPayload<T>(key: string, value: T): void {
   }
 }
 
+function parseFplId(value: string): number | null {
+  const normalized = value.trim();
+  if (!/^\d+$/.test(normalized)) return null;
+  const entryId = Number(normalized);
+  return Number.isSafeInteger(entryId) && entryId > 0 ? entryId : null;
+}
+
+function readRememberedPlayerId(): number | null {
+  try {
+    return parseFplId(window.localStorage.getItem(playerIdentityKey) ?? "");
+  } catch {
+    return null;
+  }
+}
+
 function leagueTeamsFromHistory(history: HistoryResponse): LeagueTeam[] {
   const latestSnapshot = history.snapshots.reduce<GwSnapshot | null>(
     (latest, snapshot) => latest === null || snapshot.gw > latest.gw ? snapshot : latest,
@@ -99,57 +116,6 @@ async function fetchFplJsonWithRetry<T>(path: string): Promise<T> {
 
   throw lastError;
 }
-
-// Official 2026–27 deadlines keep the first painted frame on the correct GW;
-// the API schedule replaces this fallback as soon as the snapshot loads.
-const fallbackGwDeadlines: GwDeadline[] = [
-  { gw: 1, deadlineTime: "2026-08-21T17:30:00Z" },
-  { gw: 2, deadlineTime: "2026-08-28T17:30:00Z" },
-  { gw: 3, deadlineTime: "2026-09-04T17:30:00Z" },
-  { gw: 4, deadlineTime: "2026-09-12T12:30:00Z" },
-  { gw: 5, deadlineTime: "2026-09-18T17:30:00Z" },
-  { gw: 6, deadlineTime: "2026-10-10T10:00:00Z" },
-  { gw: 7, deadlineTime: "2026-10-17T10:00:00Z" },
-  { gw: 8, deadlineTime: "2026-10-23T17:30:00Z" },
-  { gw: 9, deadlineTime: "2026-10-31T11:00:00Z" },
-  { gw: 10, deadlineTime: "2026-11-07T13:30:00Z" },
-  { gw: 11, deadlineTime: "2026-11-21T13:30:00Z" },
-  { gw: 12, deadlineTime: "2026-11-28T13:30:00Z" },
-  { gw: 13, deadlineTime: "2026-12-02T18:30:00Z" },
-  { gw: 14, deadlineTime: "2026-12-05T13:30:00Z" },
-  { gw: 15, deadlineTime: "2026-12-12T13:30:00Z" },
-  { gw: 16, deadlineTime: "2026-12-19T13:30:00Z" },
-  { gw: 17, deadlineTime: "2026-12-26T13:30:00Z" },
-  { gw: 18, deadlineTime: "2026-12-30T18:30:00Z" },
-  { gw: 19, deadlineTime: "2027-01-02T13:30:00Z" },
-  { gw: 20, deadlineTime: "2027-01-06T18:30:00Z" },
-  { gw: 21, deadlineTime: "2027-01-16T13:30:00Z" },
-  { gw: 22, deadlineTime: "2027-01-23T13:30:00Z" },
-  { gw: 23, deadlineTime: "2027-01-30T13:30:00Z" },
-  { gw: 24, deadlineTime: "2027-02-06T13:30:00Z" },
-  { gw: 25, deadlineTime: "2027-02-10T18:30:00Z" },
-  { gw: 26, deadlineTime: "2027-02-20T13:30:00Z" },
-  { gw: 27, deadlineTime: "2027-02-27T13:30:00Z" },
-  { gw: 28, deadlineTime: "2027-03-03T18:30:00Z" },
-  { gw: 29, deadlineTime: "2027-03-13T13:30:00Z" },
-  { gw: 30, deadlineTime: "2027-03-20T13:30:00Z" },
-  { gw: 31, deadlineTime: "2027-04-10T12:30:00Z" },
-  { gw: 32, deadlineTime: "2027-04-17T12:30:00Z" },
-  { gw: 33, deadlineTime: "2027-04-24T12:30:00Z" },
-  { gw: 34, deadlineTime: "2027-05-01T12:30:00Z" },
-  { gw: 35, deadlineTime: "2027-05-08T12:30:00Z" },
-  { gw: 36, deadlineTime: "2027-05-15T12:30:00Z" },
-  { gw: 37, deadlineTime: "2027-05-23T12:30:00Z" },
-  { gw: 38, deadlineTime: "2027-05-30T13:30:00Z" },
-];
-
-const currentTrialBootstrapScript = `(() => {
-  const deadlines = ${JSON.stringify(fallbackGwDeadlines)};
-  const now = Date.now();
-  const currentGw = deadlines.reduce((latest, event) => Date.parse(event.deadlineTime) <= now ? Math.max(latest, event.gw) : latest, 0);
-  const label = document.querySelector("[data-current-trial]");
-  if (label) label.textContent = currentGw > 0 ? \`GW \${currentGw}\` : "见习者集结";
-})();`;
 
 // Official FPL classic league 511690 roster, refreshed from the live API.
 const players = [
@@ -422,6 +388,50 @@ function InlineCaptainHistory({ playerName, history, currentGwLabel }: { playerN
   );
 }
 
+function RankedPlayerCells({ player }: { player: RankedPlayer }) {
+  const { name, rank, gpc, captainTotal, hp } = player;
+  return (
+    <>
+      <strong
+        className={`rank-gem rank-gem-${rank && rank <= 3 ? rank : 4}`}
+        aria-label={`第 ${rank} 名`}
+        style={rank && rank <= 3 ? { "--rank-badge-image": `url("${siteBasePath}/assets/leaderboard/rank-${rank}-ice.png")` } as CSSProperties : undefined}
+      ><span aria-hidden="true">{rank}</span></strong>
+      <div className="player-id-cell">
+        <strong className={`player-id ${featuredTeamOrder.has(name) ? "featured-player" : ""}`}>{name}</strong>
+      </div>
+      <strong className="stat-score"><span>{gpc}</span></strong>
+      <strong className="stat-score stat-captain-total"><span>{captainTotal}</span></strong>
+      <div className="hp-cell" aria-label={`${hp} 点血量`}>
+        <span className="pixel-health" aria-hidden="true">
+          {Array.from({ length: hp }, (_, index) => <i className="blood-drop" key={index}></i>)}
+        </span>
+      </div>
+    </>
+  );
+}
+
+function CaptainSelectorList({ captain }: { captain: CaptainPopularity }) {
+  const pageSize = 10;
+  const [page, setPage] = useState(0);
+  const pageCount = Math.ceil(captain.selectors.length / pageSize);
+  const visibleSelectors = captain.selectors.slice(page * pageSize, (page + 1) * pageSize);
+
+  return (
+    <section className="captain-selector-detail" aria-label={`选择 ${captain.name} 的玩家`}>
+      <header><strong>选择该队长的玩家</strong><small>{captain.selections} 人</small></header>
+      <ol>
+        {visibleSelectors.map((teamName, index) => <li key={teamName}><span>{page * pageSize + index + 1}</span><strong>{teamName}</strong></li>)}
+      </ol>
+      {pageCount > 1 ? <nav className="captain-selector-pagination" aria-label={`${captain.name} 选择者分页`}>
+        <button type="button" onClick={() => setPage((current) => Math.max(0, current - 1))} disabled={page === 0} aria-label="上一页"><span aria-hidden="true">‹</span></button>
+        <strong>第 {page + 1} 页</strong>
+        <button type="button" onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))} disabled={page === pageCount - 1} aria-label="下一页"><span aria-hidden="true">›</span></button>
+      </nav> : null}
+    </section>
+  );
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- reserved for chapter V
 function KnockoutPanel() {
   return (
@@ -453,6 +463,13 @@ export default function Home() {
   const [gwSnapshots, setGwSnapshots] = useState<GwSnapshot[]>([]);
   const [gwDeadlines, setGwDeadlines] = useState<GwDeadline[]>([]);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
+  const [playerEntryId, setPlayerEntryId] = useState<number | null>(null);
+  const [myStandingExpanded, setMyStandingExpanded] = useState(false);
+  const [expandedCaptain, setExpandedCaptain] = useState<string | null>(null);
+  const [loginStep, setLoginStep] = useState<LoginStep>("closed");
+  const [loginValue, setLoginValue] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [pendingEntryId, setPendingEntryId] = useState<number | null>(null);
   const mountedRef = useRef(false);
   const refreshInFlightRef = useRef<Promise<void> | null>(null);
   const lastRefreshAttemptRef = useRef(0);
@@ -515,9 +532,11 @@ export default function Home() {
 
       const cachedLeague = readCachedFplPayload<LeagueResponse>(leagueCacheKey);
       const cachedHistory = readCachedFplPayload<HistoryResponse>(historyCacheKey);
+      const rememberedPlayerId = readRememberedPlayerId();
       const validCachedLeague = cachedLeague && isLeagueResponse(cachedLeague.value) ? cachedLeague : null;
       const validCachedHistory = cachedHistory && isHistoryResponse(cachedHistory.value) ? cachedHistory : null;
 
+      if (rememberedPlayerId) setPlayerEntryId(rememberedPlayerId);
       if (validCachedLeague) setLeagueTeams(validCachedLeague.value.teams);
       if (validCachedHistory) {
         setGwSnapshots(validCachedHistory.value.snapshots.filter((snapshot) => Array.isArray(snapshot?.teams)));
@@ -612,6 +631,7 @@ export default function Home() {
   const pageSize = 20;
   const pageCount = Math.ceil(ranking.length / pageSize);
   const visibleRanking = ranking.slice(rankingPage * pageSize, (rankingPage + 1) * pageSize);
+  const myRanking = playerEntryId === null ? null : ranking.find((player) => player.entryId === playerEntryId) ?? null;
   const latestCaptainSnapshot = useMemo(() => gwSnapshots.reduce<GwSnapshot | null>(
     (latest, snapshot) => latest === null || snapshot.gw > latest.gw ? snapshot : latest,
     null,
@@ -620,7 +640,7 @@ export default function Home() {
     if (!latestCaptainSnapshot) return [];
 
     const selections = latestCaptainSnapshot.teams.filter((team) => team.captainName);
-    const grouped = new Map<string, { points: number; selections: number }>();
+    const grouped = new Map<string, { points: number; selections: number; selectors: string[] }>();
     for (const team of selections) {
       const name = team.captainName;
       if (!name) continue;
@@ -628,6 +648,7 @@ export default function Home() {
       grouped.set(name, {
         points: team.captainPoints,
         selections: (current?.selections ?? 0) + 1,
+        selectors: [...(current?.selectors ?? []), team.teamName],
       });
     }
 
@@ -636,6 +657,7 @@ export default function Home() {
       points: captain.points,
       selections: captain.selections,
       rate: selections.length > 0 ? captain.selections / selections.length * 100 : 0,
+      selectors: captain.selectors.sort((left, right) => left.localeCompare(right, "zh-CN")),
     })).sort((left, right) => right.selections - left.selections || right.points - left.points || left.name.localeCompare(right.name, "zh-CN"));
   }, [latestCaptainSnapshot]);
   const deadlineSchedule = gwDeadlines.length > 0
@@ -649,6 +671,76 @@ export default function Home() {
     return hasStarted ? Math.max(latestGw, event.gw) : latestGw;
   }, 0);
   const currentTrialLabel = latestStartedGw > 0 ? `GW ${latestStartedGw}` : "见习者集结";
+  const pendingLoginTeam = pendingEntryId === null ? null : leagueTeams.find((team) => team.entryId === pendingEntryId) ?? null;
+
+  const openLogin = () => {
+    setLoginStep("identify");
+    setLoginValue("");
+    setLoginError("");
+    setPendingEntryId(null);
+  };
+
+  const closeLogin = () => {
+    setLoginStep("closed");
+    setLoginValue("");
+    setLoginError("");
+    setPendingEntryId(null);
+  };
+
+  const submitPlayerId = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (leagueTeams.length === 0) {
+      setLoginError("排行榜数据尚未加载，请稍后再试。");
+      return;
+    }
+
+    const entryId = parseFplId(loginValue);
+    if (entryId === null || !leagueTeams.some((team) => team.entryId === entryId)) {
+      setLoginError("没有找到这个 FPL ID，请检查后重新输入。");
+      return;
+    }
+
+    setPendingEntryId(entryId);
+    setLoginStep("confirm");
+    setLoginValue("");
+    setLoginError("");
+  };
+
+  const confirmPlayerId = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const confirmedEntryId = parseFplId(loginValue);
+    if (confirmedEntryId === null || confirmedEntryId !== pendingEntryId) {
+      setLoginError("两次输入的 FPL ID 不一致，请重新确认。");
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(playerIdentityKey, String(confirmedEntryId));
+    } catch {
+      setLoginError("当前浏览器无法保存登录状态，请检查隐私设置。");
+      return;
+    }
+
+    setPlayerEntryId(confirmedEntryId);
+    setRankingPage(0);
+    closeLogin();
+  };
+
+  const logoutPlayer = () => {
+    try {
+      window.localStorage.removeItem(playerIdentityKey);
+    } catch {
+      // In-memory logout still works when storage is unavailable.
+    }
+    setPlayerEntryId(null);
+    setMyStandingExpanded(false);
+    setExpandedPlayer(null);
+  };
+
+  const showMyStanding = () => {
+    setActiveStage(1);
+    window.setTimeout(() => document.querySelector("#my-ranking")?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
+  };
   const rankingPanelAssets = {
     "--ledger-complete-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.png")`,
     "--ledger-row-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-row-frame.png")`,
@@ -663,7 +755,7 @@ export default function Home() {
 
   return (
     <main>
-      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a className="active" href={`${siteBasePath}/`}>战榜</a><a href={`${siteBasePath}/rules/`}>冰渊法典</a></nav><div className="gameweek"><small>当前试炼</small><strong data-current-trial suppressHydrationWarning>{currentTrialLabel}</strong></div></div></header>
+      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a className="active" href={`${siteBasePath}/`}>战榜</a><a href={`${siteBasePath}/rules/`}>冰渊法典</a></nav>{myRanking ? <button className="player-login-button player-login-active" type="button" onClick={showMyStanding}><small>已登录</small><strong>我的成绩</strong></button> : <button className="player-login-button" type="button" onClick={openLogin}><small>PLAYER</small><strong>登录</strong></button>}<div className="gameweek"><small>当前试炼</small><strong data-current-trial suppressHydrationWarning>{currentTrialLabel}</strong></div></div></header>
       <script dangerouslySetInnerHTML={{ __html: currentTrialBootstrapScript }} />
 
       <section className="league-hero"><div className="hero-inner"><div className="hero-copy"><span>THE FROZEN ABYSS · 2026–27</span><h1>冰渊王座<span>之战</span></h1><p className="hero-myth"><span>在世界尽头，有一片被遗忘的禁地——终焉冰海。这里没有四季，只有永恒的寒冬。传说远古巨龙陨落后，它的心脏化为了贯穿天地的巨大冰山，而它的鲜血流入深海，孕育出了无数深渊生灵。</span><span>冰山之上，是荣耀、力量与王权的象征；<br />深海之下，是黑暗、危险与未知的试炼。</span><span>千年以来，无数冒险者、骑士、法师、海妖与巨兽都曾踏入这片领域，只为寻找传说中的至高宝藏。据说，只有经历五重试炼、在冰山与深海之间活到最后的人，才能获得王座认可，成为新一代——</span><strong>冰渊之王</strong></p></div></div></section>
@@ -699,12 +791,18 @@ export default function Home() {
       {activeStage === 1 ? <section className="boards">
         <article className="panel ranking-panel" id="ranking" key={`ranking-${activeStage}`} style={rankingPanelAssets}>
           <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>
+          {myRanking ? <section className="my-ranking-strip" id="my-ranking" aria-label="我的成绩">
+            <header><div><small>MY STANDING</small><strong>{myRanking.name}</strong></div><button type="button" onClick={logoutPlayer}>退出登录</button></header>
+            <article className={`rank-row selectable current-player-row ${myStandingExpanded ? "selected" : ""}`} role="button" tabIndex={0} aria-expanded={myStandingExpanded} onClick={() => setMyStandingExpanded((expanded) => !expanded)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setMyStandingExpanded((expanded) => !expanded); } }}><RankedPlayerCells player={myRanking} /></article>
+            {myStandingExpanded ? <div className="rank-history-wrap"><InlineCaptainHistory playerName={myRanking.name} history={myRanking.history} currentGwLabel={currentTrialLabel} /></div> : null}
+          </section> : null}
           <div className="ranking-head"><span>阶位</span><span>玩家 ID</span><span>当周队长得分</span><span>队长总分</span><span>血量</span></div>
           <div className="ranking-list">
-            {visibleRanking.map(({ entryId, name, rank, gpc, captainTotal, hp, history }) => (
-              <Fragment key={entryId}>
+            {visibleRanking.map((player) => {
+              const { entryId, name, history } = player;
+              return <Fragment key={entryId}>
                 <article
-                  className={`rank-row selectable ${expandedPlayer === entryId ? "selected" : ""}`}
+                  className={`rank-row selectable ${expandedPlayer === entryId ? "selected" : ""} ${playerEntryId === entryId ? "current-player-row" : ""}`}
                   onClick={() => {
                     setExpandedPlayer((current) => current === entryId ? null : entryId);
                   }}
@@ -718,25 +816,11 @@ export default function Home() {
                   tabIndex={0}
                   aria-expanded={expandedPlayer === entryId}
                 >
-                  <strong
-                    className={`rank-gem rank-gem-${rank && rank <= 3 ? rank : 4}`}
-                    aria-label={`第 ${rank} 名`}
-                    style={rank && rank <= 3 ? { "--rank-badge-image": `url("${siteBasePath}/assets/leaderboard/rank-${rank}-ice.png")` } as CSSProperties : undefined}
-                  ><span aria-hidden="true">{rank}</span></strong>
-                  <div className="player-id-cell">
-                    <strong className={`player-id ${featuredTeamOrder.has(name) ? "featured-player" : ""}`}>{name}</strong>
-                  </div>
-                  <strong className="stat-score"><span>{gpc}</span></strong>
-                  <strong className="stat-score stat-captain-total"><span>{captainTotal}</span></strong>
-                  <div className="hp-cell" aria-label={`${hp} 点血量`}>
-                    <span className="pixel-health" aria-hidden="true">
-                      {Array.from({ length: hp }, (_, index) => <i className="blood-drop" key={index}></i>)}
-                    </span>
-                  </div>
+                  <RankedPlayerCells player={player} />
                 </article>
                 {expandedPlayer === entryId ? <div className="rank-history-wrap"><InlineCaptainHistory playerName={name} history={history} currentGwLabel={currentTrialLabel} /></div> : null}
-              </Fragment>
-            ))}
+              </Fragment>;
+            })}
           </div>
           <nav className="ranking-pagination" aria-label="排行榜分页">
             <button onClick={() => { setExpandedPlayer(null); setRankingPage((page) => Math.max(0, page - 1)); }} disabled={rankingPage === 0} aria-label="上一页"><span aria-hidden="true">‹</span></button>
@@ -748,17 +832,38 @@ export default function Home() {
           <header className="panel-title"><div><small>{latestCaptainSnapshot ? `GW${latestCaptainSnapshot.gw}` : "CURRENT GW"} · CAPTAIN PICKS</small><h2>队长选择率</h2></div></header>
           <div className="captain-rate-head"><span>队长名字</span><span>当轮分数</span><span>选择人数</span><span>选择率</span></div>
           <div className="captain-rate-list">
-            {captainPopularity.map((captain) => (
-              <article className="captain-rate-row" key={captain.name}>
+            {captainPopularity.map((captain) => {
+              const isRare = captain.rate < 10;
+              const isExpanded = expandedCaptain === captain.name;
+              return <Fragment key={captain.name}>
+              <article className={`captain-rate-row selectable ${isExpanded ? "selected" : ""}`} role="button" tabIndex={0} aria-expanded={isExpanded} onClick={() => setExpandedCaptain((current) => current === captain.name ? null : captain.name)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setExpandedCaptain((current) => current === captain.name ? null : captain.name); } }}>
                 <strong className="captain-rate-name">{captain.name}</strong>
                 <strong>{captain.points}</strong>
                 <strong>{captain.selections} 人</strong>
-                <strong>{captain.rate.toFixed(1)}%</strong>
+                <strong className={isRare ? "rare-captain-rate" : undefined}>{captain.rate.toFixed(1)}%</strong>
               </article>
-            ))}
+              {isExpanded ? <CaptainSelectorList captain={captain} /> : null}
+              </Fragment>;
+            })}
           </div>
         </article>
       </section> : <section className="chapter-await" aria-live="polite"><p>A New Chapter Await</p></section>}
+
+      {loginStep !== "closed" ? <div className="player-login-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeLogin(); }} onKeyDown={(event) => { if (event.key === "Escape") closeLogin(); }}>
+        <section className="player-login-dialog" role="dialog" aria-modal="true" aria-labelledby="player-login-title">
+          <button className="player-login-close" type="button" onClick={closeLogin} aria-label="关闭登录对话框">×</button>
+          <small>{loginStep === "identify" ? "PLAYER IDENTIFICATION" : "CONFIRM IDENTITY"}</small>
+          <h2 id="player-login-title">{loginStep === "identify" ? "登录企鹅杯" : "再次确认 FPL ID"}</h2>
+          {loginStep === "confirm" && pendingLoginTeam ? <p className="player-login-found">已找到玩家：<strong>{pendingLoginTeam.teamName}</strong></p> : <p>输入你在 Fantasy Premier League 中的数字 ID。</p>}
+          <form onSubmit={loginStep === "identify" ? submitPlayerId : confirmPlayerId}>
+            <label htmlFor="player-fpl-id">FPL ID</label>
+            <input id="player-fpl-id" name="fpl-id" type="text" inputMode="numeric" pattern="[0-9]*" autoComplete="off" autoFocus value={loginValue} onChange={(event) => { setLoginValue(event.target.value); setLoginError(""); }} aria-describedby={loginError ? "player-login-note player-login-error" : "player-login-note"} />
+            {loginError ? <strong className="player-login-error" id="player-login-error" role="alert">{loginError}</strong> : null}
+            <small id="player-login-note">此功能只用于个性化显示，ID 仅保存在当前浏览器，不代表账号所有权。</small>
+            <div className="player-login-actions"><button type="button" onClick={closeLogin}>取消</button><button type="submit">{loginStep === "identify" ? "下一步" : "确认登录"}</button></div>
+          </form>
+        </section>
+      </div> : null}
 
       <footer className="site-footer"><p>冰山之上，强者争夺荣耀；深海之下，亡者寻找重生</p><div><strong>PENGUIN CUP 2026–27</strong></div></footer>
     </main>
