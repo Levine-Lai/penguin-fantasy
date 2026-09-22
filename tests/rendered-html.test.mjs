@@ -36,12 +36,18 @@ test("server-renders the Penguin Cup leaderboard", async () => {
   assert.match(html, /data-current-trial[^>]*>GW \d+/);
   assert.match(html, /当周队长得分/);
   assert.match(html, /血量/);
-  assert.match(html, /aria-label="1 点血量"/);
+  assert.match(html, /aria-label="[1-5] 点血量"/);
   assert.match(html, /class="rank-gem rank-gem-/);
   assert.match(html, /class="pixel-health"/);
   assert.match(html, /class="blood-drop"/);
-  const renderedPlayerNames = [...html.matchAll(/class="player-id[^"]*"[^>]*>([^<]+)<\/strong>/g)].map((match) => match[1]);
-  assert.deepEqual(renderedPlayerNames.slice(0, 2), ["SSU - Sakai Moka", "企鹅"]);
+  const renderedPlayerNames = [...html.matchAll(/class="player-id[^"]*"[^>]*>([^<]+)<\/strong>/g)].map((match) =>
+    match[1].replaceAll("&#x27;", "'").replaceAll("&amp;", "&"),
+  );
+  const staticData = JSON.parse(await readFile(new URL("../app/static-fpl-data.json", import.meta.url), "utf8"));
+  const snapshotPlayerNames = new Set(staticData.league.teams.map((team) => team.teamName));
+  assert.equal(renderedPlayerNames.length, 20);
+  assert.ok(renderedPlayerNames.every((name) => snapshotPlayerNames.has(name)));
+  assert.notDeepEqual(renderedPlayerNames.slice(0, 2), ["SSU - Sakai Moka", "企鹅"]);
   assert.match(html, /队长总分/);
   assert.doesNotMatch(html, />GPC<|>TP<|>HP</);
   assert.equal((html.match(/class="rank-row/g) ?? []).length, 20);
@@ -59,19 +65,19 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /key=\{`ranking-\$\{activeStage\}`\}/);
   assert.match(page, /className="stage-switcher"/);
   assert.match(page, /rank-gem rank-gem-/);
-  assert.match(page, /assets\/leaderboard\/ice-ledger-frame\.png/);
-  assert.match(page, /assets\/leaderboard\/ice-frame-complete\.png/);
-  assert.match(page, /assets\/leaderboard\/ice-row-frame\.png/);
-  assert.match(page, /assets\/leaderboard\/ice-history-frame\.png/);
+  assert.match(page, /assets\/leaderboard\/ice-ledger-frame\.webp/);
+  assert.match(page, /assets\/leaderboard\/ice-frame-complete\.webp/);
+  assert.match(page, /assets\/leaderboard\/ice-row-frame\.webp/);
+  assert.match(page, /assets\/leaderboard\/ice-history-frame\.webp/);
   assert.match(page, /Official FPL classic league 511690 roster/);
   const rosterBlock = page.match(/const players = \[([\s\S]*?)\n\];/)?.[1] ?? "";
   assert.equal((rosterBlock.match(/^\s*".*",\s*$/gm) ?? []).length, 111);
   assert.match(rosterBlock, /"JZhuoyan"/);
   assert.match(rosterBlock, /"Shuo City"/);
   assert.doesNotMatch(rosterBlock, /"Shuo Home"|"Rainbow Desert"/);
-  assert.match(page, /assets\/leaderboard\/ice-side-left\.png/);
-  assert.match(page, /assets\/leaderboard\/ice-side-right\.png/);
-  assert.match(page, /assets\/leaderboard\/score-slot\.png/);
+  assert.match(page, /assets\/leaderboard\/ice-side-left\.webp/);
+  assert.match(page, /assets\/leaderboard\/ice-side-right\.webp/);
+  assert.match(page, /assets\/leaderboard\/score-slot\.webp/);
   assert.match(page, /assets\/leaderboard\/pixel-heart\.svg/);
   assert.match(page, /className="pixel-health"/);
   assert.match(page, /className="blood-drop"/);
@@ -93,7 +99,11 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /\/api\/history/);
   assert.match(page, /Promise\.allSettled/);
   assert.match(page, /AbortController/);
-  assert.match(page, /requestRetryDelays = \[0, 2_000, 5_000\]/);
+  assert.match(page, /requestTimeout = 6_000/);
+  assert.match(page, /requestRetryDelays = \[0, 1_500\]/);
+  assert.match(page, /import staticFplData from "\.\/static-fpl-data\.json"/);
+  assert.match(page, /isLeagueResponse\(bundledFplData\.league\)/);
+  assert.match(page, /isHistoryResponse\(bundledFplData\.history\)/);
   assert.match(page, /window\.localStorage\.setItem/);
   assert.match(page, /readCachedFplPayload<HistoryResponse>/);
   assert.match(page, /leagueTeamsFromHistory/);
@@ -106,6 +116,8 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /window\.localStorage\.setItem\(playerIdentityKey/);
   assert.match(page, /window\.localStorage\.removeItem\(playerIdentityKey/);
   assert.match(page, /className="my-ranking-strip"/);
+  assert.match(page, /onClick=\{logoutPlayer\} aria-label="退出登录"/);
+  assert.doesNotMatch(page, />退出登录<\/button>/);
   assert.match(page, /current-player-row/);
   assert.match(page, /aria-modal="true"/);
   assert.doesNotMatch(page, /type="password"/);
@@ -148,11 +160,12 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /item\.id === 1 \? <i>当前<\/i>/);
   assert.match(page, /className="brand-emblem"/);
   assert.match(page, /className="stage-relic"/);
-  assert.match(page, /assets\/stages\/stage-\$\{item\.id\}\.png/);
+  assert.match(page, /assets\/stages\/stage-\$\{item\.id\}\.webp/);
+  assert.match(page, /loading=\{item\.id === 1 \? "eager" : "lazy"\}/);
   const stageArtifacts = await Promise.all(
-    [1, 2, 3, 4, 5].map((id) => readFile(new URL(`../public/assets/stages/stage-${id}.png`, import.meta.url))),
+    [1, 2, 3, 4, 5].map((id) => readFile(new URL(`../public/assets/stages/stage-${id}.webp`, import.meta.url))),
   );
-  assert.ok(stageArtifacts.every((asset) => asset.byteLength > 100_000));
+  assert.ok(stageArtifacts.every((asset) => asset.byteLength > 10_000 && asset.byteLength < 100_000));
   assert.match(page, /stage-lore stage-lore-/);
   assert.equal((page.match(/description:\s*"/g) ?? []).length, 5);
   assert.doesNotMatch(page, /iceBurst|ice-burst|ice-fragments|ice-dust|ice-cloud/);
@@ -214,6 +227,8 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(css, /\.player-login-overlay\s*\{/);
   assert.match(css, /\.player-login-dialog\s*\{/);
   assert.match(css, /\.my-ranking-strip\s*\{/);
+  assert.match(css, /\.my-ranking-strip\s*\{[\s\S]*?border:\s*0;/);
+  assert.match(css, /\.my-ranking-strip\s*\{[\s\S]*?outline:\s*0;/);
   assert.match(css, /\.rank-row\.current-player-row/);
   assert.match(css, /\.captain-selector-detail\s*\{/);
   assert.match(css, /\.captain-rate-row \.rare-captain-rate/);
@@ -280,9 +295,9 @@ test("server-renders the rules route", async () => {
   assert.match(html, /data-current-trial/);
   assert.doesNotMatch(html, /五重试炼<\/small><strong>RULES/);
   assert.match(html, /GW35–GW38/);
-  assert.match(html, /aria-label="主导航"/);
-  assert.match(html, /href="\/">战榜/);
-  assert.match(html, /href="\/rules\/"[^>]*>冰渊法典/);
+  assert.match(html, /aria-label="返回导航"/);
+  assert.match(html, /aria-label="返回战榜">战榜/);
+  assert.doesNotMatch(html, /href="\/rules\/"[^>]*>冰渊法典/);
   assert.match(html, /PLAYER/);
   assert.doesNotMatch(html, /class="rules-summary"|赛制流程|<span>Gameweeks<\/span>/);
 });

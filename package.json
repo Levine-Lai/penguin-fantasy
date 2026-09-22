@@ -6,8 +6,11 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "sync:fpl-snapshot": "node scripts/sync-fpl-snapshot.mjs",
+    "prebuild": "npm run sync:fpl-snapshot",
     "dev": "vinext dev",
     "build": "vinext build",
+    "prebuild:pages": "npm run sync:fpl-snapshot",
     "build:pages": "next build",
     "deploy:cloudflare": "npm run build:pages && wrangler pages deploy out --project-name penguin-fantasy --branch main",
     "start": "vinext start",

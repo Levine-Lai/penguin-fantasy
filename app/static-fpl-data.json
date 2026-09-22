@@ -1,0 +1,5152 @@
+{
+  "generatedAt": "2026-09-22T08:39:00.642Z",
+  "league": {
+    "ready": true,
+    "leagueId": 511690,
+    "teams": [
+      {
+        "entryId": 58461,
+        "teamName": "Eva"
+      },
+      {
+        "entryId": 17355,
+        "teamName": "Nicolas' XI"
+      },
+      {
+        "entryId": 63181,
+        "teamName": "TakahashiAki"
+      },
+      {
+        "entryId": 171138,
+        "teamName": "dora ura aka aka"
+      },
+      {
+        "entryId": 59632,
+        "teamName": "Verydisco"
+      },
+      {
+        "entryId": 5882,
+        "teamName": "remember"
+      },
+      {
+        "entryId": 349454,
+        "teamName": "蒂亚鸽鸽鸽"
+      },
+      {
+        "entryId": 15042,
+        "teamName": "足球离家出走了"
+      },
+      {
+        "entryId": 368278,
+        "teamName": "F.C. Chelion"
+      },
+      {
+        "entryId": 39996,
+        "teamName": "范特西体育"
+      },
+      {
+        "entryId": 713,
+        "teamName": "好堡"
+      },
+      {
+        "entryId": 389939,
+        "teamName": "Team Blue"
+      },
+      {
+        "entryId": 33197,
+        "teamName": "柯北"
+      },
+      {
+        "entryId": 13130,
+        "teamName": "光之围棋俱乐部"
+      },
+      {
+        "entryId": 48961,
+        "teamName": "SSU - Sakai Moka"
+      },
+      {
+        "entryId": 57272,
+        "teamName": "lecitron"
+      },
+      {
+        "entryId": 29876,
+        "teamName": "Seawuwu"
+      },
+      {
+        "entryId": 18391,
+        "teamName": "Loki7_7"
+      },
+      {
+        "entryId": 707880,
+        "teamName": "Cuipi"
+      },
+      {
+        "entryId": 18299,
+        "teamName": "蒂兰基尔尼"
+      },
+      {
+        "entryId": 2703815,
+        "teamName": "YaGunnersYa"
+      },
+      {
+        "entryId": 80766,
+        "teamName": "Pluto D"
+      },
+      {
+        "entryId": 15059,
+        "teamName": "她在我耳边吹气"
+      },
+      {
+        "entryId": 20121,
+        "teamName": "JackieGu"
+      },
+      {
+        "entryId": 19561,
+        "teamName": "Northcote Holdings"
+      },
+      {
+        "entryId": 10013,
+        "teamName": "Summerfan"
+      },
+      {
+        "entryId": 113485,
+        "teamName": "一人血书 求这刺聊点啥回归"
+      },
+      {
+        "entryId": 8086,
+        "teamName": "Real Madridista"
+      },
+      {
+        "entryId": 117128,
+        "teamName": "Dongma"
+      },
+      {
+        "entryId": 128271,
+        "teamName": "Wenbo's Team"
+      },
+      {
+        "entryId": 64942,
+        "teamName": "Yamine Lmao"
+      },
+      {
+        "entryId": 197536,
+        "teamName": "Yemoooon"
+      },
+      {
+        "entryId": 25503,
+        "teamName": "联曼"
+      },
+      {
+        "entryId": 19977,
+        "teamName": "Xi9Li"
+      },
+      {
+        "entryId": 68692,
+        "teamName": "毒奶喵26"
+      },
+      {
+        "entryId": 15944,
+        "teamName": "ParisAintGerman"
+      },
+      {
+        "entryId": 2665694,
+        "teamName": "Hann-San"
+      },
+      {
+        "entryId": 30963,
+        "teamName": "香香软软的big b"
+      },
+      {
+        "entryId": 57236,
+        "teamName": "SSU - 珍惜当下❤️"
+      },
+      {
+        "entryId": 36705,
+        "teamName": "LAD's Team"
+      },
+      {
+        "entryId": 48071,
+        "teamName": "AnonTokyo"
+      },
+      {
+        "entryId": 74544,
+        "teamName": "Kw"
+      },
+      {
+        "entryId": 15316,
+        "teamName": "咻狗勾不在家"
+      },
+      {
+        "entryId": 10262,
+        "teamName": "Dream Tickets"
+      },
+      {
+        "entryId": 79852,
+        "teamName": "HindMics"
+      },
+      {
+        "entryId": 228011,
+        "teamName": "谨慎分析 大胆梭哈"
+      },
+      {
+        "entryId": 22212,
+        "teamName": "Micky VDV"
+      },
+      {
+        "entryId": 83055,
+        "teamName": "Shanghai Port FC"
+      },
+      {
+        "entryId": 20987,
+        "teamName": "KNVB"
+      },
+      {
+        "entryId": 362316,
+        "teamName": "ABC"
+      },
+      {
+        "entryId": 30741,
+        "teamName": "BEK's Team"
+      },
+      {
+        "entryId": 23235,
+        "teamName": "Soft Candy FC"
+      },
+      {
+        "entryId": 24938,
+        "teamName": "将死之时掩以水门汀"
+      },
+      {
+        "entryId": 6994,
+        "teamName": "这是团赛专用的大号"
+      },
+      {
+        "entryId": 9045,
+        "teamName": "Noodle FC"
+      },
+      {
+        "entryId": 13184,
+        "teamName": "JZhuoyan"
+      },
+      {
+        "entryId": 1844803,
+        "teamName": "AVERAGE"
+      },
+      {
+        "entryId": 7455,
+        "teamName": "Fitz"
+      },
+      {
+        "entryId": 28425,
+        "teamName": "FRANCISTASY"
+      },
+      {
+        "entryId": 10707,
+        "teamName": "Steven's Team"
+      },
+      {
+        "entryId": 28736,
+        "teamName": "Chelsea Mata"
+      },
+      {
+        "entryId": 26411,
+        "teamName": "笨雕先游"
+      },
+      {
+        "entryId": 30110,
+        "teamName": "逍遥小尧"
+      },
+      {
+        "entryId": 73032,
+        "teamName": "MutdBJ"
+      },
+      {
+        "entryId": 705633,
+        "teamName": "镜落"
+      },
+      {
+        "entryId": 12692,
+        "teamName": "Baros15"
+      },
+      {
+        "entryId": 112171,
+        "teamName": "Orange's Team"
+      },
+      {
+        "entryId": 22889,
+        "teamName": "绿豆猫手作"
+      },
+      {
+        "entryId": 673111,
+        "teamName": "MUJY"
+      },
+      {
+        "entryId": 83336,
+        "teamName": "yu99"
+      },
+      {
+        "entryId": 10008,
+        "teamName": "Clark's Team"
+      },
+      {
+        "entryId": 50026,
+        "teamName": "Wei's Team"
+      },
+      {
+        "entryId": 24950,
+        "teamName": "美式加冰"
+      },
+      {
+        "entryId": 17081,
+        "teamName": "應該係除非唔係"
+      },
+      {
+        "entryId": 93912,
+        "teamName": "药药"
+      },
+      {
+        "entryId": 36525,
+        "teamName": "谁是无机盐"
+      },
+      {
+        "entryId": 33504,
+        "teamName": "换汤不换药"
+      },
+      {
+        "entryId": 6867,
+        "teamName": "干饭帮手"
+      },
+      {
+        "entryId": 257996,
+        "teamName": "乔治啊啊马丁"
+      },
+      {
+        "entryId": 16501,
+        "teamName": "Champion Leeds"
+      },
+      {
+        "entryId": 65270,
+        "teamName": "Mind The Gap"
+      },
+      {
+        "entryId": 302847,
+        "teamName": "Call loud Yeehc111"
+      },
+      {
+        "entryId": 36526,
+        "teamName": "Havertz Scores again"
+      },
+      {
+        "entryId": 10773,
+        "teamName": "企鹅"
+      },
+      {
+        "entryId": 53516,
+        "teamName": "开半天猪耳朵"
+      },
+      {
+        "entryId": 24429,
+        "teamName": "acidboy"
+      },
+      {
+        "entryId": 77383,
+        "teamName": "奏响最绝望的乐章"
+      },
+      {
+        "entryId": 80003,
+        "teamName": "fpl中搁浅的哲学家"
+      },
+      {
+        "entryId": 33157,
+        "teamName": "Will Alves my love"
+      },
+      {
+        "entryId": 17510,
+        "teamName": "Bill's Red Riffs"
+      },
+      {
+        "entryId": 661799,
+        "teamName": "OOPS"
+      },
+      {
+        "entryId": 2076,
+        "teamName": "传来传去不射门，阿尔特塔快走人！"
+      },
+      {
+        "entryId": 651647,
+        "teamName": "英超不倒翁"
+      },
+      {
+        "entryId": 3871,
+        "teamName": "红烧天堂"
+      },
+      {
+        "entryId": 2309751,
+        "teamName": "willis's Team"
+      },
+      {
+        "entryId": 30894,
+        "teamName": "EriCherry"
+      },
+      {
+        "entryId": 306254,
+        "teamName": "elliott's Team"
+      },
+      {
+        "entryId": 29482,
+        "teamName": "粒粒2.0"
+      },
+      {
+        "entryId": 413050,
+        "teamName": "红衫圣殿"
+      },
+      {
+        "entryId": 435840,
+        "teamName": "Trent66"
+      },
+      {
+        "entryId": 24242,
+        "teamName": "TEAM NAME"
+      },
+      {
+        "entryId": 771110,
+        "teamName": "Team电子羊"
+      },
+      {
+        "entryId": 1654195,
+        "teamName": "AMARTD"
+      },
+      {
+        "entryId": 178322,
+        "teamName": "muscleking"
+      },
+      {
+        "entryId": 49254,
+        "teamName": "Shuo City"
+      },
+      {
+        "entryId": 37278,
+        "teamName": "夏初一笑 婉兒摘星"
+      },
+      {
+        "entryId": 2457647,
+        "teamName": "afewgoodkids"
+      },
+      {
+        "entryId": 749142,
+        "teamName": "New Trafford"
+      },
+      {
+        "entryId": 1679447,
+        "teamName": "William's Team"
+      },
+      {
+        "entryId": 750333,
+        "teamName": "NBS TEAM"
+      },
+      {
+        "entryId": 3333884,
+        "teamName": "礼物铺今天赢球了吗"
+      }
+    ]
+  },
+  "history": {
+    "ready": true,
+    "snapshots": [
+      {
+        "ready": true,
+        "leagueId": 511690,
+        "gw": 1,
+        "eventName": "Gameweek 1",
+        "deadlineTime": "2026-08-21T17:30:00Z",
+        "deadlineHasPassed": true,
+        "picksSync": {
+          "checked": 111,
+          "total": 111,
+          "valid": 111,
+          "completed": true,
+          "capturedAt": "2026-08-21T19:10:01.940Z"
+        },
+        "pointsDefinition": "队长球员在 FPL 的基础得分，不计算队长双倍或三倍倍率",
+        "captainPickRateDefinition": "本联赛中选择该球员为当周队长的有效队伍数 / 本联赛当周可读取队长选择的队伍数",
+        "teams": [
+          {
+            "entryId": 59632,
+            "teamName": "Verydisco",
+            "captainId": 427,
+            "captainName": "Mbeumo",
+            "captainPoints": 2,
+            "captainPickRate": 4.5
+          },
+          {
+            "entryId": 20121,
+            "teamName": "JackieGu",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 15944,
+            "teamName": "ParisAintGerman",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 8086,
+            "teamName": "Real Madridista",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 58461,
+            "teamName": "Eva",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 117128,
+            "teamName": "Dongma",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 10013,
+            "teamName": "Summerfan",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 5882,
+            "teamName": "remember",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 113485,
+            "teamName": "热刺传奇教练德泽尔比",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 36526,
+            "teamName": "Havertz Scores again",
+            "captainId": 26,
+            "captainName": "Havertz",
+            "captainPoints": 6,
+            "captainPickRate": 1.8
+          },
+          {
+            "entryId": 18391,
+            "teamName": "Loki7_7",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 435840,
+            "teamName": "Trent66",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 23235,
+            "teamName": "在英格兰捕猎的's Team",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 24429,
+            "teamName": "acidboy",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 48961,
+            "teamName": "SSU - Sakai Moka",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 389939,
+            "teamName": "Team Blue",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 2309751,
+            "teamName": "willis's Team",
+            "captainId": 15,
+            "captainName": "Ødegaard",
+            "captainPoints": 11,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 15059,
+            "teamName": "她在我耳边吹气",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 17510,
+            "teamName": "Bill's Red Riffs",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 349454,
+            "teamName": "蒂亚鸽鸽鸽",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 24950,
+            "teamName": "美式加冰",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 302847,
+            "teamName": "Call loud Yeehc111",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 6994,
+            "teamName": "这是团赛专用的大号",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 9045,
+            "teamName": "Noodle FC",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 17081,
+            "teamName": "應該係除非唔係",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 17355,
+            "teamName": "Nicolas' XI",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 63181,
+            "teamName": "TakahashiAki",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 749142,
+            "teamName": "New Trafford",
+            "captainId": 26,
+            "captainName": "Havertz",
+            "captainPoints": 6,
+            "captainPickRate": 1.8
+          },
+          {
+            "entryId": 10008,
+            "teamName": "Clark's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 33157,
+            "teamName": "Will Alves my love",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 83336,
+            "teamName": "yu99",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 707880,
+            "teamName": "Cuipi",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 20987,
+            "teamName": "KNVB",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 79852,
+            "teamName": "HindMics",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 11,
+            "captainPickRate": 2.7
+          },
+          {
+            "entryId": 80766,
+            "teamName": "Pluto D",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 2665694,
+            "teamName": "Hann-San",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 30110,
+            "teamName": "逍遥小尧",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 30894,
+            "teamName": "EriCherry",
+            "captainId": 427,
+            "captainName": "Mbeumo",
+            "captainPoints": 2,
+            "captainPickRate": 4.5
+          },
+          {
+            "entryId": 10707,
+            "teamName": "Steven's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 48071,
+            "teamName": "AnonTokyo",
+            "captainId": 427,
+            "captainName": "Mbeumo",
+            "captainPoints": 2,
+            "captainPickRate": 4.5
+          },
+          {
+            "entryId": 53516,
+            "teamName": "开半天猪耳朵",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 68692,
+            "teamName": "毒奶喵26",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 7455,
+            "teamName": "Fitz",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 33504,
+            "teamName": "换汤不换药",
+            "captainId": 557,
+            "captainName": "Tzolis",
+            "captainPoints": 6,
+            "captainPickRate": 2.7
+          },
+          {
+            "entryId": 128271,
+            "teamName": "Wenbo's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 362316,
+            "teamName": "ABC",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 2703815,
+            "teamName": "YaGunnersYa",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 12692,
+            "teamName": "Baros15",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 22889,
+            "teamName": "绿豆猫手作",
+            "captainId": 427,
+            "captainName": "Mbeumo",
+            "captainPoints": 2,
+            "captainPickRate": 4.5
+          },
+          {
+            "entryId": 37278,
+            "teamName": "夏初一笑 婉兒摘星",
+            "captainId": 229,
+            "captainName": "Tarkowski",
+            "captainPoints": 6,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 1679447,
+            "teamName": "William's Team",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 11,
+            "captainPickRate": 2.7
+          },
+          {
+            "entryId": 30963,
+            "teamName": "香香软软的big b",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 6867,
+            "teamName": "干饭帮手",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 26411,
+            "teamName": "笨雕先游",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 73032,
+            "teamName": "MutdBJ",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 93912,
+            "teamName": "药药",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 178322,
+            "teamName": "muscleking",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 11,
+            "captainPickRate": 2.7
+          },
+          {
+            "entryId": 33197,
+            "teamName": "柯北",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 36525,
+            "teamName": "谁是无机盐",
+            "captainId": 366,
+            "captainName": "Wirtz",
+            "captainPoints": 2,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 64942,
+            "teamName": "Yamine Lmao",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 10773,
+            "teamName": "企鹅",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 15316,
+            "teamName": "咻狗勾不在家",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 24938,
+            "teamName": "将死之时掩以水门汀",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 57272,
+            "teamName": "lecitron",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 19561,
+            "teamName": "Northcote Holdings",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 30741,
+            "teamName": "BEK's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 57236,
+            "teamName": "SSU - 珍惜当下❤️",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 228011,
+            "teamName": "谨慎分析 大胆梭哈",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 673111,
+            "teamName": "MUJY",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 705633,
+            "teamName": "镜落",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 2076,
+            "teamName": "传来传去不射门，阿尔特塔快走人！",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 13130,
+            "teamName": "光之围棋俱乐部",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 13184,
+            "teamName": "JZhuoyan",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 74544,
+            "teamName": "Kw",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 83055,
+            "teamName": "Shanghai Port FC",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 112171,
+            "teamName": "Orange's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 171138,
+            "teamName": "dora ura aka aka",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 368278,
+            "teamName": "F.C. Chelion",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 10262,
+            "teamName": "Dream Tickets",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 19977,
+            "teamName": "Xi9Li",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 25503,
+            "teamName": "联曼",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 29876,
+            "teamName": "Seawuwu",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 651647,
+            "teamName": "英超不倒翁",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 1844803,
+            "teamName": "AVERAGE",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 16501,
+            "teamName": "Champion Leeds",
+            "captainId": 427,
+            "captainName": "Mbeumo",
+            "captainPoints": 2,
+            "captainPickRate": 4.5
+          },
+          {
+            "entryId": 29482,
+            "teamName": "粒粒2.0",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 3871,
+            "teamName": "红烧天堂",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 18299,
+            "teamName": "蒂兰基尔尼",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 36705,
+            "teamName": "LAD's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 77383,
+            "teamName": "奏响最绝望的乐章",
+            "captainId": 557,
+            "captainName": "Tzolis",
+            "captainPoints": 6,
+            "captainPickRate": 2.7
+          },
+          {
+            "entryId": 713,
+            "teamName": "好堡",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 39996,
+            "teamName": "范特西体育",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 197536,
+            "teamName": "Yemoooon",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 1654195,
+            "teamName": "AMARTD",
+            "captainId": 25,
+            "captainName": "Gyökeres",
+            "captainPoints": 0,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 15042,
+            "teamName": "足球离家出走了",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 413050,
+            "teamName": "红衫圣殿",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 750333,
+            "teamName": "NBS TEAM",
+            "captainId": 125,
+            "captainName": "Georginio",
+            "captainPoints": 5,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 22212,
+            "teamName": "Micky VDV",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 24242,
+            "teamName": "TEAM NAME",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 28425,
+            "teamName": "FRANCISTASY",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 49254,
+            "teamName": "Shuo City",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 257996,
+            "teamName": "乔治啊啊马丁",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 28736,
+            "teamName": "Chelsea Mata",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 80003,
+            "teamName": "fpl中搁浅的哲学家",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 2457647,
+            "teamName": "afewgoodkids",
+            "captainId": 4,
+            "captainName": "Gabriel",
+            "captainPoints": 5,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 65270,
+            "teamName": "Mind The Gap",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 661799,
+            "teamName": "OOPS",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 3333884,
+            "teamName": "礼物铺今天赢球了吗",
+            "captainId": 557,
+            "captainName": "Tzolis",
+            "captainPoints": 6,
+            "captainPickRate": 2.7
+          },
+          {
+            "entryId": 50026,
+            "teamName": "Wei's Team",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 306254,
+            "teamName": "elliott's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 2,
+            "captainPickRate": 48.6
+          },
+          {
+            "entryId": 771110,
+            "teamName": "Team电子羊",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 34.2
+          }
+        ],
+        "updatedAt": "2026-08-27T23:30:12.224Z"
+      },
+      {
+        "ready": true,
+        "leagueId": 511690,
+        "gw": 2,
+        "eventName": "Gameweek 2",
+        "deadlineTime": "2026-08-28T17:30:00Z",
+        "deadlineHasPassed": true,
+        "picksSync": {
+          "checked": 111,
+          "total": 111,
+          "valid": 111,
+          "completed": true,
+          "capturedAt": "2026-08-28T19:10:01.911Z"
+        },
+        "pointsDefinition": "队长球员在 FPL 的基础得分，不计算队长双倍或三倍倍率",
+        "captainPickRateDefinition": "本联赛中选择该球员为当周队长的有效队伍数 / 本联赛当周可读取队长选择的队伍数",
+        "teams": [
+          {
+            "entryId": 59632,
+            "teamName": "Verydisco",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 48961,
+            "teamName": "SSU - Sakai Moka",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 389939,
+            "teamName": "Team Blue",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 58461,
+            "teamName": "Eva",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 5882,
+            "teamName": "remember",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 171138,
+            "teamName": "dora ura aka aka",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 713,
+            "teamName": "好堡",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 23235,
+            "teamName": "Soft Candy FC",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 8086,
+            "teamName": "Real Madridista",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 18391,
+            "teamName": "Loki7_7",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 13130,
+            "teamName": "光之围棋俱乐部",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 349454,
+            "teamName": "蒂亚鸽鸽鸽",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 15059,
+            "teamName": "她在我耳边吹气",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 15042,
+            "teamName": "足球离家出走了",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 368278,
+            "teamName": "F.C. Chelion",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 26411,
+            "teamName": "笨雕先游",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 2665694,
+            "teamName": "Hann-San",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 9,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 63181,
+            "teamName": "TakahashiAki",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 707880,
+            "teamName": "Cuipi",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 65270,
+            "teamName": "Mind The Gap",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 83055,
+            "teamName": "Shanghai Port FC",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 79852,
+            "teamName": "HindMics",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 9,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 10013,
+            "teamName": "Summerfan",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 15944,
+            "teamName": "ParisAintGerman",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 64942,
+            "teamName": "Yamine Lmao",
+            "captainId": 8,
+            "captainName": "Calafiori",
+            "captainPoints": 11,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 17355,
+            "teamName": "Nicolas' XI",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 6994,
+            "teamName": "这是团赛专用的大号",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 15316,
+            "teamName": "咻狗勾不在家",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 20987,
+            "teamName": "KNVB",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 7455,
+            "teamName": "Fitz",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 18299,
+            "teamName": "蒂兰基尔尼",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 93912,
+            "teamName": "药药",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 7,
+            "captainPickRate": 1.8
+          },
+          {
+            "entryId": 22212,
+            "teamName": "Micky VDV",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 9045,
+            "teamName": "Noodle FC",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 80766,
+            "teamName": "Pluto D",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 33157,
+            "teamName": "Will Alves my love",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 228011,
+            "teamName": "谨慎分析 大胆梭哈",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 117128,
+            "teamName": "Dongma",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 29876,
+            "teamName": "Seawuwu",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 20121,
+            "teamName": "JackieGu",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 7,
+            "captainPickRate": 1.8
+          },
+          {
+            "entryId": 113485,
+            "teamName": "热刺传奇教练德泽尔比",
+            "captainId": 427,
+            "captainName": "Mbeumo",
+            "captainPoints": 11,
+            "captainPickRate": 6.3
+          },
+          {
+            "entryId": 73032,
+            "teamName": "MutdBJ",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 413050,
+            "teamName": "红衫圣殿",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 197536,
+            "teamName": "Yemoooon",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 33197,
+            "teamName": "柯北",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 19977,
+            "teamName": "Xi9Li",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 302847,
+            "teamName": "Call loud Yeehc111",
+            "captainId": 557,
+            "captainName": "Tzolis",
+            "captainPoints": 0,
+            "captainPickRate": 1.8
+          },
+          {
+            "entryId": 74544,
+            "teamName": "Kw",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 48071,
+            "teamName": "AnonTokyo",
+            "captainId": 427,
+            "captainName": "Mbeumo",
+            "captainPoints": 11,
+            "captainPickRate": 6.3
+          },
+          {
+            "entryId": 24429,
+            "teamName": "acidboy",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 19561,
+            "teamName": "Northcote Holdings",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 10773,
+            "teamName": "企鹅",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 30963,
+            "teamName": "香香软软的big b",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 362316,
+            "teamName": "ABC",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 36526,
+            "teamName": "Havertz Scores again",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 39996,
+            "teamName": "范特西体育",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 13184,
+            "teamName": "JZhuoyan",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 10262,
+            "teamName": "Dream Tickets",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 36705,
+            "teamName": "LAD's Team",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 68692,
+            "teamName": "毒奶喵26",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 128271,
+            "teamName": "Wenbo's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 1844803,
+            "teamName": "AVERAGE",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 30894,
+            "teamName": "EriCherry",
+            "captainId": 12,
+            "captainName": "Saka",
+            "captainPoints": 11,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 83336,
+            "teamName": "yu99",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 30110,
+            "teamName": "逍遥小尧",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 24950,
+            "teamName": "美式加冰",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 10008,
+            "teamName": "Clark's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 17081,
+            "teamName": "應該係除非唔係",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 9,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 25503,
+            "teamName": "联曼",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 22889,
+            "teamName": "绿豆猫手作",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 9,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 257996,
+            "teamName": "乔治啊啊马丁",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 17510,
+            "teamName": "Bill's Red Riffs",
+            "captainId": 557,
+            "captainName": "Tzolis",
+            "captainPoints": 0,
+            "captainPickRate": 1.8
+          },
+          {
+            "entryId": 30741,
+            "teamName": "BEK's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 705633,
+            "teamName": "镜落",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 24938,
+            "teamName": "将死之时掩以水门汀",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 2076,
+            "teamName": "传来传去不射门，阿尔特塔快走人！",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 2703815,
+            "teamName": "YaGunnersYa",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 9,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 50026,
+            "teamName": "Wei's Team",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 6867,
+            "teamName": "干饭帮手",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 28736,
+            "teamName": "Chelsea Mata",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 651647,
+            "teamName": "英超不倒翁",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 178322,
+            "teamName": "muscleking",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 9,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 28425,
+            "teamName": "FRANCISTASY",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 57272,
+            "teamName": "lecitron",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 749142,
+            "teamName": "New Trafford",
+            "captainId": 397,
+            "captainName": "Semenyo",
+            "captainPoints": 5,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 435840,
+            "teamName": "Trent66",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 53516,
+            "teamName": "开半天猪耳朵",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 10707,
+            "teamName": "Steven's Team",
+            "captainId": 367,
+            "captainName": "Gakpo",
+            "captainPoints": 5,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 2309751,
+            "teamName": "willis's Team",
+            "captainId": 15,
+            "captainName": "Ødegaard",
+            "captainPoints": 3,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 112171,
+            "teamName": "Orange's Team",
+            "captainId": 427,
+            "captainName": "Mbeumo",
+            "captainPoints": 11,
+            "captainPickRate": 6.3
+          },
+          {
+            "entryId": 29482,
+            "teamName": "粒粒2.0",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 57236,
+            "teamName": "SSU - 珍惜当下❤️",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 24242,
+            "teamName": "TEAM NAME",
+            "captainId": 4,
+            "captainName": "Gabriel",
+            "captainPoints": 8,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 33504,
+            "teamName": "换汤不换药",
+            "captainId": 427,
+            "captainName": "Mbeumo",
+            "captainPoints": 11,
+            "captainPickRate": 6.3
+          },
+          {
+            "entryId": 36525,
+            "teamName": "谁是无机盐",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 8,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 77383,
+            "teamName": "奏响最绝望的乐章",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 80003,
+            "teamName": "fpl中搁浅的哲学家",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 49254,
+            "teamName": "Shuo City",
+            "captainId": 427,
+            "captainName": "Mbeumo",
+            "captainPoints": 11,
+            "captainPickRate": 6.3
+          },
+          {
+            "entryId": 1654195,
+            "teamName": "AMARTD",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 12692,
+            "teamName": "Baros15",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 673111,
+            "teamName": "MUJY",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 3871,
+            "teamName": "红烧天堂",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 2457647,
+            "teamName": "afewgoodkids",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 9,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 16501,
+            "teamName": "Champion Leeds",
+            "captainId": 427,
+            "captainName": "Mbeumo",
+            "captainPoints": 11,
+            "captainPickRate": 6.3
+          },
+          {
+            "entryId": 1679447,
+            "teamName": "William's Team",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 9,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 661799,
+            "teamName": "OOPS",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 306254,
+            "teamName": "elliott's Team",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 23,
+            "captainPickRate": 40.5
+          },
+          {
+            "entryId": 37278,
+            "teamName": "夏初一笑 婉兒摘星",
+            "captainId": 70,
+            "captainName": "Kluivert",
+            "captainPoints": 3,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 3333884,
+            "teamName": "礼物铺今天赢球了吗",
+            "captainId": 427,
+            "captainName": "Mbeumo",
+            "captainPoints": 11,
+            "captainPickRate": 6.3
+          },
+          {
+            "entryId": 771110,
+            "teamName": "Team电子羊",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 13,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 750333,
+            "teamName": "NBS TEAM",
+            "captainId": 249,
+            "captainName": "Barry",
+            "captainPoints": 2,
+            "captainPickRate": 0.9
+          }
+        ],
+        "updatedAt": "2026-09-03T23:30:16.795Z"
+      },
+      {
+        "ready": true,
+        "leagueId": 511690,
+        "gw": 3,
+        "eventName": "Gameweek 3",
+        "deadlineTime": "2026-09-04T17:30:00Z",
+        "deadlineHasPassed": true,
+        "picksSync": {
+          "checked": 111,
+          "total": 111,
+          "valid": 111,
+          "completed": true,
+          "capturedAt": "2026-09-04T19:10:41.066Z"
+        },
+        "pointsDefinition": "队长球员在 FPL 的基础得分，不计算队长双倍或三倍倍率",
+        "captainPickRateDefinition": "本联赛中选择该球员为当周队长的有效队伍数 / 本联赛当周可读取队长选择的队伍数",
+        "teams": [
+          {
+            "entryId": 59632,
+            "teamName": "Verydisco",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 58461,
+            "teamName": "Eva",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 5882,
+            "teamName": "remember",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 713,
+            "teamName": "好堡",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 117128,
+            "teamName": "Dongma",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 48961,
+            "teamName": "SSU - Sakai Moka",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 13,
+            "captainPickRate": 2.7
+          },
+          {
+            "entryId": 17355,
+            "teamName": "Nicolas' XI",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 349454,
+            "teamName": "蒂亚鸽鸽鸽",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 171138,
+            "teamName": "dora ura aka aka",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 15316,
+            "teamName": "咻狗勾不在家",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 39996,
+            "teamName": "范特西体育",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 18299,
+            "teamName": "蒂兰基尔尼",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 23235,
+            "teamName": "Soft Candy FC",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 7455,
+            "teamName": "Fitz",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 29876,
+            "teamName": "Seawuwu",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 389939,
+            "teamName": "Team Blue",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 83055,
+            "teamName": "Shanghai Port FC",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 15059,
+            "teamName": "她在我耳边吹气",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 15042,
+            "teamName": "足球离家出走了",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 18391,
+            "teamName": "Loki7_7",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 63181,
+            "teamName": "TakahashiAki",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 8086,
+            "teamName": "Real Madridista",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 13130,
+            "teamName": "光之围棋俱乐部",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 20987,
+            "teamName": "KNVB",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 707880,
+            "teamName": "Cuipi",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 10707,
+            "teamName": "Steven's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 228011,
+            "teamName": "谨慎分析 大胆梭哈",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 10013,
+            "teamName": "Summerfan",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 368278,
+            "teamName": "F.C. Chelion",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 20121,
+            "teamName": "JackieGu",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 113485,
+            "teamName": "一人血书 求这刺聊点啥回归",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 197536,
+            "teamName": "Yemoooon",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 2665694,
+            "teamName": "Hann-San",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 80766,
+            "teamName": "Pluto D",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 19561,
+            "teamName": "Northcote Holdings",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 19977,
+            "teamName": "Xi9Li",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 413050,
+            "teamName": "红衫圣殿",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 65270,
+            "teamName": "Mind The Gap",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 10773,
+            "teamName": "企鹅",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 24938,
+            "teamName": "将死之时掩以水门汀",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 64942,
+            "teamName": "Yamine Lmao",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 15944,
+            "teamName": "ParisAintGerman",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 74544,
+            "teamName": "Kw",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 13184,
+            "teamName": "JZhuoyan",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 9045,
+            "teamName": "Noodle FC",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 73032,
+            "teamName": "MutdBJ",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 26411,
+            "teamName": "笨雕先游",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 36526,
+            "teamName": "Havertz Scores again",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 30110,
+            "teamName": "逍遥小尧",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 10008,
+            "teamName": "Clark's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 6994,
+            "teamName": "这是团赛专用的大号",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 1844803,
+            "teamName": "AVERAGE",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 128271,
+            "teamName": "Wenbo's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 79852,
+            "teamName": "HindMics",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 33197,
+            "teamName": "柯北",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 2076,
+            "teamName": "传来传去不射门，阿尔特塔快走人！",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 22889,
+            "teamName": "绿豆猫手作",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 13,
+            "captainPickRate": 2.7
+          },
+          {
+            "entryId": 24429,
+            "teamName": "acidboy",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 24950,
+            "teamName": "美式加冰",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 33157,
+            "teamName": "Will Alves my love",
+            "captainId": 368,
+            "captainName": "Szoboszlai",
+            "captainPoints": 3,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 48071,
+            "teamName": "AnonTokyo",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 57236,
+            "teamName": "SSU - 珍惜当下❤️",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 302847,
+            "teamName": "Call loud Yeehc111",
+            "captainId": 399,
+            "captainName": "Cherki",
+            "captainPoints": 3,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 36705,
+            "teamName": "LAD's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 83336,
+            "teamName": "yu99",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 30963,
+            "teamName": "香香软软的big b",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 362316,
+            "teamName": "ABC",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 22212,
+            "teamName": "Micky VDV",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 93912,
+            "teamName": "药药",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 10262,
+            "teamName": "Dream Tickets",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 50026,
+            "teamName": "Wei's Team",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 1.8
+          },
+          {
+            "entryId": 28736,
+            "teamName": "Chelsea Mata",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 6867,
+            "teamName": "干饭帮手",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 53516,
+            "teamName": "开半天猪耳朵",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 33504,
+            "teamName": "换汤不换药",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 17081,
+            "teamName": "應該係除非唔係",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 57272,
+            "teamName": "lecitron",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 30894,
+            "teamName": "EriCherry",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 17510,
+            "teamName": "Bill's Red Riffs",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 68692,
+            "teamName": "毒奶喵26",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 30741,
+            "teamName": "BEK's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 112171,
+            "teamName": "Orange's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 705633,
+            "teamName": "镜落",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 25503,
+            "teamName": "联曼",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 36525,
+            "teamName": "谁是无机盐",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 13,
+            "captainPickRate": 2.7
+          },
+          {
+            "entryId": 16501,
+            "teamName": "Champion Leeds",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 2703815,
+            "teamName": "YaGunnersYa",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 28425,
+            "teamName": "FRANCISTASY",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 2309751,
+            "teamName": "willis's Team",
+            "captainId": 15,
+            "captainName": "Ødegaard",
+            "captainPoints": 10,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 257996,
+            "teamName": "乔治啊啊马丁",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 651647,
+            "teamName": "英超不倒翁",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 435840,
+            "teamName": "Trent66",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 3871,
+            "teamName": "红烧天堂",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 673111,
+            "teamName": "MUJY",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 77383,
+            "teamName": "奏响最绝望的乐章",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 1654195,
+            "teamName": "AMARTD",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 749142,
+            "teamName": "New Trafford",
+            "captainId": 398,
+            "captainName": "Foden",
+            "captainPoints": 1,
+            "captainPickRate": 1.8
+          },
+          {
+            "entryId": 29482,
+            "teamName": "粒粒2.0",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 12692,
+            "teamName": "Baros15",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 80003,
+            "teamName": "fpl中搁浅的哲学家",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 49254,
+            "teamName": "Shuo City",
+            "captainId": 480,
+            "captainName": "Gibbs-White",
+            "captainPoints": 3,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 178322,
+            "teamName": "muscleking",
+            "captainId": 106,
+            "captainName": "Thiago",
+            "captainPoints": 2,
+            "captainPickRate": 1.8
+          },
+          {
+            "entryId": 661799,
+            "teamName": "OOPS",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 306254,
+            "teamName": "elliott's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 1679447,
+            "teamName": "William's Team",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 1,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 24242,
+            "teamName": "TEAM NAME",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 1.8
+          },
+          {
+            "entryId": 771110,
+            "teamName": "Team电子羊",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 2457647,
+            "teamName": "afewgoodkids",
+            "captainId": 398,
+            "captainName": "Foden",
+            "captainPoints": 1,
+            "captainPickRate": 1.8
+          },
+          {
+            "entryId": 3333884,
+            "teamName": "礼物铺今天赢球了吗",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 86.5
+          },
+          {
+            "entryId": 37278,
+            "teamName": "夏初一笑 婉兒摘星",
+            "captainId": 166,
+            "captainName": "N.Jackson",
+            "captainPoints": 2,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 750333,
+            "teamName": "NBS TEAM",
+            "captainId": 106,
+            "captainName": "Thiago",
+            "captainPoints": 2,
+            "captainPickRate": 1.8
+          }
+        ],
+        "updatedAt": "2026-09-11T23:30:26.675Z"
+      },
+      {
+        "ready": true,
+        "leagueId": 511690,
+        "gw": 4,
+        "eventName": "Gameweek 4",
+        "deadlineTime": "2026-09-12T12:30:00Z",
+        "deadlineHasPassed": true,
+        "picksSync": {
+          "checked": 111,
+          "total": 111,
+          "valid": 111,
+          "completed": true,
+          "capturedAt": "2026-09-12T14:10:54.848Z"
+        },
+        "pointsDefinition": "队长球员在 FPL 的基础得分，不计算队长双倍或三倍倍率",
+        "captainPickRateDefinition": "本联赛中选择该球员为当周队长的有效队伍数 / 本联赛当周可读取队长选择的队伍数",
+        "teams": [
+          {
+            "entryId": 58461,
+            "teamName": "Eva",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 17355,
+            "teamName": "Nicolas' XI",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 59632,
+            "teamName": "Verydisco",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 5882,
+            "teamName": "remember",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 11.7
+          },
+          {
+            "entryId": 63181,
+            "teamName": "TakahashiAki",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 349454,
+            "teamName": "蒂亚鸽鸽鸽",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 171138,
+            "teamName": "dora ura aka aka",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 13130,
+            "teamName": "光之围棋俱乐部",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 15059,
+            "teamName": "她在我耳边吹气",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 713,
+            "teamName": "好堡",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 80766,
+            "teamName": "Pluto D",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 39996,
+            "teamName": "范特西体育",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 8086,
+            "teamName": "Real Madridista",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 389939,
+            "teamName": "Team Blue",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 15042,
+            "teamName": "足球离家出走了",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 33197,
+            "teamName": "柯北",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 18391,
+            "teamName": "Loki7_7",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 368278,
+            "teamName": "F.C. Chelion",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 10013,
+            "teamName": "Summerfan",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 48961,
+            "teamName": "SSU - Sakai Moka",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 707880,
+            "teamName": "Cuipi",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 29876,
+            "teamName": "Seawuwu",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 83055,
+            "teamName": "Shanghai Port FC",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 19977,
+            "teamName": "Xi9Li",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 15316,
+            "teamName": "咻狗勾不在家",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 197536,
+            "teamName": "Yemoooon",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 228011,
+            "teamName": "谨慎分析 大胆梭哈",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 117128,
+            "teamName": "Dongma",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 74544,
+            "teamName": "Kw",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 11.7
+          },
+          {
+            "entryId": 64942,
+            "teamName": "Yamine Lmao",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 79852,
+            "teamName": "HindMics",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 20987,
+            "teamName": "KNVB",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 24938,
+            "teamName": "将死之时掩以水门汀",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 11.7
+          },
+          {
+            "entryId": 36705,
+            "teamName": "LAD's Team",
+            "captainId": 40,
+            "captainName": "Rogers",
+            "captainPoints": 8,
+            "captainPickRate": 5.4
+          },
+          {
+            "entryId": 30963,
+            "teamName": "香香软软的big b",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 15944,
+            "teamName": "ParisAintGerman",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 57272,
+            "teamName": "lecitron",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 48071,
+            "teamName": "AnonTokyo",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 30741,
+            "teamName": "BEK's Team",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 20121,
+            "teamName": "JackieGu",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 18299,
+            "teamName": "蒂兰基尔尼",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 2,
+            "captainPickRate": 9
+          },
+          {
+            "entryId": 10262,
+            "teamName": "Dream Tickets",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 128271,
+            "teamName": "Wenbo's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 11.7
+          },
+          {
+            "entryId": 7455,
+            "teamName": "Fitz",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 68692,
+            "teamName": "毒奶喵26",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 23235,
+            "teamName": "Soft Candy FC",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 113485,
+            "teamName": "一人血书 求这刺聊点啥回归",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 9045,
+            "teamName": "Noodle FC",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 19561,
+            "teamName": "Northcote Holdings",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 73032,
+            "teamName": "MutdBJ",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 57236,
+            "teamName": "SSU - 珍惜当下❤️",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 1844803,
+            "teamName": "AVERAGE",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 26411,
+            "teamName": "笨雕先游",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 22212,
+            "teamName": "Micky VDV",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 2,
+            "captainPickRate": 9
+          },
+          {
+            "entryId": 2665694,
+            "teamName": "Hann-San",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 11.7
+          },
+          {
+            "entryId": 6994,
+            "teamName": "这是团赛专用的大号",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 25503,
+            "teamName": "联曼",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 13184,
+            "teamName": "JZhuoyan",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 11.7
+          },
+          {
+            "entryId": 28736,
+            "teamName": "Chelsea Mata",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 65270,
+            "teamName": "Mind The Gap",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 22889,
+            "teamName": "绿豆猫手作",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 2,
+            "captainPickRate": 9
+          },
+          {
+            "entryId": 10707,
+            "teamName": "Steven's Team",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 2,
+            "captainPickRate": 9
+          },
+          {
+            "entryId": 10008,
+            "teamName": "Clark's Team",
+            "captainId": 40,
+            "captainName": "Rogers",
+            "captainPoints": 8,
+            "captainPickRate": 5.4
+          },
+          {
+            "entryId": 2703815,
+            "teamName": "YaGunnersYa",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 362316,
+            "teamName": "ABC",
+            "captainId": 40,
+            "captainName": "Rogers",
+            "captainPoints": 8,
+            "captainPickRate": 5.4
+          },
+          {
+            "entryId": 17081,
+            "teamName": "應該係除非唔係",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 11.7
+          },
+          {
+            "entryId": 30110,
+            "teamName": "逍遥小尧",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 83336,
+            "teamName": "yu99",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 28425,
+            "teamName": "FRANCISTASY",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 24429,
+            "teamName": "acidboy",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 2076,
+            "teamName": "传来传去不射门，阿尔特塔快走人！",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 11.7
+          },
+          {
+            "entryId": 36526,
+            "teamName": "Havertz Scores again",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 93912,
+            "teamName": "药药",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 6867,
+            "teamName": "干饭帮手",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 112171,
+            "teamName": "Orange's Team",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 10773,
+            "teamName": "企鹅",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 17510,
+            "teamName": "Bill's Red Riffs",
+            "captainId": 40,
+            "captainName": "Rogers",
+            "captainPoints": 8,
+            "captainPickRate": 5.4
+          },
+          {
+            "entryId": 16501,
+            "teamName": "Champion Leeds",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 302847,
+            "teamName": "Call loud Yeehc111",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 705633,
+            "teamName": "镜落",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 11.7
+          },
+          {
+            "entryId": 257996,
+            "teamName": "乔治啊啊马丁",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 33504,
+            "teamName": "换汤不换药",
+            "captainId": 40,
+            "captainName": "Rogers",
+            "captainPoints": 8,
+            "captainPickRate": 5.4
+          },
+          {
+            "entryId": 24950,
+            "teamName": "美式加冰",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 2309751,
+            "teamName": "willis's Team",
+            "captainId": 15,
+            "captainName": "Ødegaard",
+            "captainPoints": 3,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 3871,
+            "teamName": "红烧天堂",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 36525,
+            "teamName": "谁是无机盐",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 2,
+            "captainPickRate": 9
+          },
+          {
+            "entryId": 77383,
+            "teamName": "奏响最绝望的乐章",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 651647,
+            "teamName": "英超不倒翁",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 413050,
+            "teamName": "红衫圣殿",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 2,
+            "captainPickRate": 9
+          },
+          {
+            "entryId": 12692,
+            "teamName": "Baros15",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 33157,
+            "teamName": "Will Alves my love",
+            "captainId": 368,
+            "captainName": "Szoboszlai",
+            "captainPoints": 3,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 435840,
+            "teamName": "Trent66",
+            "captainId": 40,
+            "captainName": "Rogers",
+            "captainPoints": 8,
+            "captainPickRate": 5.4
+          },
+          {
+            "entryId": 53516,
+            "teamName": "开半天猪耳朵",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 2,
+            "captainPickRate": 9
+          },
+          {
+            "entryId": 50026,
+            "teamName": "Wei's Team",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 2,
+            "captainPickRate": 9
+          },
+          {
+            "entryId": 673111,
+            "teamName": "MUJY",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 29482,
+            "teamName": "粒粒2.0",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 80003,
+            "teamName": "fpl中搁浅的哲学家",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 11.7
+          },
+          {
+            "entryId": 30894,
+            "teamName": "EriCherry",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 306254,
+            "teamName": "elliott's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 11.7
+          },
+          {
+            "entryId": 661799,
+            "teamName": "OOPS",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 11.7
+          },
+          {
+            "entryId": 24242,
+            "teamName": "TEAM NAME",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 5,
+            "captainPickRate": 33.3
+          },
+          {
+            "entryId": 1654195,
+            "teamName": "AMARTD",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 9,
+            "captainPickRate": 11.7
+          },
+          {
+            "entryId": 771110,
+            "teamName": "Team电子羊",
+            "captainId": 346,
+            "captainName": "Calvert-Lewin",
+            "captainPoints": 10,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 49254,
+            "teamName": "Shuo City",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 2,
+            "captainPickRate": 9
+          },
+          {
+            "entryId": 749142,
+            "teamName": "New Trafford",
+            "captainId": 106,
+            "captainName": "Thiago",
+            "captainPoints": 1,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 178322,
+            "teamName": "muscleking",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 1679447,
+            "teamName": "William's Team",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 12,
+            "captainPickRate": 34.2
+          },
+          {
+            "entryId": 2457647,
+            "teamName": "afewgoodkids",
+            "captainId": 398,
+            "captainName": "Foden",
+            "captainPoints": -2,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 37278,
+            "teamName": "夏初一笑 婉兒摘星",
+            "captainId": 214,
+            "captainName": "Kamada",
+            "captainPoints": 8,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 750333,
+            "teamName": "NBS TEAM",
+            "captainId": 138,
+            "captainName": "Kostoulas",
+            "captainPoints": 10,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 3333884,
+            "teamName": "礼物铺今天赢球了吗",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 2,
+            "captainPickRate": 9
+          }
+        ],
+        "updatedAt": "2026-09-17T23:30:58.795Z"
+      },
+      {
+        "ready": true,
+        "leagueId": 511690,
+        "gw": 5,
+        "eventName": "Gameweek 5",
+        "deadlineTime": "2026-09-18T17:30:00Z",
+        "deadlineHasPassed": true,
+        "picksSync": {
+          "checked": 111,
+          "total": 111,
+          "valid": 111,
+          "completed": true,
+          "capturedAt": "2026-09-18T19:10:48.412Z"
+        },
+        "pointsDefinition": "队长球员在 FPL 的基础得分，不计算队长双倍或三倍倍率",
+        "captainPickRateDefinition": "本联赛中选择该球员为当周队长的有效队伍数 / 本联赛当周可读取队长选择的队伍数",
+        "teams": [
+          {
+            "entryId": 58461,
+            "teamName": "Eva",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 17355,
+            "teamName": "Nicolas' XI",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 63181,
+            "teamName": "TakahashiAki",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 171138,
+            "teamName": "dora ura aka aka",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 59632,
+            "teamName": "Verydisco",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 5882,
+            "teamName": "remember",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 349454,
+            "teamName": "蒂亚鸽鸽鸽",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 15042,
+            "teamName": "足球离家出走了",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 368278,
+            "teamName": "F.C. Chelion",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 39996,
+            "teamName": "范特西体育",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 713,
+            "teamName": "好堡",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 389939,
+            "teamName": "Team Blue",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 33197,
+            "teamName": "柯北",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 13130,
+            "teamName": "光之围棋俱乐部",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 48961,
+            "teamName": "SSU - Sakai Moka",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 57272,
+            "teamName": "lecitron",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 29876,
+            "teamName": "Seawuwu",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 18391,
+            "teamName": "Loki7_7",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 707880,
+            "teamName": "Cuipi",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 18299,
+            "teamName": "蒂兰基尔尼",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 2703815,
+            "teamName": "YaGunnersYa",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 80766,
+            "teamName": "Pluto D",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 15059,
+            "teamName": "她在我耳边吹气",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 20121,
+            "teamName": "JackieGu",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 19561,
+            "teamName": "Northcote Holdings",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 8,
+            "captainPickRate": 2.7
+          },
+          {
+            "entryId": 10013,
+            "teamName": "Summerfan",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 113485,
+            "teamName": "一人血书 求这刺聊点啥回归",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 8086,
+            "teamName": "Real Madridista",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 117128,
+            "teamName": "Dongma",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 64942,
+            "teamName": "Yamine Lmao",
+            "captainId": 480,
+            "captainName": "Gibbs-White",
+            "captainPoints": 2,
+            "captainPickRate": 10.8
+          },
+          {
+            "entryId": 128271,
+            "teamName": "Wenbo's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 25503,
+            "teamName": "联曼",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 197536,
+            "teamName": "Yemoooon",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 19977,
+            "teamName": "Xi9Li",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 68692,
+            "teamName": "毒奶喵26",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 15944,
+            "teamName": "ParisAintGerman",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 2665694,
+            "teamName": "Hann-San",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 30963,
+            "teamName": "香香软软的big b",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 57236,
+            "teamName": "SSU - 珍惜当下❤️",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 36705,
+            "teamName": "LAD's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 48071,
+            "teamName": "AnonTokyo",
+            "captainId": 480,
+            "captainName": "Gibbs-White",
+            "captainPoints": 2,
+            "captainPickRate": 10.8
+          },
+          {
+            "entryId": 74544,
+            "teamName": "Kw",
+            "captainId": 480,
+            "captainName": "Gibbs-White",
+            "captainPoints": 2,
+            "captainPickRate": 10.8
+          },
+          {
+            "entryId": 15316,
+            "teamName": "咻狗勾不在家",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 10262,
+            "teamName": "Dream Tickets",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 79852,
+            "teamName": "HindMics",
+            "captainId": 480,
+            "captainName": "Gibbs-White",
+            "captainPoints": 2,
+            "captainPickRate": 10.8
+          },
+          {
+            "entryId": 228011,
+            "teamName": "谨慎分析 大胆梭哈",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 22212,
+            "teamName": "Micky VDV",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 83055,
+            "teamName": "Shanghai Port FC",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 20987,
+            "teamName": "KNVB",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 362316,
+            "teamName": "ABC",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 30741,
+            "teamName": "BEK's Team",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "captainPoints": 0,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 23235,
+            "teamName": "Soft Candy FC",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 24938,
+            "teamName": "将死之时掩以水门汀",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 6994,
+            "teamName": "这是团赛专用的大号",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "captainPoints": 2,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 9045,
+            "teamName": "Noodle FC",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 1844803,
+            "teamName": "AVERAGE",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 13184,
+            "teamName": "JZhuoyan",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 7455,
+            "teamName": "Fitz",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 28425,
+            "teamName": "FRANCISTASY",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 10707,
+            "teamName": "Steven's Team",
+            "captainId": 480,
+            "captainName": "Gibbs-White",
+            "captainPoints": 2,
+            "captainPickRate": 10.8
+          },
+          {
+            "entryId": 28736,
+            "teamName": "Chelsea Mata",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 26411,
+            "teamName": "笨雕先游",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 30110,
+            "teamName": "逍遥小尧",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 73032,
+            "teamName": "MutdBJ",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 705633,
+            "teamName": "镜落",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 12692,
+            "teamName": "Baros15",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 112171,
+            "teamName": "Orange's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 22889,
+            "teamName": "绿豆猫手作",
+            "captainId": 469,
+            "captainName": "N.Williams",
+            "captainPoints": 2,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 673111,
+            "teamName": "MUJY",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 83336,
+            "teamName": "yu99",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 10008,
+            "teamName": "Clark's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 24950,
+            "teamName": "美式加冰",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 50026,
+            "teamName": "Wei's Team",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 17081,
+            "teamName": "應該係除非唔係",
+            "captainId": 480,
+            "captainName": "Gibbs-White",
+            "captainPoints": 2,
+            "captainPickRate": 10.8
+          },
+          {
+            "entryId": 93912,
+            "teamName": "药药",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 36525,
+            "teamName": "谁是无机盐",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 8,
+            "captainPickRate": 2.7
+          },
+          {
+            "entryId": 33504,
+            "teamName": "换汤不换药",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 6867,
+            "teamName": "干饭帮手",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 257996,
+            "teamName": "乔治啊啊马丁",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 16501,
+            "teamName": "Champion Leeds",
+            "captainId": 236,
+            "captainName": "Dewsbury-Hall",
+            "captainPoints": 3,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 65270,
+            "teamName": "Mind The Gap",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 302847,
+            "teamName": "Call loud Yeehc111",
+            "captainId": 40,
+            "captainName": "Rogers",
+            "captainPoints": 2,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 36526,
+            "teamName": "Havertz Scores again",
+            "captainId": 480,
+            "captainName": "Gibbs-White",
+            "captainPoints": 2,
+            "captainPickRate": 10.8
+          },
+          {
+            "entryId": 10773,
+            "teamName": "企鹅",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 53516,
+            "teamName": "开半天猪耳朵",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 24429,
+            "teamName": "acidboy",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 77383,
+            "teamName": "奏响最绝望的乐章",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 80003,
+            "teamName": "fpl中搁浅的哲学家",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 33157,
+            "teamName": "Will Alves my love",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 17510,
+            "teamName": "Bill's Red Riffs",
+            "captainId": 480,
+            "captainName": "Gibbs-White",
+            "captainPoints": 2,
+            "captainPickRate": 10.8
+          },
+          {
+            "entryId": 661799,
+            "teamName": "OOPS",
+            "captainId": 112,
+            "captainName": "Van Hecke",
+            "captainPoints": 6,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 2076,
+            "teamName": "传来传去不射门，阿尔特塔快走人！",
+            "captainId": 480,
+            "captainName": "Gibbs-White",
+            "captainPoints": 2,
+            "captainPickRate": 10.8
+          },
+          {
+            "entryId": 651647,
+            "teamName": "英超不倒翁",
+            "captainId": 480,
+            "captainName": "Gibbs-White",
+            "captainPoints": 2,
+            "captainPickRate": 10.8
+          },
+          {
+            "entryId": 3871,
+            "teamName": "红烧天堂",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 2309751,
+            "teamName": "willis's Team",
+            "captainId": 15,
+            "captainName": "Ødegaard",
+            "captainPoints": 2,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 30894,
+            "teamName": "EriCherry",
+            "captainId": 480,
+            "captainName": "Gibbs-White",
+            "captainPoints": 2,
+            "captainPickRate": 10.8
+          },
+          {
+            "entryId": 306254,
+            "teamName": "elliott's Team",
+            "captainId": 499,
+            "captainName": "Pedro Porro",
+            "captainPoints": 1,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 29482,
+            "teamName": "粒粒2.0",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 413050,
+            "teamName": "红衫圣殿",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 435840,
+            "teamName": "Trent66",
+            "captainId": 201,
+            "captainName": "Muñoz",
+            "captainPoints": 2,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 24242,
+            "teamName": "TEAM NAME",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 771110,
+            "teamName": "Team电子羊",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 1654195,
+            "teamName": "AMARTD",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 178322,
+            "teamName": "muscleking",
+            "captainId": 426,
+            "captainName": "B.Fernandes",
+            "captainPoints": 2,
+            "captainPickRate": 7.2
+          },
+          {
+            "entryId": 49254,
+            "teamName": "Shuo City",
+            "captainId": 12,
+            "captainName": "Saka",
+            "captainPoints": 2,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 37278,
+            "teamName": "夏初一笑 婉兒摘星",
+            "captainId": 480,
+            "captainName": "Gibbs-White",
+            "captainPoints": 2,
+            "captainPickRate": 10.8
+          },
+          {
+            "entryId": 2457647,
+            "teamName": "afewgoodkids",
+            "captainId": 399,
+            "captainName": "Cherki",
+            "captainPoints": 8,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 749142,
+            "teamName": "New Trafford",
+            "captainId": 332,
+            "captainName": "Justin",
+            "captainPoints": 8,
+            "captainPickRate": 0.9
+          },
+          {
+            "entryId": 1679447,
+            "teamName": "William's Team",
+            "captainId": 167,
+            "captainName": "Delap",
+            "captainPoints": 1,
+            "captainPickRate": 1.8
+          },
+          {
+            "entryId": 750333,
+            "teamName": "NBS TEAM",
+            "captainId": 167,
+            "captainName": "Delap",
+            "captainPoints": 1,
+            "captainPickRate": 1.8
+          },
+          {
+            "entryId": 3333884,
+            "teamName": "礼物铺今天赢球了吗",
+            "captainId": 379,
+            "captainName": "Isak",
+            "captainPoints": 8,
+            "captainPickRate": 2.7
+          }
+        ],
+        "updatedAt": "2026-09-21T23:30:45.905Z"
+      }
+    ],
+    "deadlines": [
+      {
+        "gw": 1,
+        "deadlineTime": "2026-08-21T17:30:00Z"
+      },
+      {
+        "gw": 2,
+        "deadlineTime": "2026-08-28T17:30:00Z"
+      },
+      {
+        "gw": 3,
+        "deadlineTime": "2026-09-04T17:30:00Z"
+      },
+      {
+        "gw": 4,
+        "deadlineTime": "2026-09-12T12:30:00Z"
+      },
+      {
+        "gw": 5,
+        "deadlineTime": "2026-09-18T17:30:00Z"
+      },
+      {
+        "gw": 6,
+        "deadlineTime": "2026-10-10T10:00:00Z"
+      },
+      {
+        "gw": 7,
+        "deadlineTime": "2026-10-17T10:00:00Z"
+      },
+      {
+        "gw": 8,
+        "deadlineTime": "2026-10-23T17:30:00Z"
+      },
+      {
+        "gw": 9,
+        "deadlineTime": "2026-10-31T11:00:00Z"
+      },
+      {
+        "gw": 10,
+        "deadlineTime": "2026-11-06T18:30:00Z"
+      },
+      {
+        "gw": 11,
+        "deadlineTime": "2026-11-21T11:00:00Z"
+      },
+      {
+        "gw": 12,
+        "deadlineTime": "2026-11-27T18:30:00Z"
+      },
+      {
+        "gw": 13,
+        "deadlineTime": "2026-12-02T18:30:00Z"
+      },
+      {
+        "gw": 14,
+        "deadlineTime": "2026-12-05T13:30:00Z"
+      },
+      {
+        "gw": 15,
+        "deadlineTime": "2026-12-12T13:30:00Z"
+      },
+      {
+        "gw": 16,
+        "deadlineTime": "2026-12-19T13:30:00Z"
+      },
+      {
+        "gw": 17,
+        "deadlineTime": "2026-12-26T11:00:00Z"
+      },
+      {
+        "gw": 18,
+        "deadlineTime": "2026-12-29T18:00:00Z"
+      },
+      {
+        "gw": 19,
+        "deadlineTime": "2027-01-01T18:30:00Z"
+      },
+      {
+        "gw": 20,
+        "deadlineTime": "2027-01-05T18:00:00Z"
+      },
+      {
+        "gw": 21,
+        "deadlineTime": "2027-01-16T13:30:00Z"
+      },
+      {
+        "gw": 22,
+        "deadlineTime": "2027-01-23T13:30:00Z"
+      },
+      {
+        "gw": 23,
+        "deadlineTime": "2027-01-30T13:30:00Z"
+      },
+      {
+        "gw": 24,
+        "deadlineTime": "2027-02-06T13:30:00Z"
+      },
+      {
+        "gw": 25,
+        "deadlineTime": "2027-02-10T18:30:00Z"
+      },
+      {
+        "gw": 26,
+        "deadlineTime": "2027-02-20T13:30:00Z"
+      },
+      {
+        "gw": 27,
+        "deadlineTime": "2027-02-27T13:30:00Z"
+      },
+      {
+        "gw": 28,
+        "deadlineTime": "2027-03-03T18:30:00Z"
+      },
+      {
+        "gw": 29,
+        "deadlineTime": "2027-03-13T13:30:00Z"
+      },
+      {
+        "gw": 30,
+        "deadlineTime": "2027-03-20T13:30:00Z"
+      },
+      {
+        "gw": 31,
+        "deadlineTime": "2027-04-10T12:30:00Z"
+      },
+      {
+        "gw": 32,
+        "deadlineTime": "2027-04-17T12:30:00Z"
+      },
+      {
+        "gw": 33,
+        "deadlineTime": "2027-04-24T12:30:00Z"
+      },
+      {
+        "gw": 34,
+        "deadlineTime": "2027-05-01T12:30:00Z"
+      },
+      {
+        "gw": 35,
+        "deadlineTime": "2027-05-08T12:30:00Z"
+      },
+      {
+        "gw": 36,
+        "deadlineTime": "2027-05-15T12:30:00Z"
+      },
+      {
+        "gw": 37,
+        "deadlineTime": "2027-05-23T12:30:00Z"
+      },
+      {
+        "gw": 38,
+        "deadlineTime": "2027-05-30T13:30:00Z"
+      }
+    ]
+  }
+}

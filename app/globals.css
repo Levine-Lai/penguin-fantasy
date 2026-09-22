@@ -6,7 +6,6 @@
  * Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V5
  * contrast: pass (40–41) · slop: pass (42–45) · tokens: pass (48) · mobile: pass (34, 49–57)
  */
-@import url("https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700;900&display=swap");
 @import "tailwindcss";
 @import "../tokens.css";
 
@@ -4068,16 +4067,6 @@ main > * {
   white-space: nowrap;
 }
 
-.my-ranking-strip > header button {
-  padding: var(--space-2xs) var(--space-sm);
-  flex: 0 0 auto;
-  border: var(--rule-hair) solid var(--color-rule-2);
-  background: var(--color-paper-a42);
-  color: var(--color-muted);
-  font-size: 0.68rem;
-  cursor: pointer;
-}
-
 .my-ranking-strip .rank-row { border-block-end: 0; }
 
 .rank-row.current-player-row,
@@ -4307,7 +4296,6 @@ main > * {
 @media (hover: hover) and (pointer: fine) {
   .player-login-button:hover,
   .player-login-actions button:hover,
-  .my-ranking-strip > header button:hover,
   .player-login-close:hover {
     border-color: var(--color-accent);
     color: var(--color-ink);
@@ -4336,4 +4324,71 @@ main > * {
   .captain-selector-detail { margin-inline: var(--space-2xs); }
   .captain-selector-detail > header,
   .captain-selector-detail li { padding-inline: var(--space-sm); }
+}
+
+/* Final mobile header and personal-standing refinements. */
+.my-ranking-strip {
+  border: 0;
+  outline: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.rules-page .rules-return-nav {
+  width: 5.5rem;
+  min-width: 5.5rem;
+  display: block;
+  border: 0;
+}
+
+.rules-page .rules-return-nav a,
+.rules-page .player-login-button {
+  width: 5.5rem;
+  min-width: 5.5rem;
+  min-height: 2.75rem;
+}
+
+.rules-page .rules-return-nav a {
+  display: grid;
+  place-items: center;
+  border: var(--rule-hair) solid var(--color-rule-2) !important;
+}
+
+@media (max-width: 48rem) {
+  .rules-page .header-inner {
+    grid-template-columns: minmax(0, 1fr) 4.5rem 4.5rem auto;
+    gap: var(--space-xs);
+  }
+
+  .rules-page .brand-copy { display: none; }
+  .rules-page .rules-return-nav,
+  .rules-page .rules-return-nav a,
+  .rules-page .player-login-button {
+    width: 4.5rem;
+    min-width: 4.5rem;
+    min-height: 2.5rem;
+  }
+
+  .rules-page .rules-hero {
+    padding-block: var(--space-xl) var(--space-lg);
+    gap: var(--space-lg);
+  }
+}
+
+@media (max-width: 32rem) {
+  .rules-page .header-inner {
+    grid-template-columns: minmax(0, 1fr) 3.7rem 3.7rem auto;
+    gap: var(--space-3xs);
+  }
+
+  .rules-page .rules-return-nav,
+  .rules-page .rules-return-nav a,
+  .rules-page .player-login-button {
+    width: 3.7rem;
+    min-width: 3.7rem;
+    min-height: 2.4rem;
+  }
+
+  .rules-page .rules-return-nav a,
+  .rules-page .player-login-button strong { font-size: 0.68rem; }
 }

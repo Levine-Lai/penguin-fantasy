@@ -2,6 +2,7 @@
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { currentTrialBootstrapScript, fallbackGwDeadlines, type GwDeadline } from "./current-trial";
+import staticFplData from "./static-fpl-data.json";
 
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const fplApiBase = "https://penguin-fantasy.pages.dev";
@@ -26,14 +27,15 @@ type GwSnapshot = {
 type LeagueResponse = { ready: boolean; teams: LeagueTeam[] };
 type HistoryResponse = { ready: boolean; snapshots: GwSnapshot[]; deadlines: GwDeadline[] };
 type CachedFplPayload<T> = { cachedAt: number; value: T };
+type StaticFplData = { generatedAt: string; league: LeagueResponse; history: HistoryResponse };
 type LoginStep = "closed" | "identify" | "confirm";
 
 const leagueCacheKey = "penguin-fantasy:league:v1";
 const historyCacheKey = "penguin-fantasy:history:v1";
 const playerIdentityKey = "penguin-fantasy:player-id:v1";
 const cachedDataMaxAge = 7 * 24 * 60 * 60 * 1000;
-const requestTimeout = 15_000;
-const requestRetryDelays = [0, 2_000, 5_000];
+const requestTimeout = 6_000;
+const requestRetryDelays = [0, 1_500];
 
 function isLeagueResponse(value: unknown): value is LeagueResponse {
   const candidate = value as LeagueResponse | null;
@@ -50,6 +52,9 @@ function isHistoryResponse(value: unknown): value is HistoryResponse {
     && candidate.snapshots.some((snapshot) => Array.isArray(snapshot?.teams) && snapshot.teams.length > 0)
     && Array.isArray(candidate.deadlines);
 }
+
+const bundledFplData = staticFplData as StaticFplData;
+const bundledSnapshotTime = Date.parse(bundledFplData.generatedAt);
 
 function readCachedFplPayload<T>(key: string): CachedFplPayload<T> | null {
   try {
@@ -395,7 +400,7 @@ function RankedPlayerCells({ player }: { player: RankedPlayer }) {
       <strong
         className={`rank-gem rank-gem-${rank && rank <= 3 ? rank : 4}`}
         aria-label={`第 ${rank} 名`}
-        style={rank && rank <= 3 ? { "--rank-badge-image": `url("${siteBasePath}/assets/leaderboard/rank-${rank}-ice.png")` } as CSSProperties : undefined}
+        style={rank && rank <= 3 ? { "--rank-badge-image": `url("${siteBasePath}/assets/leaderboard/rank-${rank}-ice.webp")` } as CSSProperties : undefined}
       ><span aria-hidden="true">{rank}</span></strong>
       <div className="player-id-cell">
         <strong className={`player-id ${featuredTeamOrder.has(name) ? "featured-player" : ""}`}>{name}</strong>
@@ -459,9 +464,9 @@ export default function Home() {
   const [activeStage, setActiveStage] = useState<StageId>(1);
   const [expandedPlayer, setExpandedPlayer] = useState<number | null>(null);
   const [rankingPage, setRankingPage] = useState(0);
-  const [leagueTeams, setLeagueTeams] = useState<LeagueTeam[]>(fallbackTeams);
-  const [gwSnapshots, setGwSnapshots] = useState<GwSnapshot[]>([]);
-  const [gwDeadlines, setGwDeadlines] = useState<GwDeadline[]>([]);
+  const [leagueTeams, setLeagueTeams] = useState<LeagueTeam[]>(() => isLeagueResponse(bundledFplData.league) ? bundledFplData.league.teams : fallbackTeams);
+  const [gwSnapshots, setGwSnapshots] = useState<GwSnapshot[]>(() => isHistoryResponse(bundledFplData.history) ? bundledFplData.history.snapshots : []);
+  const [gwDeadlines, setGwDeadlines] = useState<GwDeadline[]>(() => isHistoryResponse(bundledFplData.history) ? bundledFplData.history.deadlines : []);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [playerEntryId, setPlayerEntryId] = useState<number | null>(null);
   const [myStandingExpanded, setMyStandingExpanded] = useState(false);
@@ -473,7 +478,7 @@ export default function Home() {
   const mountedRef = useRef(false);
   const refreshInFlightRef = useRef<Promise<void> | null>(null);
   const lastRefreshAttemptRef = useRef(0);
-  const lastSuccessfulRefreshRef = useRef<number | null>(null);
+  const lastSuccessfulRefreshRef = useRef<number | null>(Number.isFinite(bundledSnapshotTime) ? bundledSnapshotTime : null);
   const stage = stages.find((item) => item.id === activeStage) ?? stages[1];
 
   const loadFplData = useCallback((force = false) => {
@@ -533,8 +538,8 @@ export default function Home() {
       const cachedLeague = readCachedFplPayload<LeagueResponse>(leagueCacheKey);
       const cachedHistory = readCachedFplPayload<HistoryResponse>(historyCacheKey);
       const rememberedPlayerId = readRememberedPlayerId();
-      const validCachedLeague = cachedLeague && isLeagueResponse(cachedLeague.value) ? cachedLeague : null;
-      const validCachedHistory = cachedHistory && isHistoryResponse(cachedHistory.value) ? cachedHistory : null;
+      const validCachedLeague = cachedLeague && cachedLeague.cachedAt > bundledSnapshotTime && isLeagueResponse(cachedLeague.value) ? cachedLeague : null;
+      const validCachedHistory = cachedHistory && cachedHistory.cachedAt > bundledSnapshotTime && isHistoryResponse(cachedHistory.value) ? cachedHistory : null;
 
       if (rememberedPlayerId) setPlayerEntryId(rememberedPlayerId);
       if (validCachedLeague) setLeagueTeams(validCachedLeague.value.teams);
@@ -737,25 +742,21 @@ export default function Home() {
     setExpandedPlayer(null);
   };
 
-  const showMyStanding = () => {
-    setActiveStage(1);
-    window.setTimeout(() => document.querySelector("#my-ranking")?.scrollIntoView({ behavior: "smooth", block: "center" }), 0);
-  };
   const rankingPanelAssets = {
-    "--ledger-complete-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.png")`,
-    "--ledger-row-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-row-frame.png")`,
-    "--ledger-history-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-history-frame.png")`,
-    "--ledger-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-ledger-frame.png")`,
-    "--ledger-left-rail-image": `url("${siteBasePath}/assets/leaderboard/ice-side-left.png")`,
-    "--ledger-right-rail-image": `url("${siteBasePath}/assets/leaderboard/ice-side-right.png")`,
-    "--ledger-divider-image": `url("${siteBasePath}/assets/leaderboard/ice-divider.png")`,
-    "--score-slot-image": `url("${siteBasePath}/assets/leaderboard/score-slot.png")`,
+    "--ledger-complete-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.webp")`,
+    "--ledger-row-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-row-frame.webp")`,
+    "--ledger-history-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-history-frame.webp")`,
+    "--ledger-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-ledger-frame.webp")`,
+    "--ledger-left-rail-image": `url("${siteBasePath}/assets/leaderboard/ice-side-left.webp")`,
+    "--ledger-right-rail-image": `url("${siteBasePath}/assets/leaderboard/ice-side-right.webp")`,
+    "--ledger-divider-image": `url("${siteBasePath}/assets/leaderboard/ice-divider.webp")`,
+    "--score-slot-image": `url("${siteBasePath}/assets/leaderboard/score-slot.webp")`,
     "--pixel-heart-image": `url("${siteBasePath}/assets/leaderboard/pixel-heart.svg")`,
   } as CSSProperties;
 
   return (
     <main>
-      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a className="active" href={`${siteBasePath}/`}>战榜</a><a href={`${siteBasePath}/rules/`}>冰渊法典</a></nav>{myRanking ? <button className="player-login-button player-login-active" type="button" onClick={showMyStanding}><small>已登录</small><strong>我的成绩</strong></button> : <button className="player-login-button" type="button" onClick={openLogin}><small>PLAYER</small><strong>登录</strong></button>}<div className="gameweek"><small>当前试炼</small><strong data-current-trial suppressHydrationWarning>{currentTrialLabel}</strong></div></div></header>
+      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a className="active" href={`${siteBasePath}/`}>战榜</a><a href={`${siteBasePath}/rules/`}>冰渊法典</a></nav>{myRanking ? <button className="player-login-button player-login-active" type="button" onClick={logoutPlayer} aria-label="退出登录"><small>已登录</small><strong>我的成绩</strong></button> : <button className="player-login-button" type="button" onClick={openLogin}><small>PLAYER</small><strong>登录</strong></button>}<div className="gameweek"><small>当前试炼</small><strong data-current-trial suppressHydrationWarning>{currentTrialLabel}</strong></div></div></header>
       <script dangerouslySetInnerHTML={{ __html: currentTrialBootstrapScript }} />
 
       <section className="league-hero"><div className="hero-inner"><div className="hero-copy"><span>THE FROZEN ABYSS · 2026–27</span><h1>冰渊王座<span>之战</span></h1><p className="hero-myth"><span>在世界尽头，有一片被遗忘的禁地——终焉冰海。这里没有四季，只有永恒的寒冬。传说远古巨龙陨落后，它的心脏化为了贯穿天地的巨大冰山，而它的鲜血流入深海，孕育出了无数深渊生灵。</span><span>冰山之上，是荣耀、力量与王权的象征；<br />深海之下，是黑暗、危险与未知的试炼。</span><span>千年以来，无数冒险者、骑士、法师、海妖与巨兽都曾踏入这片领域，只为寻找传说中的至高宝藏。据说，只有经历五重试炼、在冰山与深海之间活到最后的人，才能获得王座认可，成为新一代——</span><strong>冰渊之王</strong></p></div></div></section>
@@ -767,10 +768,13 @@ export default function Home() {
               <span className="stage-relic" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={`${siteBasePath}/assets/stages/stage-${item.id}.png`}
+                  src={`${siteBasePath}/assets/stages/stage-${item.id}.webp`}
                   alt=""
                   width="1536"
                   height="1536"
+                  loading={item.id === 1 ? "eager" : "lazy"}
+                  fetchPriority={item.id === 1 ? "high" : "low"}
+                  decoding="async"
                   draggable="false"
                 />
               </span>
@@ -792,7 +796,7 @@ export default function Home() {
         <article className="panel ranking-panel" id="ranking" key={`ranking-${activeStage}`} style={rankingPanelAssets}>
           <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>
           {myRanking ? <section className="my-ranking-strip" id="my-ranking" aria-label="我的成绩">
-            <header><div><small>MY STANDING</small><strong>{myRanking.name}</strong></div><button type="button" onClick={logoutPlayer}>退出登录</button></header>
+            <header><div><small>MY STANDING</small><strong>{myRanking.name}</strong></div></header>
             <article className={`rank-row selectable current-player-row ${myStandingExpanded ? "selected" : ""}`} role="button" tabIndex={0} aria-expanded={myStandingExpanded} onClick={() => setMyStandingExpanded((expanded) => !expanded)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setMyStandingExpanded((expanded) => !expanded); } }}><RankedPlayerCells player={myRanking} /></article>
             {myStandingExpanded ? <div className="rank-history-wrap"><InlineCaptainHistory playerName={myRanking.name} history={myRanking.history} currentGwLabel={currentTrialLabel} /></div> : null}
           </section> : null}

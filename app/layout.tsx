@@ -13,7 +13,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="zh-CN">
       <head>
         <link rel="icon" href={`${basePath}/penguin-cup-logo.png`} />
-        <style>{`:root{--asset-frozen-abyss:url("${basePath}/frozen-abyss-hero.png");--asset-penguin-logo:url("${basePath}/penguin-cup-logo.png")}`}</style>
+        <style>{`:root{--asset-frozen-abyss:url("${basePath}/frozen-abyss-hero.webp");--asset-penguin-logo:url("${basePath}/penguin-cup-logo.webp")}`}</style>
       </head>
       <body>{children}</body>
     </html>
