@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { preload } from "react-dom";
 import "./globals.css";
 
 const basePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/[^a-zA-Z0-9/_-]/g, "");
@@ -9,6 +10,11 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  preload(`${basePath}/frozen-abyss-hero.webp`, { as: "image", type: "image/webp", fetchPriority: "high" });
+  preload(`${basePath}/assets/leaderboard/ice-frame-complete.webp`, { as: "image", type: "image/webp", fetchPriority: "high" });
+  preload(`${basePath}/assets/leaderboard/score-slot.webp`, { as: "image", type: "image/webp" });
+  preload(`${basePath}/assets/leaderboard/ice-history-frame.webp`, { as: "image", type: "image/webp", fetchPriority: "low" });
+
   return (
     <html lang="zh-CN">
       <head>

@@ -3071,7 +3071,7 @@ main > * {
 /* Frozen frame slicing: preserve carved corners while the rails adapt to content. */
 .ranking-panel {
   padding: 0;
-  border: var(--space-2xl) solid transparent;
+  border: var(--space-2xl) solid var(--color-rule-2);
   border-image-source: var(--ledger-complete-frame-image);
   border-image-slice: 155;
   border-image-width: var(--space-2xl);
@@ -3094,7 +3094,7 @@ main > * {
 .rank-row:nth-of-type(even),
 .rank-row.selected {
   box-sizing: border-box;
-  border: var(--space-xs) solid transparent;
+  border: var(--space-xs) solid var(--color-rule);
   border-image-source: var(--ledger-row-frame-image);
   border-image-slice: 82 92;
   border-image-width: var(--space-xs);
@@ -3118,7 +3118,7 @@ main > * {
 }
 
 .rank-history {
-  border: var(--space-md) solid transparent;
+  border: var(--space-md) solid var(--color-rule-2);
   border-image-source: var(--ledger-history-frame-image);
   border-image-slice: 118 92;
   border-image-width: var(--space-md);

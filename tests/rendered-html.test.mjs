@@ -55,10 +55,11 @@ test("server-renders the Penguin Cup leaderboard", async () => {
 });
 
 test("keeps the five-stage interaction and unified ranking contracts", async () => {
-  const [page, css, currentTrial] = await Promise.all([
+  const [page, css, currentTrial, layout] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/current-trial.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
   ]);
 
   assert.equal((page.match(/id:\s*[1-5],\s*roman:/g) ?? []).length, 5);
@@ -69,6 +70,10 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /assets\/leaderboard\/ice-frame-complete\.webp/);
   assert.match(page, /assets\/leaderboard\/ice-row-frame\.webp/);
   assert.match(page, /assets\/leaderboard\/ice-history-frame\.webp/);
+  assert.match(layout, /preload\(`\$\{basePath\}\/assets\/leaderboard\/ice-frame-complete\.webp`/);
+  assert.match(layout, /preload\(`\$\{basePath\}\/assets\/leaderboard\/score-slot\.webp`/);
+  assert.match(layout, /preload\(`\$\{basePath\}\/assets\/leaderboard\/ice-history-frame\.webp`[\s\S]*fetchPriority: "low"/);
+  assert.match(css, /border:\s*var\(--space-2xl\) solid var\(--color-rule-2\)/);
   assert.match(page, /Official FPL classic league 511690 roster/);
   const rosterBlock = page.match(/const players = \[([\s\S]*?)\n\];/)?.[1] ?? "";
   assert.equal((rosterBlock.match(/^\s*".*",\s*$/gm) ?? []).length, 111);
@@ -312,7 +317,9 @@ test("server-renders the isolated ice arena prototype", async () => {
   assert.match(html, /DDL 已过/);
   assert.match(html, /剩余[\s\S]{0,40}5[\s\S]{0,40}次决斗权/);
   assert.match(html, /3[\s\S]{0,30}\/[\s\S]{0,30}5 组/);
-  assert.match(html, /冰海角斗场排行榜/);
+  assert.match(html, /积分与血量排行榜/);
+  assert.match(html, /当周队长得分/);
+  assert.match(html, /队长总分/);
 
   const [demo, css] = await Promise.all([
     readFile(new URL("../app/test/arena-demo.tsx", import.meta.url), "utf8"),
@@ -325,6 +332,12 @@ test("server-renders the isolated ice arena prototype", async () => {
   assert.match(demo, /const isAfterDeadline = true/);
   assert.match(demo, /挑战已发起/);
   assert.match(demo, /ice-frame-complete\.webp/);
+  assert.match(demo, /--pixel-heart-image/);
+  assert.match(demo, /队长选择记录/);
+  assert.match(demo, /决斗记录/);
+  assert.match(demo, /duelHistoryFor/);
+  assert.match(demo, /双方队长与得分将在 DDL 后统一公开/);
+  assert.doesNotMatch(demo, /confirmVersus[\s\S]*selectedCandidate\.revealed(?:Captain|Score)/);
   assert.match(demo, /role="dialog" aria-modal="true"/);
   assert.match(demo, /setDuels\(\(current\) => \[/);
   assert.doesNotMatch(demo, />基础</);

@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
+import { Fragment, useEffect, useMemo, useState, type CSSProperties, type FormEvent } from "react";
 import styles from "./arena.module.css";
 
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const isAfterDeadline = true;
 
 type DialogStep = "closed" | "select" | "confirm";
-type DuelStatus = "settled" | "draw";
 
 type Duel = {
   id: number;
@@ -17,16 +16,52 @@ type Duel = {
   targetCaptain: string;
   challengerScore: number;
   targetScore: number;
-  status: DuelStatus;
 };
 
 type Candidate = {
   name: string;
   rank: number;
   hp: number;
-  captain: string;
-  captainScore: number;
+  revealedCaptain: string;
+  revealedScore: number;
 };
+
+type CaptainHistoryEntry = {
+  gw: number;
+  captain: string;
+  rate: number;
+  points: number;
+  life: number;
+};
+
+type DemoPlayer = {
+  name: string;
+  history: CaptainHistoryEntry[];
+};
+
+type RankedDemoPlayer = DemoPlayer & {
+  rank: number;
+  gpc: number;
+  captainTotal: number;
+  hp: number;
+};
+
+type DuelHistoryRecord = {
+  id: number;
+  opponent: string;
+  result: "胜" | "负" | "平";
+  hpChange: number;
+};
+
+function makeHistory(captain: string, points: number[], rate: number): CaptainHistoryEntry[] {
+  return points.map((score, index) => {
+    const gw = index + 5;
+    const life = gw === 9
+      ? score >= 10 ? 1 : score <= 3 ? -1 : 0
+      : score >= 10 ? rate < 10 ? 2 : 1 : 0;
+    return { gw, captain, rate, points: score, life };
+  });
+}
 
 const initialDuels: Duel[] = [
   {
@@ -37,7 +72,6 @@ const initialDuels: Duel[] = [
     targetCaptain: "Saka",
     challengerScore: 12,
     targetScore: 6,
-    status: "settled",
   },
   {
     id: 2,
@@ -47,7 +81,6 @@ const initialDuels: Duel[] = [
     targetCaptain: "Isak",
     challengerScore: 8,
     targetScore: 8,
-    status: "draw",
   },
   {
     id: 3,
@@ -57,33 +90,54 @@ const initialDuels: Duel[] = [
     targetCaptain: "B.Fernandes",
     challengerScore: 4,
     targetScore: 11,
-    status: "settled",
   },
 ];
 
 const candidates: Candidate[] = [
-  { name: "Nicolas' XI", rank: 7, hp: 4, captain: "Haaland", captainScore: 4 },
-  { name: "Dream Tickets", rank: 10, hp: 3, captain: "Saka", captainScore: 6 },
-  { name: "F.C. Chelion", rank: 12, hp: 3, captain: "Palmer", captainScore: 8 },
-  { name: "Loki7_7", rank: 14, hp: 3, captain: "Isak", captainScore: 8 },
-  { name: "谨慎分析 大胆梭哈", rank: 16, hp: 3, captain: "Haaland", captainScore: 4 },
-  { name: "足球离家出走了", rank: 19, hp: 3, captain: "Saka", captainScore: 6 },
+  { name: "Nicolas' XI", rank: 7, hp: 4, revealedCaptain: "Haaland", revealedScore: 4 },
+  { name: "Dream Tickets", rank: 10, hp: 3, revealedCaptain: "Saka", revealedScore: 6 },
+  { name: "F.C. Chelion", rank: 12, hp: 3, revealedCaptain: "Palmer", revealedScore: 8 },
+  { name: "Loki7_7", rank: 14, hp: 3, revealedCaptain: "Isak", revealedScore: 8 },
+  { name: "谨慎分析 大胆梭哈", rank: 16, hp: 3, revealedCaptain: "Haaland", revealedScore: 4 },
+  { name: "足球离家出走了", rank: 19, hp: 3, revealedCaptain: "Saka", revealedScore: 6 },
 ];
 
-const rankingRows = [
-  { rank: 1, name: "willis's Team", captain: "Haaland", captainScore: 12, hp: 7 },
-  { rank: 2, name: "Team电子羊", captain: "B.Fernandes", captainScore: 11, hp: 5 },
-  { rank: 3, name: "HindMics", captain: "Palmer", captainScore: 8, hp: 4 },
-  { rank: 4, name: "Orange's Team", captain: "Isak", captainScore: 8, hp: 4 },
-  { rank: 5, name: "SSU - Sakai Moka", captain: "Saka", captainScore: 6, hp: 3 },
-  { rank: 6, name: "muscleking", captain: "Haaland", captainScore: 4, hp: 3 },
-  { rank: 20, name: "Eva（我）", captain: "Haaland", captainScore: 10, hp: 4 },
+const demoPlayers: DemoPlayer[] = [
+  { name: "willis's Team", history: makeHistory("Haaland", [2, 11, 5, 9, 12], 34.2) },
+  { name: "SSU - Sakai Moka", history: makeHistory("Saka", [6, 3, 10, 7, 6], 18.9) },
+  { name: "HindMics", history: makeHistory("Palmer", [5, 12, 8, 6, 8], 33.3) },
+  { name: "Orange's Team", history: makeHistory("Isak", [2, 4, 11, 8, 8], 9.0) },
+  { name: "muscleking", history: makeHistory("Haaland", [12, 7, 2, 9, 4], 34.2) },
+  { name: "Team电子羊", history: makeHistory("B.Fernandes", [5, 3, 6, 10, 11], 7.2) },
+  { name: "Eva（我）", history: makeHistory("Haaland", [6, 10, 5, 8, 10], 34.2) },
+  { name: "Nicolas' XI", history: makeHistory("Haaland", [8, 5, 11, 3, 4], 34.2) },
+  { name: "Dream Tickets", history: makeHistory("Saka", [4, 10, 5, 7, 6], 18.9) },
+  { name: "F.C. Chelion", history: makeHistory("Palmer", [10, 6, 3, 12, 8], 33.3) },
+  { name: "Loki7_7", history: makeHistory("Isak", [7, 2, 5, 10, 8], 9.0) },
+  { name: "谨慎分析 大胆梭哈", history: makeHistory("Haaland", [3, 6, 12, 4, 4], 34.2) },
+  { name: "足球离家出走了", history: makeHistory("Saka", [9, 3, 7, 11, 6], 18.9) },
 ];
 
-function captainScoreClass(score: number) {
-  if (score >= 10) return styles.positive;
-  if (score <= 3) return styles.negative;
-  return styles.neutral;
+function duelHistoryFor(playerName: string, duels: Duel[]): DuelHistoryRecord[] {
+  return duels.flatMap((duel) => {
+    const isChallenger = duel.challenger === playerName;
+    const isTarget = duel.target === playerName;
+    if (!isChallenger && !isTarget) return [];
+
+    const ownScore = isChallenger ? duel.challengerScore : duel.targetScore;
+    const opponentScore = isChallenger ? duel.targetScore : duel.challengerScore;
+    const result = ownScore === opponentScore ? "平" : ownScore > opponentScore ? "胜" : "负";
+    return [{
+      id: duel.id,
+      opponent: isChallenger ? duel.target : duel.challenger,
+      result,
+      hpChange: result === "胜" ? 1 : result === "负" ? -1 : 0,
+    } satisfies DuelHistoryRecord];
+  });
+}
+
+function formatLife(value: number) {
+  return value > 0 ? `+${value}` : String(value);
 }
 
 function DuelCard({ duel }: { duel: Duel }) {
@@ -123,17 +177,90 @@ function DuelCard({ duel }: { duel: Duel }) {
   );
 }
 
+function DemoRankedPlayerCells({ player }: { player: RankedDemoPlayer }) {
+  return (
+    <>
+      <strong
+        className={`rank-gem rank-gem-${player.rank <= 3 ? player.rank : 4}`}
+        aria-label={`第 ${player.rank} 名`}
+        style={player.rank <= 3 ? { "--rank-badge-image": `url("${siteBasePath}/assets/leaderboard/rank-${player.rank}-ice.webp")` } as CSSProperties : undefined}
+      ><span aria-hidden="true">{player.rank}</span></strong>
+      <div className="player-id-cell"><strong className="player-id">{player.name}</strong></div>
+      <strong className="stat-score"><span>{player.gpc}</span></strong>
+      <strong className="stat-score stat-captain-total"><span>{player.captainTotal}</span></strong>
+      <div className="hp-cell" aria-label={`${player.hp} 点血量`}>
+        <span className="pixel-health" aria-hidden="true">
+          {Array.from({ length: player.hp }, (_, index) => <i className="blood-drop" key={index}></i>)}
+        </span>
+      </div>
+    </>
+  );
+}
+
+function DemoRankingHistory({ player, duelRecords }: { player: RankedDemoPlayer; duelRecords: DuelHistoryRecord[] }) {
+  return (
+    <section className="rank-history" aria-label={`${player.name} 的得分与血量记录`}>
+      <header><strong>队长选择记录</strong><small>GW 9</small></header>
+      <div>
+        {player.history.map((item) => (
+          <article className="history-row" key={`captain-${item.gw}`}>
+            <strong className="history-gw">GW{item.gw}</strong>
+            <div className="history-captain"><b>{item.captain}</b><small className={item.rate < 10 ? "rare-pick" : ""}>选择率 {item.rate}%</small></div>
+            <div className="history-result" aria-label={`${item.points} 分，血量变化 ${formatLife(item.life)}`}>
+              <span className="history-result-box history-points" aria-hidden="true"><b>{item.points}</b><em>分</em></span>
+              <span className={`history-result-box history-life ${item.life >= 2 ? "life-rare" : ""}`} aria-hidden="true"><b>{formatLife(item.life)}</b><em>血</em></span>
+            </div>
+          </article>
+        ))}
+        {duelRecords.map((record) => (
+          <article className={`history-row ${styles.duelHistoryRow}`} key={`duel-${record.id}`}>
+            <strong className="history-gw">GW9</strong>
+            <div className="history-captain"><b>决斗记录</b><small>VS {record.opponent}</small></div>
+            <div className="history-result" aria-label={`决斗${record.result}，血量变化 ${formatLife(record.hpChange)}`}>
+              <span className={`history-result-box ${record.result === "胜" ? styles.duelWin : record.result === "负" ? styles.duelLoss : ""}`} aria-hidden="true"><b>{record.result}</b><em>决斗</em></span>
+              <span className={`history-result-box ${record.hpChange > 0 ? styles.duelWin : record.hpChange < 0 ? styles.duelLoss : ""}`} aria-hidden="true"><b>{formatLife(record.hpChange)}</b><em>血</em></span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function ArenaDemo() {
   const [duels, setDuels] = useState<Duel[]>(initialDuels);
   const [dialogStep, setDialogStep] = useState<DialogStep>("closed");
   const [selectedTarget, setSelectedTarget] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [expandedPlayer, setExpandedPlayer] = useState<string | null>(null);
   const usedDuelRights = Math.max(0, duels.length - initialDuels.length);
   const remainingDuels = 5 - usedDuelRights;
   const selectedCandidate = useMemo(() => candidates.find((candidate) => candidate.name === selectedTarget) ?? null, [selectedTarget]);
+  const ranking = useMemo<RankedDemoPlayer[]>(() => {
+    const rows = demoPlayers.map((player) => {
+      const duelLife = duelHistoryFor(player.name, duels).reduce((total, record) => total + record.hpChange, 0);
+      const latest = player.history[player.history.length - 1];
+      return {
+        ...player,
+        rank: 0,
+        gpc: latest?.points ?? 0,
+        captainTotal: player.history.reduce((total, item) => total + item.points, 0),
+        hp: Math.max(0, 1 + player.history.reduce((total, item) => total + item.life, 0) + duelLife),
+      };
+    });
+    return rows
+      .sort((left, right) => right.hp - left.hp || right.captainTotal - left.captainTotal || left.name.localeCompare(right.name, "zh-CN"))
+      .map((player, index) => ({ ...player, rank: index + 1 }));
+  }, [duels]);
   const frameStyle = {
     "--arena-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.webp")`,
-    "--arena-row-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-row-frame.webp")`,
+  } as CSSProperties;
+  const rankingPanelAssets = {
+    "--ledger-complete-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.webp")`,
+    "--ledger-row-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-row-frame.webp")`,
+    "--ledger-history-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-history-frame.webp")`,
+    "--score-slot-image": `url("${siteBasePath}/assets/leaderboard/score-slot.webp")`,
+    "--pixel-heart-image": `url("${siteBasePath}/assets/leaderboard/pixel-heart.svg")`,
   } as CSSProperties;
 
   useEffect(() => {
@@ -168,7 +295,7 @@ export default function ArenaDemo() {
   const confirmChallenge = () => {
     if (!selectedCandidate || duels.length >= 5) return;
     const challengerScore = 10;
-    const targetScore = selectedCandidate.captainScore;
+    const targetScore = selectedCandidate.revealedScore;
     setDuels((current) => [
       ...current,
       {
@@ -176,10 +303,9 @@ export default function ArenaDemo() {
         challenger: "Eva（我）",
         target: selectedCandidate.name,
         challengerCaptain: "Haaland",
-        targetCaptain: selectedCandidate.captain,
+        targetCaptain: selectedCandidate.revealedCaptain,
         challengerScore,
         targetScore,
-        status: challengerScore === targetScore ? "draw" : "settled",
       },
     ]);
     setDialogStep("closed");
@@ -225,33 +351,50 @@ export default function ArenaDemo() {
         )}
       </section>
 
-      <section className={styles.rankingPanel} style={frameStyle}>
-        <header>
-          <div><small>GW9 · LIFE LEDGER</small><h2>冰海角斗场排行榜</h2></div>
-        </header>
-        <div className={styles.rankingHead} aria-hidden="true">
-          <span>阶位</span><span>玩家 ID</span><span>当前队长</span><span>队长得分</span><span>血量</span>
-        </div>
-        <div className={styles.rankingList}>
-          {rankingRows.map((player) => (
-            <article className={player.name.includes("（我）") ? styles.me : ""} key={player.name}>
-              <span>{player.rank}</span>
-              <strong>{player.name}</strong>
-              <span>{player.captain}</span>
-              <b className={captainScoreClass(player.captainScore)}>{player.captainScore}</b>
-              <strong className={styles.hp}>{player.hp} ♥</strong>
-            </article>
-          ))}
-        </div>
+      <section className={styles.rankingArea}>
+        <article className="panel ranking-panel" id="ranking" style={rankingPanelAssets}>
+          <header className="panel-title"><div><small>2026–27 · ALL STAGES</small><h2>积分与血量排行榜</h2></div></header>
+          <div className="ranking-head" aria-hidden="true">
+            <span>阶位</span><span>玩家 ID</span><span>当周队长得分</span><span>队长总分</span><span>血量</span>
+          </div>
+          <div className="ranking-list">
+            {ranking.map((player) => {
+              const isExpanded = expandedPlayer === player.name;
+              return <Fragment key={player.name}>
+                <article
+                  className={`rank-row selectable ${isExpanded ? "selected" : ""} ${player.name === "Eva（我）" ? "current-player-row" : ""}`}
+                  onClick={() => setExpandedPlayer((current) => current === player.name ? null : player.name)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      setExpandedPlayer((current) => current === player.name ? null : player.name);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
+                >
+                  <DemoRankedPlayerCells player={player} />
+                </article>
+                {isExpanded ? <div className="rank-history-wrap"><DemoRankingHistory player={player} duelRecords={duelHistoryFor(player.name, duels)} /></div> : null}
+              </Fragment>;
+            })}
+          </div>
+          <nav className="ranking-pagination" aria-label="排行榜分页">
+            <button type="button" disabled aria-label="上一页"><span aria-hidden="true">‹</span></button>
+            <span><strong>第 1 页</strong></span>
+            <button type="button" disabled aria-label="下一页"><span aria-hidden="true">›</span></button>
+          </nav>
+        </article>
       </section>
 
       {dialogStep === "select" ? <div className={styles.dialogBackdrop} role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setDialogStep("closed"); }}>
         <section className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby="duel-dialog-title">
           <button className={styles.closeButton} type="button" onClick={() => setDialogStep("closed")} aria-label="关闭挑战申请">×</button>
           <header>
-            <small>GW9 · DUEL APPLICATION</small>
+            <small>GW9 · DDL 前申请</small>
             <h2 id="duel-dialog-title">发起决斗申请</h2>
-            <p>当前身份：<strong>Eva</strong>　队长：<strong>Haaland</strong></p>
+            <p>当前身份：<strong>Eva</strong></p>
           </header>
           <form onSubmit={reviewChallenge}>
             <fieldset>
@@ -288,16 +431,15 @@ export default function ArenaDemo() {
                 <small>挑战者 · RANK 20</small>
                 <strong>Eva（我）</strong>
                 <span>当前血量 <b>4 ♥</b></span>
-                <span>队长 <b>Haaland</b> · GW9 <em>10</em></span>
               </article>
               <b>VS</b>
               <article>
                 <small>挑战对象 · RANK {selectedCandidate.rank}</small>
                 <strong>{selectedCandidate.name}</strong>
                 <span>当前血量 <b>{selectedCandidate.hp} ♥</b></span>
-                <span>队长 <b>{selectedCandidate.captain}</b> · GW9 <em>{selectedCandidate.captainScore}</em></span>
               </article>
             </div>
+            <p className={styles.hiddenCaptainNotice}>双方队长与得分将在 DDL 后统一公开</p>
             <div className={styles.dialogActions}>
               <button type="button" onClick={() => setDialogStep("select")}>返回重选</button>
               <button type="button" className={styles.primaryAction} onClick={confirmChallenge}>确认提交</button>

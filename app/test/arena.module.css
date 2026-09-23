@@ -57,7 +57,7 @@
 
 .hero,
 .arena,
-.rankingPanel {
+.rankingArea {
   width: min(88rem, calc(100% - 3rem));
   margin-inline: auto;
 }
@@ -68,7 +68,6 @@
 
 .hero small,
 .arenaHeader small,
-.rankingPanel > header small,
 .dialog header small,
 .confirmVersus small {
   color: var(--arena-cyan);
@@ -83,14 +82,13 @@
   letter-spacing: 0.03em;
 }
 
-.arena,
-.rankingPanel {
+.arena {
   --frame-width: 2rem;
   box-sizing: border-box;
   position: relative;
   margin-bottom: 3rem;
   padding: clamp(0.6rem, 1.8vw, 1.35rem);
-  border: var(--frame-width) solid transparent;
+  border: var(--frame-width) solid var(--arena-rule);
   border-image-source: var(--arena-frame-image);
   border-image-slice: 155;
   border-image-width: var(--frame-width);
@@ -111,7 +109,6 @@
 }
 
 .arenaHeader h2,
-.rankingPanel > header h2,
 .dialog h2 {
   margin-top: 0.35rem;
   font-size: clamp(1.65rem, 3vw, 2.65rem);
@@ -228,53 +225,22 @@
 .preDeadlineSummary strong { color: var(--arena-cyan); font-size: 2.5rem; }
 .preDeadlineSummary span { color: var(--arena-muted); }
 
-.rankingPanel > header {
-  margin-bottom: 1.3rem;
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 1rem;
+.rankingArea {
+  margin-bottom: 3rem;
 }
 
-.rankingHead,
-.rankingList article {
-  display: grid;
-  grid-template-columns: 5rem minmax(12rem, 1.5fr) minmax(9rem, 1fr) 7rem 7rem;
-  align-items: center;
-  gap: 0.6rem;
+.duelHistoryRow {
+  border-color: rgba(0, 217, 245, 0.44) !important;
+  background-image: linear-gradient(90deg, rgba(0, 217, 245, 0.12), rgba(1, 16, 23, 0.72)) !important;
 }
 
-.rankingHead {
-  min-height: 3.2rem;
-  padding-inline: 1rem;
-  border: 1px solid var(--arena-rule);
-  color: var(--arena-muted);
-  font: 700 0.64rem/1 var(--font-label);
-  letter-spacing: 0.08em;
-  text-align: center;
-}
+.duelWin,
+.duelWin b,
+.duelWin em { color: #51f0c4 !important; }
 
-.rankingList { border-inline: 1px solid var(--arena-rule); }
-.rankingList article {
-  min-height: 4.2rem;
-  padding: 0.7rem 1rem;
-  border: 0.38rem solid transparent;
-  border-image-source: var(--arena-row-frame-image);
-  border-image-slice: 82 92;
-  border-image-width: 0.38rem;
-  border-image-repeat: stretch;
-  background: linear-gradient(90deg, rgba(1, 16, 23, 0.82), rgba(0, 217, 245, 0.05), rgba(1, 16, 23, 0.82));
-  background-clip: padding-box;
-  text-align: center;
-}
-
-.rankingList article + article { margin-top: 0.15rem; }
-.rankingList article.me { background: linear-gradient(90deg, rgba(0, 62, 76, 0.82), rgba(0, 217, 245, 0.2), rgba(0, 62, 76, 0.82)); }
-.rankingList article > span:first-child { color: var(--arena-muted); }
-.rankingList article > strong:nth-child(2) { text-align: left; }
-.rankingList article > span:nth-child(3) { color: #d7e6eb; font-size: 0.85rem; font-weight: 700; }
-.rankingList b { font-size: 0.9rem; }
-.hp { color: #ff657c; letter-spacing: 0.08em; }
+.duelLoss,
+.duelLoss b,
+.duelLoss em { color: #ff657c !important; }
 
 .dialogBackdrop {
   position: fixed;
@@ -334,6 +300,7 @@
 .confirmVersus article > span { color: var(--arena-muted); font-size: 0.78rem; }
 .confirmVersus article > span b { color: var(--arena-ink); }
 .confirmVersus article > span em { color: var(--arena-cyan); font-size: 1rem; font-style: normal; font-weight: 800; }
+.hiddenCaptainNotice { margin: 1rem 0 0; color: var(--arena-muted); font-size: 0.75rem; text-align: center; }
 
 @media (hover: hover) and (pointer: fine) {
   .backLink:hover,
@@ -345,9 +312,6 @@
 
 @media (max-width: 64rem) {
   .duelGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .rankingPanel { overflow-x: auto; }
-  .rankingHead,
-  .rankingList { min-width: 50rem; }
 }
 
 @media (max-width: 48rem) {
@@ -358,36 +322,15 @@
   .backLink { min-width: 6.3rem; min-height: 2.5rem; }
   .hero,
   .arena,
-  .rankingPanel { width: calc(100% - 1rem); }
+  .rankingArea { width: calc(100% - 1rem); }
   .hero { padding: 2.8rem 0.3rem 1.6rem; }
   .hero h1 { font-size: clamp(3.1rem, 16vw, 4.8rem); }
-  .arena,
-  .rankingPanel { --frame-width: 1rem; padding: 0.55rem; margin-bottom: 1.35rem; }
+  .arena { --frame-width: 1rem; padding: 0.55rem; margin-bottom: 1.35rem; }
+  .rankingArea { margin-bottom: 1.35rem; }
   .arenaHeader { padding: 0.45rem; grid-template-columns: 1fr auto; gap: 1rem; }
   .arenaHeader > div:first-child { grid-column: 1 / -1; }
   .challengeButton { min-width: 9.6rem; }
   .duelGrid { grid-template-columns: 1fr; }
-  .rankingPanel { overflow: visible; }
-  .rankingPanel > header { padding: 0.45rem; }
-  .rankingHead { display: none; }
-  .rankingList { min-width: 0; border: 0; }
-  .rankingList article {
-    min-height: 4.7rem;
-    padding: 0.72rem;
-    grid-template-columns: 2.6rem minmax(0, 1fr) auto;
-    grid-template-areas:
-      "rank name hp"
-      "rank captain score";
-    gap: 0.3rem 0.65rem;
-    text-align: left;
-  }
-  .rankingList article > span:first-child { grid-area: rank; align-self: center; text-align: center; }
-  .rankingList article > strong:nth-child(2) { grid-area: name; }
-  .rankingList article > span:nth-child(3) { grid-area: captain; font-size: 0.72rem; }
-  .rankingList article > span:nth-child(3)::before { content: "队长 "; color: var(--arena-muted); font-size: 0.58rem; }
-  .rankingList article > b { grid-area: score; font-size: 0.78rem; }
-  .rankingList article > b::before { content: "队长分 "; color: var(--arena-muted); font-size: 0.58rem; font-weight: 400; }
-  .rankingList article > .hp { grid-area: hp; font-size: 0.78rem; }
   .candidateList { grid-template-columns: 1fr; }
   .dialog > header,
   .dialog form,
