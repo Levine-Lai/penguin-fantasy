@@ -302,6 +302,30 @@ test("server-renders the rules route", async () => {
   assert.doesNotMatch(html, /class="rules-summary"|赛制流程|<span>Gameweeks<\/span>/);
 });
 
+test("server-renders the isolated ice arena prototype", async () => {
+  const response = await render("/test/");
+  assert.equal(response.status, 200);
+
+  const html = await response.text();
+  assert.match(html, /冰海角斗场/);
+  assert.match(html, /TEST · 不影响正式数据/);
+  assert.match(html, /决斗申请与战况/);
+  assert.match(html, /剩余[\s\S]{0,40}5[\s\S]{0,40}次决斗权/);
+  assert.match(html, /3[\s\S]{0,30}\/[\s\S]{0,30}5 组/);
+  assert.match(html, /冰海角斗场排行榜/);
+
+  const [demo, css] = await Promise.all([
+    readFile(new URL("../app/test/arena-demo.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/test/arena.module.css", import.meta.url), "utf8"),
+  ]);
+  assert.equal((demo.match(/^\s*id:\s*[1-3],$/gm) ?? []).length, 3);
+  assert.match(demo, /发起决斗申请/);
+  assert.match(demo, /role="dialog" aria-modal="true"/);
+  assert.match(demo, /setDuels\(\(current\) => \[/);
+  assert.match(css, /grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
+  assert.match(css, /@media \(max-width:\s*48rem\)[\s\S]*?\.duelGrid\s*\{\s*grid-template-columns:\s*1fr;/);
+});
+
 test("ships a double-clickable local HTML edition without network or API calls", async () => {
   const html = await readFile(new URL("../penguin-cup-local.html", import.meta.url), "utf8");
   assert.match(html, /<!doctype html>/i);
