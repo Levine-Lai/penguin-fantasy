@@ -63,7 +63,8 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   ]);
 
   assert.equal((page.match(/id:\s*[1-5],\s*roman:/g) ?? []).length, 5);
-  assert.match(page, /key=\{`ranking-\$\{activeStage\}`\}/);
+  assert.doesNotMatch(page, /key=\{`ranking-\$\{activeStage\}`\}/);
+  assert.match(page, /<section className="boards">/);
   assert.match(page, /className="stage-switcher"/);
   assert.match(page, /rank-gem rank-gem-/);
   assert.match(page, /assets\/leaderboard\/ice-ledger-frame\.webp/);
@@ -72,7 +73,9 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /assets\/leaderboard\/ice-history-frame\.webp/);
   assert.match(layout, /preload\(`\$\{basePath\}\/assets\/leaderboard\/ice-frame-complete\.webp`/);
   assert.match(layout, /preload\(`\$\{basePath\}\/assets\/leaderboard\/score-slot\.webp`/);
-  assert.match(layout, /preload\(`\$\{basePath\}\/assets\/leaderboard\/ice-history-frame\.webp`[\s\S]*fetchPriority: "low"/);
+  assert.doesNotMatch(layout, /preload\(`\$\{basePath\}\/assets\/leaderboard\/ice-history-frame\.webp`/);
+  assert.match(layout, /rel="preconnect" href="https:\/\/penguin-fantasy\.pages\.dev"/);
+  assert.match(page, /loading="lazy"\s+fetchPriority="low"/);
   assert.match(css, /border:\s*var\(--space-2xl\) solid var\(--color-rule-2\)/);
   assert.match(page, /Official FPL classic league 511690 roster/);
   const rosterBlock = page.match(/const players = \[([\s\S]*?)\n\];/)?.[1] ?? "";
@@ -104,8 +107,8 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /\/api\/history/);
   assert.match(page, /Promise\.allSettled/);
   assert.match(page, /AbortController/);
-  assert.match(page, /requestTimeout = 6_000/);
-  assert.match(page, /requestRetryDelays = \[0, 1_500\]/);
+  assert.match(page, /requestTimeout = 5_000/);
+  assert.match(page, /requestRetryDelays = \[0, 750\]/);
   assert.match(page, /import staticFplData from "\.\/static-fpl-data\.json"/);
   assert.match(page, /isLeagueResponse\(bundledFplData\.league\)/);
   assert.match(page, /isHistoryResponse\(bundledFplData\.history\)/);
@@ -166,7 +169,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /className="brand-emblem"/);
   assert.match(page, /className="stage-relic"/);
   assert.match(page, /assets\/stages\/stage-\$\{item\.id\}\.webp/);
-  assert.match(page, /loading=\{item\.id === 1 \? "eager" : "lazy"\}/);
+  assert.match(page, /loading="lazy"/);
   const stageArtifacts = await Promise.all(
     [1, 2, 3, 4, 5].map((id) => readFile(new URL(`../public/assets/stages/stage-${id}.webp`, import.meta.url))),
   );
@@ -180,7 +183,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /据说，只有经历五重试炼、在冰山与深海之间活到最后的人/);
   assert.match(page, /<strong>冰渊之王<\/strong>/);
   assert.doesNotMatch(page, /你的生命，由你守护 你的传奇，由你书写/);
-  assert.match(page, /A New Chapter Await/);
+  assert.doesNotMatch(page, /A New Chapter Await/);
   assert.doesNotMatch(page, /积分与血量排行榜<\/h2><\/div><span>36<\/span>/);
   assert.match(page, /第 \{rankingPage \+ 1\} 页/);
   assert.match(page, /function InlineCaptainHistory/);

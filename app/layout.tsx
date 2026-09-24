@@ -13,11 +13,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   preload(`${basePath}/frozen-abyss-hero.webp`, { as: "image", type: "image/webp", fetchPriority: "high" });
   preload(`${basePath}/assets/leaderboard/ice-frame-complete.webp`, { as: "image", type: "image/webp", fetchPriority: "high" });
   preload(`${basePath}/assets/leaderboard/score-slot.webp`, { as: "image", type: "image/webp" });
-  preload(`${basePath}/assets/leaderboard/ice-history-frame.webp`, { as: "image", type: "image/webp", fetchPriority: "low" });
 
   return (
     <html lang="zh-CN">
       <head>
+        <link rel="preconnect" href="https://penguin-fantasy.pages.dev" crossOrigin="anonymous" />
         <link rel="icon" href={`${basePath}/penguin-cup-logo.png`} />
         <style>{`:root{--asset-frozen-abyss:url("${basePath}/frozen-abyss-hero.webp");--asset-penguin-logo:url("${basePath}/penguin-cup-logo.webp")}`}</style>
       </head>

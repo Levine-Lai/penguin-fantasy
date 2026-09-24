@@ -34,8 +34,8 @@ const leagueCacheKey = "penguin-fantasy:league:v1";
 const historyCacheKey = "penguin-fantasy:history:v1";
 const playerIdentityKey = "penguin-fantasy:player-id:v1";
 const cachedDataMaxAge = 7 * 24 * 60 * 60 * 1000;
-const requestTimeout = 6_000;
-const requestRetryDelays = [0, 1_500];
+const requestTimeout = 5_000;
+const requestRetryDelays = [0, 750];
 
 function isLeagueResponse(value: unknown): value is LeagueResponse {
   const candidate = value as LeagueResponse | null;
@@ -299,7 +299,7 @@ function lifeEarned(points: number, rate: number | null): number {
   return rate !== null && rate < 10 ? 2 : 1;
 }
 
-const refreshRetryDelay = 60_000;
+const refreshRetryDelay = 5 * 60_000;
 
 function beijingSnapshotDay(timestamp: number): number {
   const beijingOffset = 8 * 60 * 60 * 1000;
@@ -477,6 +477,7 @@ export default function Home() {
   const [pendingEntryId, setPendingEntryId] = useState<number | null>(null);
   const mountedRef = useRef(false);
   const refreshInFlightRef = useRef<Promise<void> | null>(null);
+  const leagueResponseReceivedRef = useRef(false);
   const lastRefreshAttemptRef = useRef(0);
   const lastSuccessfulRefreshRef = useRef<number | null>(Number.isFinite(bundledSnapshotTime) ? bundledSnapshotTime : null);
   const stage = stages.find((item) => item.id === activeStage) ?? stages[1];
@@ -491,36 +492,24 @@ export default function Home() {
     lastRefreshAttemptRef.current = requestedAt;
 
     const request = Promise.resolve().then(async () => {
-      const [leagueResult, historyResult] = await Promise.allSettled([
-        fetchFplJsonWithRetry<LeagueResponse>("/api/league"),
-        fetchFplJsonWithRetry<HistoryResponse>("/api/history"),
-      ]);
-
-      if (!mountedRef.current) return;
-
-      const league = leagueResult.status === "fulfilled" && isLeagueResponse(leagueResult.value)
-        ? leagueResult.value
-        : null;
-      const history = historyResult.status === "fulfilled" && isHistoryResponse(historyResult.value)
-        ? historyResult.value
-        : null;
-
-      if (league) {
-        setLeagueTeams(league.teams);
-        writeCachedFplPayload(leagueCacheKey, league);
-      }
-      if (history) {
-        const snapshots = history.snapshots.filter((snapshot) => Array.isArray(snapshot?.teams));
-        setGwSnapshots(snapshots);
-        setGwDeadlines(history.deadlines ?? []);
-        writeCachedFplPayload(historyCacheKey, history);
-        lastSuccessfulRefreshRef.current = Date.now();
-
-        if (!league) {
+      // Apply each response as it arrives: a slow roster request must not hold back scores.
+      await Promise.allSettled([
+        fetchFplJsonWithRetry<HistoryResponse>("/api/history").then((history) => {
+          if (!mountedRef.current || !isHistoryResponse(history)) return;
+          setGwSnapshots(history.snapshots.filter((snapshot) => Array.isArray(snapshot?.teams)));
+          setGwDeadlines(history.deadlines ?? []);
+          writeCachedFplPayload(historyCacheKey, history);
+          lastSuccessfulRefreshRef.current = Date.now();
           const snapshotTeams = leagueTeamsFromHistory(history);
-          if (snapshotTeams.length > 0) setLeagueTeams(snapshotTeams);
-        }
-      }
+          if (!leagueResponseReceivedRef.current && snapshotTeams.length > 0) setLeagueTeams(snapshotTeams);
+        }),
+        fetchFplJsonWithRetry<LeagueResponse>("/api/league").then((league) => {
+          if (!mountedRef.current || !isLeagueResponse(league)) return;
+          leagueResponseReceivedRef.current = true;
+          setLeagueTeams(league.teams);
+          writeCachedFplPayload(leagueCacheKey, league);
+        }),
+      ]);
     }).finally(() => {
       refreshInFlightRef.current = null;
     });
@@ -542,7 +531,10 @@ export default function Home() {
       const validCachedHistory = cachedHistory && cachedHistory.cachedAt > bundledSnapshotTime && isHistoryResponse(cachedHistory.value) ? cachedHistory : null;
 
       if (rememberedPlayerId) setPlayerEntryId(rememberedPlayerId);
-      if (validCachedLeague) setLeagueTeams(validCachedLeague.value.teams);
+      if (validCachedLeague) {
+        leagueResponseReceivedRef.current = true;
+        setLeagueTeams(validCachedLeague.value.teams);
+      }
       if (validCachedHistory) {
         setGwSnapshots(validCachedHistory.value.snapshots.filter((snapshot) => Array.isArray(snapshot?.teams)));
         setGwDeadlines(validCachedHistory.value.deadlines ?? []);
@@ -557,7 +549,8 @@ export default function Home() {
 
     const refreshAfterSnapshotBoundary = () => {
       const lastSuccessfulRefresh = lastSuccessfulRefreshRef.current;
-      if (lastSuccessfulRefresh === null || beijingSnapshotDay(Date.now()) > beijingSnapshotDay(lastSuccessfulRefresh)) {
+      if (lastSuccessfulRefresh === null || beijingSnapshotDay(Date.now()) > beijingSnapshotDay(lastSuccessfulRefresh)
+        || Date.now() - lastRefreshAttemptRef.current >= refreshRetryDelay) {
         void loadFplData();
       }
     };
@@ -772,8 +765,8 @@ export default function Home() {
                   alt=""
                   width="1536"
                   height="1536"
-                  loading={item.id === 1 ? "eager" : "lazy"}
-                  fetchPriority={item.id === 1 ? "high" : "low"}
+                  loading="lazy"
+                  fetchPriority="low"
                   decoding="async"
                   draggable="false"
                 />
@@ -792,9 +785,9 @@ export default function Home() {
         <p>{stage.description}</p>
       </section>
 
-      {activeStage === 1 ? <section className="boards">
-        <article className="panel ranking-panel" id="ranking" key={`ranking-${activeStage}`} style={rankingPanelAssets}>
-          <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>
+      <section className="boards">
+        <article className="panel ranking-panel" id="ranking" style={rankingPanelAssets}>
+          <header className="panel-title"><div><small>GW1–GW8 · 生命之火试炼</small><h2>积分与血量排行榜</h2></div></header>
           {myRanking ? <section className="my-ranking-strip" id="my-ranking" aria-label="我的成绩">
             <header><div><small>MY STANDING</small><strong>{myRanking.name}</strong></div></header>
             <article className={`rank-row selectable current-player-row ${myStandingExpanded ? "selected" : ""}`} role="button" tabIndex={0} aria-expanded={myStandingExpanded} onClick={() => setMyStandingExpanded((expanded) => !expanded)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setMyStandingExpanded((expanded) => !expanded); } }}><RankedPlayerCells player={myRanking} /></article>
@@ -851,7 +844,7 @@ export default function Home() {
             })}
           </div>
         </article>
-      </section> : <section className="chapter-await" aria-live="polite"><p>A New Chapter Await</p></section>}
+      </section>
 
       {loginStep !== "closed" ? <div className="player-login-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeLogin(); }} onKeyDown={(event) => { if (event.key === "Escape") closeLogin(); }}>
         <section className="player-login-dialog" role="dialog" aria-modal="true" aria-labelledby="player-login-title">

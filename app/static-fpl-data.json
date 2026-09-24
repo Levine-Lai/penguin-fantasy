@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-22T08:39:00.642Z",
+  "generatedAt": "2026-09-24T00:54:49.426Z",
   "league": {
     "ready": true,
     "leagueId": 511690,
@@ -117,12 +117,12 @@
         "teamName": "Real Madridista"
       },
       {
-        "entryId": 117128,
-        "teamName": "Dongma"
-      },
-      {
         "entryId": 128271,
         "teamName": "Wenbo's Team"
+      },
+      {
+        "entryId": 117128,
+        "teamName": "Dongma"
       },
       {
         "entryId": 64942,
@@ -225,12 +225,12 @@
         "teamName": "Noodle FC"
       },
       {
-        "entryId": 13184,
-        "teamName": "JZhuoyan"
-      },
-      {
         "entryId": 1844803,
         "teamName": "AVERAGE"
+      },
+      {
+        "entryId": 13184,
+        "teamName": "JZhuoyan"
       },
       {
         "entryId": 7455,
@@ -4327,6 +4327,14 @@
             "captainPickRate": 66.7
           },
           {
+            "entryId": 128271,
+            "teamName": "Wenbo's Team",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
             "entryId": 117128,
             "teamName": "Dongma",
             "captainId": 411,
@@ -4343,8 +4351,8 @@
             "captainPickRate": 10.8
           },
           {
-            "entryId": 128271,
-            "teamName": "Wenbo's Team",
+            "entryId": 197536,
+            "teamName": "Yemoooon",
             "captainId": 411,
             "captainName": "Haaland",
             "captainPoints": 6,
@@ -4353,14 +4361,6 @@
           {
             "entryId": 25503,
             "teamName": "联曼",
-            "captainId": 411,
-            "captainName": "Haaland",
-            "captainPoints": 6,
-            "captainPickRate": 66.7
-          },
-          {
-            "entryId": 197536,
-            "teamName": "Yemoooon",
             "captainId": 411,
             "captainName": "Haaland",
             "captainPoints": 6,
@@ -4671,20 +4671,20 @@
             "captainPickRate": 66.7
           },
           {
-            "entryId": 24950,
-            "teamName": "美式加冰",
-            "captainId": 411,
-            "captainName": "Haaland",
-            "captainPoints": 6,
-            "captainPickRate": 66.7
-          },
-          {
             "entryId": 50026,
             "teamName": "Wei's Team",
             "captainId": 426,
             "captainName": "B.Fernandes",
             "captainPoints": 2,
             "captainPickRate": 7.2
+          },
+          {
+            "entryId": 24950,
+            "teamName": "美式加冰",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
           },
           {
             "entryId": 17081,
@@ -4991,7 +4991,7 @@
             "captainPickRate": 2.7
           }
         ],
-        "updatedAt": "2026-09-21T23:30:45.905Z"
+        "updatedAt": "2026-09-23T23:30:42.710Z"
       }
     ],
     "deadlines": [
