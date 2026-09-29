@@ -164,8 +164,8 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /尚无队长选择记录/);
   assert.match(page, /InlineCaptainHistory playerName=\{name\} history=\{history\} currentGwLabel=\{currentTrialLabel\}/);
   assert.doesNotMatch(page, /<header><strong>队长选择记录<\/strong><small>见习者集结<\/small><\/header>/);
-  assert.match(page, /useState<StageId>\(1\)/);
-  assert.match(page, /item\.id === 1 \? <i>当前<\/i>/);
+  assert.match(page, /useState<StageId>\(isArenaPreview \? 2 : 1\)/);
+  assert.match(page, /item\.id === \(isArenaPreview \? 2 : 1\) \? <i>当前<\/i>/);
   assert.match(page, /className="brand-emblem"/);
   assert.match(page, /className="stage-relic"/);
   assert.match(page, /assets\/stages\/stage-\$\{item\.id\}\.webp/);
@@ -310,11 +310,16 @@ test("server-renders the rules route", async () => {
   assert.doesNotMatch(html, /class="rules-summary"|赛制流程|<span>Gameweeks<\/span>/);
 });
 
-test("server-renders the isolated ice arena prototype", async () => {
+test("server-renders the arena inside the second chapter's homepage shell", async () => {
   const response = await render("/test/");
   assert.equal(response.status, 200);
 
   const html = await response.text();
+  assert.match(html, /冰渊王座/);
+  assert.match(html, /CHAPTER[\s\S]{0,80}II/);
+  assert.match(html, /选择阶段/);
+  assert.match(html, /冰渊法典/);
+  assert.match(html, /GW 9/);
   assert.match(html, /冰海角斗场/);
   assert.match(html, /决斗申请与战况/);
   assert.match(html, /DDL 已过/);
@@ -328,6 +333,7 @@ test("server-renders the isolated ice arena prototype", async () => {
     readFile(new URL("../app/test/arena-demo.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/test/arena.module.css", import.meta.url), "utf8"),
   ]);
+  assert.doesNotMatch(demo, /<main className=\{styles\.page\}|styles\.siteHeader|styles\.hero/);
   assert.equal((demo.match(/^\s*id:\s*[1-3],$/gm) ?? []).length, 3);
   assert.match(demo, /发起决斗申请/);
   assert.match(demo, /确认挑战对象/);

@@ -312,20 +312,7 @@ export default function ArenaDemo() {
   };
 
   return (
-    <main className={styles.page}>
-      <header className={styles.siteHeader}>
-        <a className={styles.brand} href={`${siteBasePath}/`} aria-label="返回正式战榜">
-          <span className={styles.brandEmblem} aria-hidden="true"></span>
-          <span><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span>
-        </a>
-        <a className={styles.backLink} href={`${siteBasePath}/`}>返回战榜</a>
-      </header>
-
-      <section className={styles.hero}>
-        <small>STAGE II · GW9–GW20</small>
-        <h1>冰海角斗场</h1>
-      </section>
-
+    <div className={styles.preview}>
       <section className={styles.arena} style={frameStyle}>
         <header className={styles.arenaHeader}>
           <div>
@@ -447,6 +434,6 @@ export default function ArenaDemo() {
           </div>
         </section>
       </div> : null}
-    </main>
+    </div>
   );
 }

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-24T00:54:49.426Z",
+  "generatedAt": "2026-09-29T06:01:29.598Z",
   "league": {
     "ready": true,
     "leagueId": 511690,
@@ -109,32 +109,32 @@
         "teamName": "Summerfan"
       },
       {
-        "entryId": 113485,
-        "teamName": "一人血书 求这刺聊点啥回归"
-      },
-      {
         "entryId": 8086,
         "teamName": "Real Madridista"
       },
       {
-        "entryId": 128271,
-        "teamName": "Wenbo's Team"
+        "entryId": 113485,
+        "teamName": "一人血书 求这刺聊点啥回归"
       },
       {
         "entryId": 117128,
         "teamName": "Dongma"
       },
       {
+        "entryId": 128271,
+        "teamName": "Wenbo's Team"
+      },
+      {
         "entryId": 64942,
         "teamName": "Yamine Lmao"
       },
       {
-        "entryId": 197536,
-        "teamName": "Yemoooon"
-      },
-      {
         "entryId": 25503,
         "teamName": "联曼"
+      },
+      {
+        "entryId": 197536,
+        "teamName": "Yemoooon"
       },
       {
         "entryId": 19977,
@@ -225,12 +225,12 @@
         "teamName": "Noodle FC"
       },
       {
-        "entryId": 1844803,
-        "teamName": "AVERAGE"
-      },
-      {
         "entryId": 13184,
         "teamName": "JZhuoyan"
+      },
+      {
+        "entryId": 1844803,
+        "teamName": "AVERAGE"
       },
       {
         "entryId": 7455,
@@ -4287,14 +4287,6 @@
             "captainPickRate": 66.7
           },
           {
-            "entryId": 20121,
-            "teamName": "JackieGu",
-            "captainId": 411,
-            "captainName": "Haaland",
-            "captainPoints": 6,
-            "captainPickRate": 66.7
-          },
-          {
             "entryId": 19561,
             "teamName": "Northcote Holdings",
             "captainId": 379,
@@ -4303,8 +4295,24 @@
             "captainPickRate": 2.7
           },
           {
+            "entryId": 20121,
+            "teamName": "JackieGu",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
             "entryId": 10013,
             "teamName": "Summerfan",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
+          },
+          {
+            "entryId": 8086,
+            "teamName": "Real Madridista",
             "captainId": 411,
             "captainName": "Haaland",
             "captainPoints": 6,
@@ -4319,12 +4327,12 @@
             "captainPickRate": 66.7
           },
           {
-            "entryId": 8086,
-            "teamName": "Real Madridista",
-            "captainId": 411,
-            "captainName": "Haaland",
-            "captainPoints": 6,
-            "captainPickRate": 66.7
+            "entryId": 64942,
+            "teamName": "Yamine Lmao",
+            "captainId": 480,
+            "captainName": "Gibbs-White",
+            "captainPoints": 2,
+            "captainPickRate": 10.8
           },
           {
             "entryId": 128271,
@@ -4341,14 +4349,6 @@
             "captainName": "Haaland",
             "captainPoints": 6,
             "captainPickRate": 66.7
-          },
-          {
-            "entryId": 64942,
-            "teamName": "Yamine Lmao",
-            "captainId": 480,
-            "captainName": "Gibbs-White",
-            "captainPoints": 2,
-            "captainPickRate": 10.8
           },
           {
             "entryId": 197536,
@@ -4447,20 +4447,20 @@
             "captainPickRate": 66.7
           },
           {
-            "entryId": 10262,
-            "teamName": "Dream Tickets",
-            "captainId": 411,
-            "captainName": "Haaland",
-            "captainPoints": 6,
-            "captainPickRate": 66.7
-          },
-          {
             "entryId": 79852,
             "teamName": "HindMics",
             "captainId": 480,
             "captainName": "Gibbs-White",
             "captainPoints": 2,
             "captainPickRate": 10.8
+          },
+          {
+            "entryId": 10262,
+            "teamName": "Dream Tickets",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "captainPoints": 6,
+            "captainPickRate": 66.7
           },
           {
             "entryId": 228011,
@@ -4991,7 +4991,7 @@
             "captainPickRate": 2.7
           }
         ],
-        "updatedAt": "2026-09-23T23:30:42.710Z"
+        "updatedAt": "2026-09-28T23:30:34.784Z"
       }
     ],
     "deadlines": [

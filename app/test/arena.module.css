@@ -1,85 +1,25 @@
-.page {
+.preview {
   --arena-ink: #dce9ef;
   --arena-muted: #8ea8b4;
   --arena-cyan: #00d9f5;
   --arena-cyan-soft: rgba(0, 217, 245, 0.16);
   --arena-rule: rgba(27, 157, 183, 0.42);
   --arena-paper: rgba(2, 17, 25, 0.94);
-  min-height: 100vh;
-  padding-bottom: 4rem;
   color: var(--arena-ink);
-  background:
-    linear-gradient(180deg, rgba(0, 8, 14, 0.26), rgba(0, 10, 16, 0.96) 48rem),
-    var(--asset-frozen-abyss) center top / cover fixed;
 }
 
-.siteHeader {
-  min-height: 5rem;
-  padding: 0 clamp(1rem, 4vw, 4.5rem);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 1rem;
-  border-bottom: 1px solid var(--arena-rule);
-  background: rgba(0, 9, 15, 0.95);
-}
-
-.brand {
-  width: fit-content;
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  color: var(--arena-ink);
-  text-decoration: none;
-}
-
-.brandEmblem {
-  width: 2.7rem;
-  aspect-ratio: 1;
-  flex: 0 0 auto;
-  background: var(--asset-penguin-logo) center / contain no-repeat;
-}
-
-.brand > span:last-child { display: grid; }
-.brand strong { font-size: 0.92rem; letter-spacing: 0.14em; }
-.brand small { color: var(--arena-muted); font-size: 0.58rem; letter-spacing: 0.14em; }
-
-.backLink {
-  min-width: 7rem;
-  min-height: 2.7rem;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--arena-rule);
-  color: var(--arena-cyan);
-  font: 700 0.76rem/1 var(--font-label);
-  text-decoration: none;
-}
-
-.hero,
 .arena,
 .rankingArea {
-  width: min(88rem, calc(100% - 3rem));
+  width: min(var(--content-wide), calc(100% - (var(--page-gutter) * 2)));
   margin-inline: auto;
 }
 
-.hero {
-  padding-block: clamp(3rem, 7vw, 5.5rem) 2.25rem;
-}
-
-.hero small,
 .arenaHeader small,
 .dialog header small,
 .confirmVersus small {
   color: var(--arena-cyan);
   font: 700 0.72rem/1.2 var(--font-label);
   letter-spacing: 0.13em;
-}
-
-.hero h1 {
-  margin-top: 0.75rem;
-  font-size: clamp(3.4rem, 8vw, 7rem);
-  line-height: 0.95;
-  letter-spacing: 0.03em;
 }
 
 .arena {
@@ -303,7 +243,6 @@
 .hiddenCaptainNotice { margin: 1rem 0 0; color: var(--arena-muted); font-size: 0.75rem; text-align: center; }
 
 @media (hover: hover) and (pointer: fine) {
-  .backLink:hover,
   .challengeButton:hover,
   .dialogActions button:hover,
   .closeButton:hover { border-color: #8ff4ff; color: #8ff4ff; }
@@ -315,16 +254,8 @@
 }
 
 @media (max-width: 48rem) {
-  .page { padding-bottom: 1.5rem; }
-  .siteHeader { min-height: 4.5rem; padding-inline: 1rem; gap: 0.6rem; }
-  .brand > span:last-child { display: none; }
-  .brandEmblem { width: 2.35rem; }
-  .backLink { min-width: 6.3rem; min-height: 2.5rem; }
-  .hero,
   .arena,
   .rankingArea { width: calc(100% - 1rem); }
-  .hero { padding: 2.8rem 0.3rem 1.6rem; }
-  .hero h1 { font-size: clamp(3.1rem, 16vw, 4.8rem); }
   .arena { --frame-width: 1rem; padding: 0.55rem; margin-bottom: 1.35rem; }
   .rankingArea { margin-bottom: 1.35rem; }
   .arenaHeader { padding: 0.45rem; grid-template-columns: 1fr auto; gap: 1rem; }

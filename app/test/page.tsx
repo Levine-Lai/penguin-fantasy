@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HomeView } from "../page";
 import ArenaDemo from "./arena-demo";
 
 export const metadata: Metadata = {
@@ -7,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function ArenaTestPage() {
-  return <ArenaDemo />;
+  return <HomeView arenaPreview={<ArenaDemo />} />;
 }
