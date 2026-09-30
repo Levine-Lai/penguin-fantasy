@@ -3617,6 +3617,15 @@ main > * {
   color: var(--color-gold);
 }
 
+/* Hallmark · chapter summary: one life box spans the whole result column. */
+.history-chapter-summary .history-result {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.history-chapter-summary .history-captain b {
+  color: var(--color-accent);
+}
+
 @media (max-width: 48rem) {
   .history-row,
   .history-row:nth-child(even) {

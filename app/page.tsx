@@ -237,13 +237,15 @@ const players = [
   "企鹅",
 ];
 
-const stages: Array<{ id: StageId; roman: string; title: string; range: string; tpBase: number; description: string }> = [
+const stages: Array<{ id: StageId; roman: string; title: string; range: string; tpBase: number; gwFrom: number; gwTo: number; description: string }> = [
   {
     id: 1,
     roman: "I",
     title: "生命之火试炼",
     range: "GW1–GW8",
     tpBase: 686,
+    gwFrom: 1,
+    gwTo: 8,
     description: "踏入终焉冰海的那一刻，所有远征者都会被古老的寒冰魔法剥去昔日荣光，只留下微弱却不肯熄灭的生命之火。他们以“寒冰见习者”之名穿越无声冰原，在没有战争与背叛的最初旅程中，既要学会重新燃起自己的火种，也要留意远古龙魂的凝视。这里尚未响起刀剑，冰海安静地记录每一次选择，并把真正的力量藏进即将到来的风暴。",
   },
   {
@@ -252,6 +254,8 @@ const stages: Array<{ id: StageId; roman: string; title: string; range: string; 
     title: "冰海角斗场",
     range: "GW9–GW20",
     tpBase: 812,
+    gwFrom: 9,
+    gwTo: 20,
     description: "寒冬加剧，封冻千年的冰龙决斗场从裂海之下重新升起。曾并肩远行的勇士第一次以敌手的身份隔着冰刃相望，荣耀、鲜血与命运在古老看台的回声中交织。冰龙不赞颂迟疑，也不怜悯弱小；当挑战的号角响起，有人成为猎人，有人成为猎物，而每一次交锋都在冰渊深处上留下无法抹去的刻痕。",
   },
   {
@@ -260,6 +264,8 @@ const stages: Array<{ id: StageId; roman: string; title: string; range: string; 
     title: "冰山与深海分界",
     range: "GW21–GW30",
     tpBase: 936,
+    gwFrom: 21,
+    gwTo: 30,
     description: "二十周的征战之后，远古冰龙降临冰海，审判所有仍然站立的勇士。命运自冰面中央裂开：一边是沐浴寒光、资源丰饶的浮冰大陆，冰冠贵族在高处继续追逐荣耀；另一边是永无天日的深渊，幸存者在暗流、巨兽与未知恐惧中寻找出路。冰山象征被承认的力量，深海则收藏尚未写完的传奇——因为终焉冰海最古老的传说，总从绝境开始。",
   },
   {
@@ -268,6 +274,8 @@ const stages: Array<{ id: StageId; roman: string; title: string; range: string; 
     title: "深海大逃杀",
     range: "GW31–GW34",
     tpBase: 1012,
+    gwFrom: 31,
+    gwTo: 34,
     description: "冰海陷入狂潮，所有未被王座选中的幸存者都被卷入万丈冰渊。这里没有坚固的盟约，没有安全的边界，也没有谁能倚仗旧日排名获得庇护。曾经的强者可能在黑潮中陨落，曾经的弱者也可能从最深处归来；当整片深海化作最后的战场，唯有坚韧的意志才是能让人最终活下去的火苗。",
   },
   {
@@ -276,9 +284,13 @@ const stages: Array<{ id: StageId; roman: string; title: string; range: string; 
     title: "冰渊王座对决",
     range: "GW35–GW38",
     tpBase: 1094,
+    gwFrom: 35,
+    gwTo: 38,
     description: "冰山之巅的八位冰冠骑士，与深海归来的八位挑战者，终在冰龙王座竞技场相会。漫长远征就此结束，留下十六道孤独的身影，每一步都通往王冠之巅，但一不留神也可能坠入永恒寒夜。乱战之后，远古冰龙只会向最后站立的人低首；那个人将戴上冰渊王冠，成为新的冰渊之王，并把自己的名字刻入终焉冰海从不融化的冰层深处。",
   },
 ];
+
+type StageInfo = (typeof stages)[number];
 
 const fallbackTeams: LeagueTeam[] = players.map((teamName, index) => ({ entryId: -(index + 1), teamName }));
 const featuredTeamOrder = new Map([
@@ -297,6 +309,25 @@ function compareRankedPlayers(left: RankedPlayer, right: RankedPlayer): number {
 function lifeEarned(points: number, rate: number | null): number {
   if (points < 10) return 0;
   return rate !== null && rate < 10 ? 2 : 1;
+}
+
+function stageForGw(gw: number): StageInfo | undefined {
+  return stages.find((item) => gw >= item.gwFrom && gw <= item.gwTo);
+}
+
+// Each chapter owns its own life rule: chapter I earns life from captain scores,
+// chapters II–IV follow /rules (captain ≥10 +1, captain ≤3 -1), chapter V is single
+// elimination. Duel-driven ±1/±2 needs the arena backend and is not counted yet.
+function lifeEarnedInStage(stage: StageInfo | undefined, points: number, rate: number | null): number {
+  if (!stage || stage.id === 5) return 0;
+  if (stage.id === 1) return lifeEarned(points, rate);
+  if (points >= 10) return 1;
+  if (points <= 3) return -1;
+  return 0;
+}
+
+function signedLife(value: number): string {
+  return value > 0 ? `+${value}` : String(value);
 }
 
 const refreshRetryDelay = 5 * 60_000;
@@ -366,28 +397,42 @@ function ChallengePanel({ melee = false, gameweek = "GW12" }: { melee?: boolean;
   );
 }
 
-function InlineCaptainHistory({ playerName, history, currentGwLabel }: { playerName: string; history: CaptainHistoryEntry[]; currentGwLabel: string }) {
+function InlineCaptainHistory({ playerName, history, currentGwLabel, stage }: { playerName: string; history: CaptainHistoryEntry[]; currentGwLabel: string; stage: StageInfo }) {
+  // Chapter panels stay independent: chapter II never shows chapter I records,
+  // while total life and captain totals keep ranking players across all chapters.
+  const chapterHistory = history.filter((item) => item.gw >= stage.gwFrom && item.gw <= stage.gwTo);
+  const chapterLife = chapterHistory.reduce((total, item) => total + item.life, 0);
+
   return (
-    <section className="rank-history" aria-label={`${playerName} 的队长选择记录`}>
+    <section className="rank-history" aria-label={`${playerName} 在${stage.title}的队长选择记录`}>
       <header><strong>队长选择记录</strong><small>{currentGwLabel}</small></header>
       <div>
-        {history.length === 0 ? <p className="history-empty">尚无队长选择记录</p> : history.map((item) => (
+        {chapterHistory.length === 0 ? <p className="history-empty">本章节尚无队长选择记录</p> : chapterHistory.map((item) => (
           <article className="history-row" key={item.gw}>
             <strong className="history-gw">GW{item.gw}</strong>
             <div className="history-captain"><b>{item.captain}</b><small className={item.rate < 10 ? "rare-pick" : ""}>选择率 {item.rate}%</small></div>
             <div
               className="history-result"
-              aria-label={`${item.points} 分，增加 ${item.life} 滴血`}
+              aria-label={`${item.points} 分，血量变化 ${signedLife(item.life)}`}
             >
               <span className="history-result-box history-points" aria-hidden="true">
                 <b>{item.points}</b><em>分</em>
               </span>
               <span className={`history-result-box history-life ${item.life === 2 ? "life-rare" : ""}`} aria-hidden="true">
-                <b>+{item.life}</b><em>血</em>
+                <b>{signedLife(item.life)}</b><em>血</em>
               </span>
             </div>
           </article>
         ))}
+        <article className="history-row history-chapter-summary">
+          <strong className="history-gw">CH.{stage.roman}</strong>
+          <div className="history-captain"><b>{stage.title}</b><small>{stage.range} · 本章节血量变化</small></div>
+          <div className="history-result" aria-label={`本章节血量变化 ${signedLife(chapterLife)}`}>
+            <span className={`history-result-box history-life ${chapterLife >= 2 ? "life-rare" : ""}`} aria-hidden="true">
+              <b>{signedLife(chapterLife)}</b><em>血</em>
+            </span>
+          </div>
+        </article>
       </div>
     </section>
   );
@@ -600,7 +645,7 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
       const history = gwSnapshots.flatMap<CaptainHistoryEntry>((snapshot) => {
         const result = snapshot.teams.find((entry) => entry.entryId === team.entryId);
         if (!result?.captainName) return [];
-        const life = lifeEarned(result.captainPoints, result.captainPickRate);
+        const life = lifeEarnedInStage(stageForGw(snapshot.gw), result.captainPoints, result.captainPickRate);
         return [{
           gw: snapshot.gw,
           captain: result.captainName,
@@ -617,7 +662,7 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
         gpc: latest?.points ?? 0,
         captainTotal: history.reduce((total, item) => total + item.points, 0),
         captainRateTotal: history.reduce((total, item) => total + item.rate, 0),
-        hp: 1 + history.reduce((total, item) => total + item.life, 0),
+        hp: Math.max(0, 1 + history.reduce((total, item) => total + item.life, 0)),
         history,
       };
     });
@@ -788,11 +833,11 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
 
       {isArenaPreview && activeStage === 2 ? arenaPreview : <section className="boards">
         <article className="panel ranking-panel" id="ranking" style={rankingPanelAssets}>
-          <header className="panel-title"><div><small>GW1–GW8 · 生命之火试炼</small><h2>积分与血量排行榜</h2></div></header>
+          <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>
           {myRanking ? <section className="my-ranking-strip" id="my-ranking" aria-label="我的成绩">
             <header><div><small>MY STANDING</small><strong>{myRanking.name}</strong></div></header>
             <article className={`rank-row selectable current-player-row ${myStandingExpanded ? "selected" : ""}`} role="button" tabIndex={0} aria-expanded={myStandingExpanded} onClick={() => setMyStandingExpanded((expanded) => !expanded)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setMyStandingExpanded((expanded) => !expanded); } }}><RankedPlayerCells player={myRanking} /></article>
-            {myStandingExpanded ? <div className="rank-history-wrap"><InlineCaptainHistory playerName={myRanking.name} history={myRanking.history} currentGwLabel={currentTrialLabel} /></div> : null}
+            {myStandingExpanded ? <div className="rank-history-wrap"><InlineCaptainHistory playerName={myRanking.name} history={myRanking.history} currentGwLabel={currentTrialLabel} stage={stage} /></div> : null}
           </section> : null}
           <div className="ranking-head"><span>阶位</span><span>玩家 ID</span><span>当周队长得分</span><span>队长总分</span><span>血量</span></div>
           <div className="ranking-list">
@@ -816,7 +861,7 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
                 >
                   <RankedPlayerCells player={player} />
                 </article>
-                {expandedPlayer === entryId ? <div className="rank-history-wrap"><InlineCaptainHistory playerName={name} history={history} currentGwLabel={currentTrialLabel} /></div> : null}
+                {expandedPlayer === entryId ? <div className="rank-history-wrap"><InlineCaptainHistory playerName={name} history={history} currentGwLabel={currentTrialLabel} stage={stage} /></div> : null}
               </Fragment>;
             })}
           </div>

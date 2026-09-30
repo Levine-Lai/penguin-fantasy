@@ -5,6 +5,8 @@ import styles from "./arena.module.css";
 
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const isAfterDeadline = true;
+// Chapter II covers GW9–GW20; chapter panels must never mix chapter I records into a duel view.
+const chapterTwoFirstGw = 9;
 
 type DialogStep = "closed" | "select" | "confirm";
 
@@ -100,7 +102,20 @@ const candidates: Candidate[] = [
   { name: "Loki7_7", rank: 14, hp: 3, revealedCaptain: "Isak", revealedScore: 8 },
   { name: "谨慎分析 大胆梭哈", rank: 16, hp: 3, revealedCaptain: "Haaland", revealedScore: 4 },
   { name: "足球离家出走了", rank: 19, hp: 3, revealedCaptain: "Saka", revealedScore: 6 },
+  { name: "HindMics", rank: 5, hp: 5, revealedCaptain: "Palmer", revealedScore: 8 },
+  { name: "willis's Team", rank: 2, hp: 6, revealedCaptain: "Ødegaard", revealedScore: 12 },
+  { name: "Team电子羊", rank: 1, hp: 7, revealedCaptain: "B.Fernandes", revealedScore: 11 },
+  { name: "Orange's Team", rank: 4, hp: 5, revealedCaptain: "Isak", revealedScore: 8 },
+  { name: "muscleking", rank: 11, hp: 4, revealedCaptain: "B.Fernandes", revealedScore: 2 },
+  { name: "SSU - Sakai Moka", rank: 13, hp: 4, revealedCaptain: "Saka", revealedScore: 6 },
+  { name: "Real Madridista", rank: 22, hp: 2, revealedCaptain: "Palmer", revealedScore: 8 },
 ];
+
+const candidatePageSize = 10;
+
+// Challenge targets always read strongest first: more life wins, tie broken by rank.
+const rankedCandidates = [...candidates].sort((left, right) => right.hp - left.hp || left.rank - right.rank);
+const myDemoName = "Eva（我）";
 
 const demoPlayers: DemoPlayer[] = [
   { name: "willis's Team", history: makeHistory("Haaland", [2, 11, 5, 9, 12], 34.2) },
@@ -150,7 +165,6 @@ function DuelCard({ duel }: { duel: Duel }) {
     <article className={`${styles.duelCard} ${isDraw ? styles.draw : styles.settled}`}>
       <header className={styles.duelCardHeader}>
         <span>DUEL {String(duel.id).padStart(2, "0")}</span>
-        <strong>{isDraw ? "平局 · 次数返还" : "已结算"}</strong>
       </header>
       <div className={styles.combatants}>
         <div className={styles.combatant}>
@@ -196,11 +210,17 @@ function DemoRankedPlayerCells({ player }: { player: RankedDemoPlayer }) {
 }
 
 function DemoRankingHistory({ player, duelRecords }: { player: RankedDemoPlayer; duelRecords: DuelHistoryRecord[] }) {
+  // Chapter II only: the panel shows life changes produced inside GW9–GW20, never chapter I's records.
+  const chapterHistory = player.history.filter((item) => item.gw >= chapterTwoFirstGw);
+  const chapterLife = chapterHistory.reduce((total, item) => total + item.life, 0)
+    + duelRecords.reduce((total, record) => total + record.hpChange, 0);
+
   return (
     <section className="rank-history" aria-label={`${player.name} 的得分与血量记录`}>
       <header><strong>队长选择记录</strong><small>GW 9</small></header>
       <div>
-        {player.history.map((item) => (
+        {chapterHistory.length === 0 && duelRecords.length === 0 ? <p className="history-empty">本章节尚无队长选择记录</p> : null}
+        {chapterHistory.map((item) => (
           <article className="history-row" key={`captain-${item.gw}`}>
             <strong className="history-gw">GW{item.gw}</strong>
             <div className="history-captain"><b>{item.captain}</b><small className={item.rate < 10 ? "rare-pick" : ""}>选择率 {item.rate}%</small></div>
@@ -220,6 +240,13 @@ function DemoRankingHistory({ player, duelRecords }: { player: RankedDemoPlayer;
             </div>
           </article>
         ))}
+        <article className={`history-row ${styles.chapterSummaryRow}`}>
+          <strong className="history-gw">CH.II</strong>
+          <div className="history-captain"><b>冰海角斗场</b><small>GW9–GW20 · 本章节血量变化</small></div>
+          <div className="history-result" aria-label={`本章节血量变化 ${formatLife(chapterLife)}`}>
+            <span className={`history-result-box history-life ${chapterLife > 0 ? styles.duelWin : chapterLife < 0 ? styles.duelLoss : ""}`} aria-hidden="true"><b>{formatLife(chapterLife)}</b><em>血</em></span>
+          </div>
+        </article>
       </div>
     </section>
   );
@@ -229,11 +256,21 @@ export default function ArenaDemo() {
   const [duels, setDuels] = useState<Duel[]>(initialDuels);
   const [dialogStep, setDialogStep] = useState<DialogStep>("closed");
   const [selectedTarget, setSelectedTarget] = useState("");
+  const [candidateQuery, setCandidateQuery] = useState("");
+  const [candidatePage, setCandidatePage] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [expandedPlayer, setExpandedPlayer] = useState<string | null>(null);
   const usedDuelRights = Math.max(0, duels.length - initialDuels.length);
   const remainingDuels = 5 - usedDuelRights;
   const selectedCandidate = useMemo(() => candidates.find((candidate) => candidate.name === selectedTarget) ?? null, [selectedTarget]);
+  const visibleCandidates = useMemo(() => {
+    const query = candidateQuery.trim().toLowerCase();
+    return query === ""
+      ? rankedCandidates
+      : rankedCandidates.filter((candidate) => candidate.name.toLowerCase().includes(query));
+  }, [candidateQuery]);
+  const candidatePageCount = Math.max(1, Math.ceil(visibleCandidates.length / candidatePageSize));
+  const candidateSlice = visibleCandidates.slice(candidatePage * candidatePageSize, (candidatePage + 1) * candidatePageSize);
   const ranking = useMemo<RankedDemoPlayer[]>(() => {
     const rows = demoPlayers.map((player) => {
       const duelLife = duelHistoryFor(player.name, duels).reduce((total, record) => total + record.hpChange, 0);
@@ -253,6 +290,7 @@ export default function ArenaDemo() {
   const frameStyle = {
     "--arena-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.webp")`,
   } as CSSProperties;
+  const me = ranking.find((player) => player.name === myDemoName) ?? null;
   const rankingPanelAssets = {
     "--ledger-complete-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.webp")`,
     "--ledger-row-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-row-frame.webp")`,
@@ -272,6 +310,8 @@ export default function ArenaDemo() {
 
   const openDialog = () => {
     setSelectedTarget("");
+    setCandidateQuery("");
+    setCandidatePage(0);
     setFeedback("");
     setDialogStep("select");
   };
@@ -298,7 +338,7 @@ export default function ArenaDemo() {
       ...current,
       {
         id: current.length + 1,
-        challenger: "Eva（我）",
+        challenger: myDemoName,
         target: selectedCandidate.name,
         challengerCaptain: "Haaland",
         targetCaptain: selectedCandidate.revealedCaptain,
@@ -314,7 +354,6 @@ export default function ArenaDemo() {
       <section className={styles.arena} style={frameStyle}>
         <header className={styles.arenaHeader}>
           <div>
-            <small>GW9 · DDL 已过</small>
             <h2>决斗申请与战况</h2>
           </div>
           <div className={styles.slotMeter} aria-label={`本轮已提交 ${duels.length} 组，最多 5 组`}>
@@ -347,7 +386,7 @@ export default function ArenaDemo() {
               const isExpanded = expandedPlayer === player.name;
               return <Fragment key={player.name}>
                 <article
-                  className={`rank-row selectable ${isExpanded ? "selected" : ""} ${player.name === "Eva（我）" ? "current-player-row" : ""}`}
+                  className={`rank-row selectable ${isExpanded ? "selected" : ""} ${player.name === myDemoName ? "current-player-row" : ""}`}
                   onClick={() => setExpandedPlayer((current) => current === player.name ? null : player.name)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
@@ -379,20 +418,36 @@ export default function ArenaDemo() {
           <header>
             <small>GW9 · DDL 前申请</small>
             <h2 id="duel-dialog-title">发起决斗申请</h2>
-            <p>当前身份：<strong>Eva</strong></p>
+            <p>当前身份：<strong>{myDemoName}</strong></p>
           </header>
           <form onSubmit={reviewChallenge}>
             <fieldset>
               <legend>选择挑战目标</legend>
+              <label className={styles.candidateSearch}>
+                <span>搜索玩家</span>
+                <input
+                  type="search"
+                  value={candidateQuery}
+                  onChange={(event) => { setCandidateQuery(event.target.value); setCandidatePage(0); }}
+                  placeholder="输入玩家名称实时筛选"
+                  aria-label="搜索挑战目标"
+                />
+              </label>
               <div className={styles.candidateList}>
-                {candidates.map((candidate) => (
+                {candidateSlice.map((candidate) => (
                   <label className={selectedTarget === candidate.name ? styles.selectedCandidate : ""} key={candidate.name}>
                     <input type="radio" name="duel-target" value={candidate.name} checked={selectedTarget === candidate.name} onChange={() => { setSelectedTarget(candidate.name); setFeedback(""); }} />
                     <span><small>RANK {candidate.rank}</small><strong>{candidate.name}</strong></span>
                     <span><small>当前血量</small><b>{candidate.hp} ♥</b></span>
                   </label>
                 ))}
+                {candidateSlice.length === 0 ? <p className={styles.candidateEmpty}>没有找到匹配的玩家。</p> : null}
               </div>
+              <nav className={styles.candidatePagination} aria-label="挑战目标分页">
+                <button type="button" onClick={() => setCandidatePage((current) => Math.max(0, current - 1))} disabled={candidatePage === 0} aria-label="上一页目标"><span aria-hidden="true">‹</span></button>
+                <strong>第 {candidatePage + 1} / {candidatePageCount} 页</strong>
+                <button type="button" onClick={() => setCandidatePage((current) => Math.min(candidatePageCount - 1, current + 1))} disabled={candidatePage >= candidatePageCount - 1} aria-label="下一页目标"><span aria-hidden="true">›</span></button>
+              </nav>
             </fieldset>
             {feedback ? <p className={styles.feedback} role="alert">{feedback}</p> : null}
             <div className={styles.dialogActions}>
@@ -413,9 +468,9 @@ export default function ArenaDemo() {
           <div className={styles.confirmBody}>
             <div className={styles.confirmVersus}>
               <article>
-                <small>挑战者 · RANK 20</small>
-                <strong>Eva（我）</strong>
-                <span>当前血量 <b>4 ♥</b></span>
+                <small>挑战者 · RANK {me?.rank ?? "-"}</small>
+                <strong>{myDemoName}</strong>
+                <span>当前血量 <b>{me?.hp ?? 0} ♥</b></span>
               </article>
               <b>VS</b>
               <article>
