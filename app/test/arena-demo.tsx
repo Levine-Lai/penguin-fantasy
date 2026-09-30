@@ -156,17 +156,15 @@ function DuelCard({ duel }: { duel: Duel }) {
         <div className={styles.combatant}>
           <small>挑战者</small>
           <strong>{duel.challenger}</strong>
-          <span className={styles.captainLabel}>队长</span>
-          <b className={styles.captainName}>{duel.challengerCaptain}</b>
           <em className={challengerScoreClass}>{duel.challengerScore}</em>
+          <b className={styles.captainName} aria-label={`队长 ${duel.challengerCaptain}`}>{duel.challengerCaptain}</b>
         </div>
         <div className={styles.versus} aria-hidden="true"><i></i><strong>VS</strong><i></i></div>
         <div className={`${styles.combatant} ${styles.target}`}>
           <small>被挑战者</small>
           <strong>{duel.target}</strong>
-          <span className={styles.captainLabel}>队长</span>
-          <b className={styles.captainName}>{duel.targetCaptain}</b>
           <em className={targetScoreClass}>{duel.targetScore}</em>
+          <b className={styles.captainName} aria-label={`队长 ${duel.targetCaptain}`}>{duel.targetCaptain}</b>
         </div>
       </div>
       <div className={styles.outcome}>

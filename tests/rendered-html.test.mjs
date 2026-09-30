@@ -344,6 +344,9 @@ test("server-renders the arena inside the second chapter's homepage shell", asyn
   assert.match(demo, /--pixel-heart-image/);
   assert.match(demo, /队长选择记录/);
   assert.match(demo, /决斗记录/);
+  assert.doesNotMatch(demo, /captainLabel|>队长</);
+  assert.match(demo, /<em className=\{challengerScoreClass\}>\{duel\.challengerScore\}<\/em>[\s\S]{0,120}?<b className=\{styles\.captainName\}/);
+  assert.match(demo, /<em className=\{targetScoreClass\}>\{duel\.targetScore\}<\/em>[\s\S]{0,120}?<b className=\{styles\.captainName\}/);
   assert.match(demo, /duelHistoryFor/);
   assert.match(demo, /双方队长与得分将在 DDL 后统一公开/);
   assert.doesNotMatch(demo, /confirmVersus[\s\S]*selectedCandidate\.revealed(?:Captain|Score)/);
