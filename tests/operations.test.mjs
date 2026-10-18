@@ -4,7 +4,8 @@ import test from 'node:test';
 import { DatabaseSync } from 'node:sqlite';
 import { handleOperations, signSession, readSession, submitDuel, settleDuels, passwordHash, beijingDay } from '../cloudflare/fpl-proxy/src/operations.ts';
 
-const schema = await readFile(new URL('../cloudflare/fpl-proxy/migrations/0001_operations.sql', import.meta.url), 'utf8');
+const schema = await readFile(new URL('../cloudflare/fpl-proxy/migrations/0001_operations.sql', import.meta.url), 'utf8')
+  + await readFile(new URL('../cloudflare/fpl-proxy/migrations/0002_player_logins.sql', import.meta.url), 'utf8');
 const origin = 'https://penguin-fantasy.pages.dev';
 function database() {
   const sqlite = new DatabaseSync(':memory:'); sqlite.exec(schema);
@@ -103,17 +104,25 @@ test('announcements use Beijing dates and are removed immediately from the publi
   assert.equal(feed.announcements.length, 0);
 });
 
-test('visits are idempotent, filter unknown IDs and keep private activity behind admin auth', async () => {
+test('only explicit valid player logins are recorded; pageviews, logout and restored sessions are ignored', async () => {
   const { db, request, adminHeaders } = await setup();
   const visit = { id: crypto.randomUUID(), visitorId: crypto.randomUUID(), sessionId: crypto.randomUUID(), kind: 'pageview', path: '/', entryId: 99999 };
   assert.equal((await request('/visits', 'POST', visit)).status, 200);
   await request('/visits', 'POST', visit);
-  const rows = await db.prepare('SELECT * FROM visits').all();
-  assert.equal(rows.results.length, 1);
-  assert.equal(rows.results[0].entry_id, null);
+  assert.equal((await db.prepare('SELECT * FROM visits').all()).results.length, 0);
+  assert.equal((await db.prepare('SELECT * FROM player_logins').all()).results.length, 0);
+  const login = { id: crypto.randomUUID(), kind: 'identify', entryId: 1 };
+  assert.equal((await request('/visits', 'POST', login)).status, 200);
+  await request('/visits', 'POST', login);
+  await request('/visits', 'POST', { ...login, id: crypto.randomUUID(), entryId: null });
+  await request('/player/session', 'POST', { entryId: 1 });
+  await request('/player/session', 'POST', { entryId: 1 });
+  assert.equal((await db.prepare('SELECT * FROM player_logins').all()).results.length, 1);
   const overview = await (await request('/admin/overview', 'GET', undefined, adminHeaders)).json();
-  assert.equal(overview.stats.views, 1);
-  assert.equal(overview.stats.visitors, 1);
+  assert.equal('stats' in overview, false);
+  assert.equal('total' in overview, false);
+  assert.equal(overview.players.length, 1);
+  assert.equal(overview.activity.length, 1);
   assert.equal((await request('/admin/overview')).status, 401);
 });
 

@@ -4,7 +4,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSPr
 import { currentTrialBootstrapScript, fallbackGwDeadlines, type GwDeadline } from "./current-trial";
 import staticFplData from "./static-fpl-data.json";
 import LiveArena from './arena/live-arena';
-import { loadCommunity, type Community } from './operations-client';
+import { loadCommunity, recordPlayerLogin, type Community } from './operations-client';
 
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const fplApiBase = "https://penguin-fantasy.pages.dev";
@@ -792,6 +792,7 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
     }
 
     setPlayerEntryId(confirmedEntryId);
+    recordPlayerLogin(confirmedEntryId);
     window.dispatchEvent(new Event('penguin-player-login'));
     setRankingPage(0);
     closeLogin();
@@ -859,7 +860,7 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
         <p>{stage.description}</p>
       </section>
 
-      {!isArenaPreview && activeStage === 2 ? <div className="arena-home"><LiveArena player={myRanking} /></div> : null}
+      {!isArenaPreview && activeStage === 2 ? <div className="arena-home"><LiveArena player={myRanking} players={ranking} /></div> : null}
       {isArenaPreview && activeStage === 2 ? arenaPreview : <section className="boards">
         <article className="panel ranking-panel" id="ranking" style={rankingPanelAssets}>
           <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>

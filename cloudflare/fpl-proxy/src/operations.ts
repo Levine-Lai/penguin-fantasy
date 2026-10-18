@@ -171,25 +171,17 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
         const start = new Date(`${selectedDay}T00:00:00+08:00`).toISOString();
         const end = new Date(Date.parse(start) + 86400000).toISOString();
         const page = Math.max(0, Math.min(10000, Number(url.searchParams.get('page')) || 0));
-        const [members, config, duelRows, announcements, stats, total, activity, players, logs, codes] = await Promise.all([
+        const [members, config, duelRows, announcements, activity, players, logs] = await Promise.all([
           roster(env), arena(db),
           db.prepare('SELECT * FROM duels ORDER BY created_at DESC LIMIT 300').all<Duel>(),
           db.prepare('SELECT * FROM announcements ORDER BY created_at DESC LIMIT 100').all(),
-          db.prepare(`SELECT SUM(kind='pageview') AS views, COUNT(DISTINCT CASE WHEN kind='pageview' THEN visitor_id END) AS visitors,
-            COUNT(DISTINCT CASE WHEN kind='pageview' THEN session_id END) AS sessions,
-            SUM(kind IN ('identify','verified_login')) AS logins FROM visits WHERE created_at>=? AND created_at<?`).bind(start, end).first(),
-          db.prepare("SELECT COUNT(*) AS views FROM visits WHERE kind='pageview'").first(),
-          db.prepare('SELECT * FROM visits WHERE created_at>=? AND created_at<? ORDER BY created_at DESC LIMIT 50 OFFSET ?').bind(start, end, page * 50).all(),
-          db.prepare(`SELECT entry_id, MAX(created_at) AS lastSeen, COUNT(*) AS events,
-            MAX(CASE WHEN kind='verified_login' THEN created_at END) AS lastVerified,
-            MAX(CASE WHEN kind='identify' THEN created_at END) AS lastIdentified
-            FROM visits WHERE entry_id IS NOT NULL AND created_at>=? AND created_at<? GROUP BY entry_id ORDER BY lastSeen DESC`).bind(start, end).all(),
+          db.prepare('SELECT * FROM player_logins WHERE created_at>=? AND created_at<? ORDER BY created_at DESC LIMIT 50 OFFSET ?').bind(start, end, page * 50).all(),
+          db.prepare('SELECT entry_id, MIN(created_at) AS firstLogin, MAX(created_at) AS lastLogin FROM player_logins WHERE created_at>=? AND created_at<? GROUP BY entry_id ORDER BY lastLogin DESC').bind(start, end).all(),
           db.prepare('SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 50').all(),
-          db.prepare('SELECT entry_id, updated_at FROM player_codes').all(),
         ]);
-        return response({ day: selectedDay, page, stats, total, arena: { ...config, deadline: await deadline(env, config.gw) },
+        return response({ day: selectedDay, page, arena: { ...config, deadline: await deadline(env, config.gw) },
           members, duels: namedDuels(duelRows.results, members), announcements: announcements.results,
-          activity: activity.results, players: players.results, logs: logs.results, codes: codes.results }, request);
+          activity: activity.results, players: players.results, logs: logs.results }, request);
       }
       if (path === '/api/admin/arena' && request.method === 'POST') {
         const input = await body(request); const gw = Number(input.gw);
@@ -240,14 +232,13 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
     if (path === '/api/visits' && request.method === 'POST') {
       await limit(env, request, 'visits', 180, 60000);
       const input = await body(request);
-      if (!idPattern.test(String(input.id)) || !idPattern.test(String(input.visitorId)) || !idPattern.test(String(input.sessionId))) throw new ApiError(400, '访问标识无效');
-      if (!['pageview', 'identify'].includes(String(input.kind))) throw new ApiError(400, '访问类型无效');
-      const pathValue = text(input.path, 200);
-      if (!pathValue.startsWith('/') || pathValue.startsWith('//') || /[?#\u0000-\u001f]/.test(pathValue)) throw new ApiError(400, '页面路径无效');
+      if (input.kind === 'pageview') return response({ ok: true }, request);
+      if (input.kind !== 'identify') throw new ApiError(400, '登录类型无效');
+      if (!idPattern.test(String(input.id))) throw new ApiError(400, '登录标识无效');
       const entryId = Number(input.entryId);
-      const member = (await roster(env)).find(item => item.entryId === entryId);
-      await db.prepare('INSERT OR IGNORE INTO visits VALUES (?,?,?,?,?,?,?,?)').bind(input.id, input.visitorId, input.sessionId, member?.entryId ?? null,
-        input.kind, pathValue, /mobile|android|iphone/i.test(request.headers.get('user-agent') ?? '') ? '手机' : '电脑/其他', now).run();
+      if (!(await roster(env)).some(member => member.entryId === entryId)) return response({ ok: true }, request);
+      await db.prepare('INSERT OR IGNORE INTO player_logins VALUES (?,?,?,?)').bind(input.id, entryId,
+        /mobile|android|iphone/i.test(request.headers.get('user-agent') ?? '') ? '手机' : '电脑/其他', now).run();
       return response({ ok: true }, request);
     }
     if (path === '/api/player/session' && request.method === 'POST') {
@@ -255,8 +246,6 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
       const input = await body(request); const entryId = Number(input.entryId);
       if (!(await roster(env)).some(member => member.entryId === entryId)) throw new ApiError(403, '玩家不在当前联赛中');
       const token = await signSession(env.SESSION_SECRET, { role: 'player', entryId, exp: Date.now() + 12 * 3600000 });
-      await db.prepare('INSERT INTO visits VALUES (?,?,?,?,?,?,?,?)').bind(crypto.randomUUID(), idPattern.test(String(input.visitorId)) ? input.visitorId : crypto.randomUUID(),
-        idPattern.test(String(input.sessionId)) ? input.sessionId : crypto.randomUUID(), entryId, 'identify', '/arena/', /mobile|android|iphone/i.test(request.headers.get('user-agent') ?? '') ? '手机' : '电脑/其他', now).run();
       return response({ token, entryId }, request);
     }
     if (path === '/api/duels/mine' && request.method === 'GET') {
@@ -308,5 +297,6 @@ export async function settleDuels(env: OpsEnv): Promise<void> {
   await db.batch([
     db.prepare('DELETE FROM rate_limits WHERE expires_at<?').bind(Date.now() - 86400000),
     db.prepare('DELETE FROM visits WHERE created_at<?').bind(new Date(Date.now() - 90 * 86400000).toISOString()),
+    db.prepare('DELETE FROM player_logins WHERE created_at<?').bind(new Date(Date.now() - 90 * 86400000).toISOString()),
   ]);
 }

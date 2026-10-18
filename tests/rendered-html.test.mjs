@@ -400,6 +400,10 @@ test("formal arena uses the header identity and searchable framed registration",
   assert.doesNotMatch(arena, /localStorage|onSubmit=\{login\}|identityKey/);
   assert.match(arena, /String\(member.entryId\)\.includes\(query\)/);
   assert.match(arena, /ice-frame-complete\.webp/);
+  assert.doesNotMatch(arena, /window\.confirm|<dt>阶位|<dt>队长总分|<dt>剩余决斗权/);
+  assert.match(arena, /<dialog[\s\S]*confirm-duel-title/);
+  assert.match(arena, /length: player\.hp/);
+  assert.match(arena, /health\.get\(member.entryId\)/);
   assert.match(css, /@media \(max-width: 48rem\)/);
 });
 

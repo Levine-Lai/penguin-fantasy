@@ -41,3 +41,6 @@ export function visitorIdentity(): { visitorId: string; sessionId: string } {
 export function chinaTime(value: string | null | undefined): string {
   return value ? new Date(value).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false }) : '—';
 }
+export function recordPlayerLogin(entryId: number): void {
+  void operationsFetch('/visits', { method: 'POST', body: JSON.stringify({ id: crypto.randomUUID(), entryId, kind: 'identify' }) }).catch(() => {});
+}

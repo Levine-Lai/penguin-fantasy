@@ -7,10 +7,13 @@
 .profile h3 { margin: .7rem 0; color: var(--arena-ink); font-size: 1.55rem; overflow-wrap: anywhere; }
 .profile h3.featured, .candidates strong.featured { color: var(--color-gold); }
 .playerId { color: var(--arena-muted); font: .8rem var(--font-label); }
-.profile dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1.5rem 0 0; }
-.profile dl > div { padding: .8rem; border: 1px solid var(--arena-rule); text-align: center; }
-.profile dt { color: var(--arena-muted); font-size: .75rem; }
-.profile dd { margin: .5rem 0 0; color: var(--arena-cyan); font: 700 1.4rem var(--font-label); }
+.life { display: grid; justify-items: center; gap: 1rem; margin-top: 1.5rem; padding: 1.2rem; border: 1px solid var(--arena-rule); }
+.life > span:first-child { color: var(--arena-muted); font-size: .85rem; }
+.life > strong { color: var(--arena-cyan); font: 700 2rem var(--font-label); }
+.drops { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; max-width: 9.5rem; }
+.candidateMeta { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; }
+.candidateHealth { display: inline-flex; align-items: center; gap: .3rem; color: #ff879a; }
+.candidateHealth i { margin: 0; }
 .form { min-width: 0; }
 .fieldset { border: 0; min-width: 0; padding: 0; margin: 0 0 1rem; }
 .fieldset:disabled { opacity: .55; }
@@ -31,9 +34,19 @@
   .registration, .duels { grid-template-columns: minmax(0, 1fr); }
   .header { grid-template-columns: minmax(0, 1fr); gap: .4rem; }
   .profile { padding: 1rem; }
-  .profile dl { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .4rem; margin-top: 1rem; }
-  .profile dl > div { padding: .7rem .2rem; }
-  .profile dt { font-size: .65rem; }
-  .profile dd { font-size: 1.1rem; }
+  .life { margin-top: 1rem; }
 }
 @media (max-width: 30rem) { .candidates { grid-template-columns: minmax(0, 1fr); } }
+.confirmDialog { position: fixed; inset: 0; width: min(34rem, calc(100% - 1.5rem)); max-height: calc(100dvh - 2rem); margin: auto; padding: clamp(1rem, 3vw, 1.6rem); overflow-y: auto; border: 1.2rem solid var(--arena-rule); border-image: var(--arena-frame-image) 155 / 1.2rem stretch; color: var(--arena-ink); background: #02121a; background-clip: padding-box; box-shadow: 0 1.5rem 5rem #000a; }
+.confirmDialog::backdrop { background: #000b; backdrop-filter: blur(6px); }
+.confirmDialog h2 { margin: .5rem 0 1.5rem; font-size: clamp(1.3rem, 5vw, 1.9rem); }
+.confirmDialog header small { color: var(--arena-cyan); }
+.confirmPlayers { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: .8rem; padding: 1.2rem 0; border-block: 1px solid var(--arena-rule); text-align: center; }
+.confirmPlayers strong { overflow-wrap: anywhere; font-size: 1.1rem; }
+.confirmPlayers span { color: var(--arena-cyan); font: 700 .8rem var(--font-label); }
+.confirmDialog p { color: var(--arena-muted); line-height: 1.7; font-size: .85rem; margin: 1rem 0 1.5rem; }
+.confirmActions { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+.confirmActions button { min-height: 2.8rem; border: 1px solid var(--arena-rule); background: #031c27; color: var(--arena-ink); cursor: pointer; }
+.confirmActions button[type=submit] { border-color: var(--arena-cyan); color: var(--arena-cyan); background: #06313c; }
+.confirmActions button:disabled { opacity: .5; cursor: default; }
+.confirmDialog :focus-visible { outline: 2px solid var(--arena-cyan); outline-offset: 3px; }
