@@ -153,7 +153,22 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
       </div>}
     </section>
     <dialog ref={confirmDialog} className={styles.confirmDialog} style={assets} aria-labelledby="confirm-duel-title" aria-describedby="confirm-duel-note" onCancel={event => { if (busy) event.preventDefault(); else setConfirmation(null); }} onClick={event => { if (event.target === event.currentTarget && !busy) { const rect = event.currentTarget.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) setConfirmation(null); } }}>
-      <form onSubmit={submit}><header><small>GW{confirmation?.gw ?? round?.gw ?? 9}</small><h2 id="confirm-duel-title">确认发起决斗</h2></header><div className={styles.confirmPlayers}><strong>{player?.name}</strong><span>VS</span><strong>{confirmation?.targetName}</strong></div><p id="confirm-duel-note">每轮只能提交一次，提交后不能修改。</p><div className={styles.confirmActions}><button type="button" disabled={busy} onClick={() => setConfirmation(null)}>取消</button><button type="submit" disabled={busy}>{busy ? '正在提交…' : '确认提交'}</button></div></form>
+      <form onSubmit={submit}>
+        <header><small>GW{confirmation?.gw ?? round?.gw ?? 9}</small><h2 id="confirm-duel-title">确认发起决斗</h2></header>
+        <div className={styles.confirmPlayers}>
+          <div className={styles.confirmPlayer}>
+            <small>挑战者</small><strong>{player?.name}</strong>
+            <span className={styles.confirmHealth}>血量 {player?.hp ?? 0}<i className="blood-drop" aria-hidden="true" /></span>
+          </div>
+          <span className={styles.confirmVersus}>VS</span>
+          <div className={styles.confirmPlayer}>
+            <small>被挑战者</small><strong>{confirmation?.targetName}</strong>
+            <span className={styles.confirmHealth}>血量 {confirmation ? health.get(confirmation.targetId) ?? 0 : 0}<i className="blood-drop" aria-hidden="true" /></span>
+          </div>
+        </div>
+        <p id="confirm-duel-note">每轮只能提交一次，提交后不能修改。</p>
+        <div className={styles.confirmActions}><button type="button" disabled={busy} onClick={() => setConfirmation(null)}>取消</button><button type="submit" disabled={busy}>{busy ? '正在提交…' : '确认提交'}</button></div>
+      </form>
     </dialog>
   </div>;
 }

@@ -43,11 +43,22 @@
 .confirmDialog h2 { margin: .5rem 0 1.5rem; font-size: clamp(1.3rem, 5vw, 1.9rem); }
 .confirmDialog header small { color: var(--arena-cyan); }
 .confirmPlayers { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: .8rem; padding: 1.2rem 0; border-block: 1px solid var(--arena-rule); text-align: center; }
-.confirmPlayers strong { overflow-wrap: anywhere; font-size: 1.1rem; }
-.confirmPlayers span { color: var(--arena-cyan); font: 700 .8rem var(--font-label); }
+.confirmPlayer { min-width: 0; display: grid; grid-template-rows: auto 1fr auto; align-self: stretch; align-items: center; justify-items: center; gap: .65rem; }
+.confirmPlayer > small { color: var(--arena-muted); font-size: .75rem; }
+.confirmPlayer > strong { max-width: 100%; overflow-wrap: anywhere; font-size: 1.1rem; }
+.confirmVersus { color: var(--arena-cyan); font: 700 .8rem var(--font-label); }
+.confirmHealth { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; color: #ff879a; font-size: .85rem; }
+.confirmHealth :global(.blood-drop) { flex-shrink: 0; margin: 0; }
 .confirmDialog p { color: var(--arena-muted); line-height: 1.7; font-size: .85rem; margin: 1rem 0 1.5rem; }
 .confirmActions { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
 .confirmActions button { min-height: 2.8rem; border: 1px solid var(--arena-rule); background: #031c27; color: var(--arena-ink); cursor: pointer; }
 .confirmActions button[type=submit] { border-color: var(--arena-cyan); color: var(--arena-cyan); background: #06313c; }
 .confirmActions button:disabled { opacity: .5; cursor: default; }
 .confirmDialog :focus-visible { outline: 2px solid var(--arena-cyan); outline-offset: 3px; }
+@media (max-width: 30rem) {
+  .confirmDialog { padding: .9rem .6rem; border-width: .8rem; border-image-width: .8rem; }
+  .confirmPlayers { gap: .4rem; padding-block: 1rem; }
+  .confirmPlayer { gap: .5rem; }
+  .confirmPlayer > strong { font-size: 1rem; }
+  .confirmActions { gap: .6rem; }
+}
