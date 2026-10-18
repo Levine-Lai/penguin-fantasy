@@ -232,7 +232,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(css, /\.pixel-health\s*\{/);
   assert.match(css, /\.blood-drop\s*\{/);
   assert.match(css, /\.blood-drop::before\s*\{/);
-  assert.match(css, /grid-template-columns:\s*repeat\(7,\s*0\.44rem\)/);
+  assert.match(css, /grid-template-columns:\s*repeat\(7,\s*0\.4rem\)/);
   assert.doesNotMatch(css, /\.ranking-panel \.panel-title::before/);
   assert.match(css, /\.ranking-pagination/);
   assert.doesNotMatch(css, /\.data-refresh|\.refresh-status/);

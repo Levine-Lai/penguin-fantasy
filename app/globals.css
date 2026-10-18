@@ -3992,15 +3992,15 @@ main > * {
   }
 
   .blood-drop {
-    width: 0.44rem;
-    height: 0.39rem;
-    flex-basis: 0.44rem;
+    width: 0.4rem;
+    height: 0.36rem;
+    flex-basis: 0.4rem;
   }
 
   .pixel-health {
     width: auto;
     display: grid;
-    grid-template-columns: repeat(7, 0.44rem);
+    grid-template-columns: repeat(7, 0.4rem);
     gap: var(--rule-hair);
     justify-content: center;
   }
