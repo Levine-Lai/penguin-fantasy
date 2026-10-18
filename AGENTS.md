@@ -133,6 +133,8 @@ npx wrangler pages deploy out --project-name penguin-fantasy --branch main --com
 - 管理入口 `/admin/` 固定使用 Cloudflare Pages 主域；GitHub Pages 和 Sites 入口自动跳转，确保管理员 cookie 为第一方。
 - 管理员凭据只保存在本机 `.private/` 和 Worker secrets，`.private/` 必须被 Git 和部署包排除；按用户要求，玩家使用首页登录的 FPL ID 直接报名，不增加口令验证。
 - DDL 前玩家端只展示报名窗口和本人提交确认，不返回报名人数或任何对阵（包含本人对阵）；DDL 后统一公开当轮对阵，后台始终可查看。
+- 决斗身份直接使用右上角登录状态，报名区不得出现独立登录表单。每个 GW 每人只能提交一次有效决斗，玩家不可修改或撤销；管理员删除后释放本轮限制，允许重新选择提交。
+- 测试阶段直接开放 GW9 报名，GW9 DDL 前的提交均归属 GW9；报名搜索支持实时匹配名称与 FPL ID，桌面左侧本人信息、右侧搜索报名，移动端上下布局。
 - 正式数据在 `penguin-fantasy-operations` D1 中，`/test/` 演示不得产生正式记录。
 - GW9–GW20 报名由管理员开放，DDL 自动锁定。单条原子 SQL 检查前5组、参与人互斥和剩余挑战次数，禁止先读计数后写入。
 - 删除决斗采用软删除并保留审计；公开对阵、剩余次数和血量从有效记录派生。已结算记录移除后不得残留重复加减血。

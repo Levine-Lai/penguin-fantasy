@@ -513,9 +513,9 @@ function KnockoutPanel() {
   );
 }
 
-export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
+export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactNode; initialStage?: StageId }) {
   const isArenaPreview = Boolean(arenaPreview);
-  const [activeStage, setActiveStage] = useState<StageId>(isArenaPreview ? 2 : 1);
+  const [activeStage, setActiveStage] = useState<StageId>(initialStage ?? (isArenaPreview ? 2 : 1));
   const [expandedPlayer, setExpandedPlayer] = useState<number | null>(null);
   const [rankingPage, setRankingPage] = useState(0);
   const [leagueTeams, setLeagueTeams] = useState<LeagueTeam[]>(() => isLeagueResponse(bundledFplData.league) ? bundledFplData.league.teams : fallbackTeams);
@@ -859,7 +859,7 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
         <p>{stage.description}</p>
       </section>
 
-      {!isArenaPreview && activeStage === 2 ? <div className="arena-home"><LiveArena /></div> : null}
+      {!isArenaPreview && activeStage === 2 ? <div className="arena-home"><LiveArena player={myRanking} /></div> : null}
       {isArenaPreview && activeStage === 2 ? arenaPreview : <section className="boards">
         <article className="panel ranking-panel" id="ranking" style={rankingPanelAssets}>
           <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>

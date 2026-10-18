@@ -132,6 +132,13 @@ test('FPL ID login needs no code, keeps registration private and locks at DDL', 
   assert.equal((await (await request('/community')).json()).duels.length, 0);
   assert.equal('count' in (await (await request('/community')).json()).arena, false);
   assert.equal((await request('/duels', 'POST', { targetId: 3, gw: 9 }, playerHeaders)).status, 409);
+  const overview = await (await request('/admin/overview', 'GET', undefined, adminHeaders)).json();
+  const first = overview.duels[0];
+  assert.equal((await request(`/duels/${first.id}`, 'DELETE', {}, playerHeaders)).status, 405);
+  assert.equal((await request('/duels', 'PUT', { targetId: 3, gw: 9 }, playerHeaders)).status, 405);
+  assert.equal((await request(`/admin/duels/${first.id}`, 'DELETE', { reason: '允许重新选择' }, adminHeaders)).status, 200);
+  assert.equal((await (await request('/duels/mine', 'GET', undefined, playerHeaders)).json()).submitted, false);
+  assert.equal((await request('/duels', 'POST', { targetId: 3, gw: 9 }, playerHeaders)).status, 201);
   cache.set('fpl:bootstrap', { value: { events: [{ id: 9, deadline_time: new Date(Date.now() - 10000).toISOString() }] } });
   assert.equal((await request('/duels', 'POST', { targetId: 3, gw: 9 }, playerHeaders)).status, 409);
   assert.equal((await (await request('/community')).json()).duels.length, 1);

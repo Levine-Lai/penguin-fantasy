@@ -1,0 +1,39 @@
+.panel { width: 100%; margin: 0; }
+.header { grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; }
+.deadline, .muted { color: var(--arena-muted); font-size: .8rem; line-height: 1.6; }
+.registration { display: grid; grid-template-columns: minmax(15rem, .7fr) minmax(0, 1.3fr); gap: 1.5rem; align-items: start; }
+.profile { min-width: 0; padding: 1.5rem; border: 1px solid var(--arena-rule); background: linear-gradient(155deg, rgba(5,36,47,.82), rgba(1,14,21,.96)); }
+.profile > small { color: var(--arena-cyan); font-size: .75rem; }
+.profile h3 { margin: .7rem 0; color: var(--arena-ink); font-size: 1.55rem; overflow-wrap: anywhere; }
+.profile h3.featured, .candidates strong.featured { color: var(--color-gold); }
+.playerId { color: var(--arena-muted); font: .8rem var(--font-label); }
+.profile dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1.5rem 0 0; }
+.profile dl > div { padding: .8rem; border: 1px solid var(--arena-rule); text-align: center; }
+.profile dt { color: var(--arena-muted); font-size: .75rem; }
+.profile dd { margin: .5rem 0 0; color: var(--arena-cyan); font: 700 1.4rem var(--font-label); }
+.form { min-width: 0; }
+.fieldset { border: 0; min-width: 0; padding: 0; margin: 0 0 1rem; }
+.fieldset:disabled { opacity: .55; }
+.candidates { max-height: 22rem; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: #187b91 #02121a; padding: 2px; }
+.candidates label { grid-template-columns: auto minmax(0, 1fr); }
+.candidates label > span:last-child { justify-items: start; }
+.candidates strong { max-width: 100%; }
+.candidates small { margin-top: .4rem; }
+.submitted { min-height: 15rem; display: grid; place-content: center; gap: .7rem; text-align: center; border: 1px solid var(--arena-rule); }
+.submitted strong { color: var(--arena-cyan); font-size: 1.5rem; }
+.submitted p { color: var(--arena-muted); font-size: .85rem; }
+.message { margin-bottom: 1rem; color: var(--arena-cyan); font-size: .85rem; }
+.error { margin-bottom: 1rem; color: #ff9aa9; font-size: .85rem; }
+.duels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.panel :focus-visible { outline: 2px solid var(--arena-cyan); outline-offset: 2px; }
+@media (max-width: 48rem) {
+  .registration, .duels { grid-template-columns: minmax(0, 1fr); }
+  .header { grid-template-columns: minmax(0, 1fr); gap: .4rem; }
+  .profile { padding: 1rem; }
+  .profile dl { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .4rem; margin-top: 1rem; }
+  .profile dl > div { padding: .7rem .2rem; }
+  .profile dt { font-size: .65rem; }
+  .profile dd { font-size: 1.1rem; }
+}
+@media (max-width: 30rem) { .candidates { grid-template-columns: minmax(0, 1fr); } }

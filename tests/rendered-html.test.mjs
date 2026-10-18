@@ -175,7 +175,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /本章节尚无队长选择记录/);
   assert.match(page, /gwFrom: 9,[\s\S]{0,40}gwTo: 20,/);
   assert.doesNotMatch(page, /<header><strong>队长选择记录<\/strong><small>见习者集结<\/small><\/header>/);
-  assert.match(page, /useState<StageId>\(isArenaPreview \? 2 : 1\)/);
+  assert.match(page, /useState<StageId>\(initialStage \?\? \(isArenaPreview \? 2 : 1\)\)/);
   assert.match(page, /item\.id === \(isArenaPreview \? 2 : 1\) \? <i>当前<\/i>/);
   assert.match(page, /className="brand-emblem"/);
   assert.match(page, /className="stage-relic"/);
@@ -381,6 +381,26 @@ test("server-renders the arena inside the second chapter's homepage shell", asyn
   assert.match(css, /grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/);
   assert.match(css, /border-image-source:\s*var\(--arena-frame-image\)/);
   assert.match(css, /@media \(max-width:\s*48rem\)[\s\S]*?\.duelGrid\s*\{\s*grid-template-columns:\s*1fr;/);
+});
+
+test("formal arena uses the header identity and searchable framed registration", async () => {
+  const response = await render('/arena/');
+  assert.equal(response.status, 200);
+  const html = await response.text();
+  assert.match(html, /site-header/);
+  assert.match(html, /发起决斗/);
+  assert.match(html, /搜索挑战对象/);
+  assert.match(html, /请先在右上角登录/);
+  const [arena, home, css] = await Promise.all([
+    readFile(new URL('../app/arena/live-arena.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../app/page.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../app/arena/live-arena.module.css', import.meta.url), 'utf8'),
+  ]);
+  assert.match(home, /<LiveArena player=\{myRanking\}/);
+  assert.doesNotMatch(arena, /localStorage|onSubmit=\{login\}|identityKey/);
+  assert.match(arena, /String\(member.entryId\)\.includes\(query\)/);
+  assert.match(arena, /ice-frame-complete\.webp/);
+  assert.match(css, /@media \(max-width: 48rem\)/);
 });
 
 test("ships a double-clickable local HTML edition without network or API calls", async () => {
