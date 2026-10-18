@@ -30,10 +30,17 @@ backfills any older due GW left incomplete by a prolonged FPL outage.
 The next daily publish also creates any missing historical snapshots whose picks
 were recovered, so an outage spanning a later DDL cannot leave a permanent gap.
 
-At Beijing time 07:30, the Worker reads the single FPL live endpoint, records
+At Beijing time 07:30, the Worker reads the FPL live-points and fixture endpoints, records
 each captain's base points before any captain multiplier, and publishes one
 complete snapshot. Player page views only read KV-backed API responses and do
 not call the official FPL API.
+
+The locked pick stores both the original captain and vice captain. Captain
+popularity always remains attached to the original captain. For scoring, an
+unstarted captain is shown as not started; only after that player's fixture is
+complete with zero minutes does an available vice captain become the scoring
+captain. Existing KV picks and snapshots are versioned and migrated in bounded
+batches.
 
 ## Endpoints
 

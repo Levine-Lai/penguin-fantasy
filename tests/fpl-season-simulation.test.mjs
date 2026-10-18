@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { captureDueCaptainPicks, publishDailySnapshot } from "../cloudflare/fpl-proxy/src/index.ts";
+import { captureDueCaptainPicks, publishDailySnapshot, resolveCaptainResult } from "../cloudflare/fpl-proxy/src/index.ts";
 
 class MemoryKv {
   values = new Map();
@@ -39,7 +39,11 @@ async function seedEnv(events, roster) {
   const kv = new MemoryKv();
   const bootstrap = {
     events,
-    elements: Array.from({ length: 4 }, (_, index) => ({ id: 101 + index, web_name: `Captain ${101 + index}` })),
+    elements: Array.from({ length: 4 }, (_, index) => ({
+      id: 101 + index,
+      web_name: `Captain ${101 + index}`,
+      team: index + 1,
+    })),
   };
   const cachedAt = new Date().toISOString();
   await kv.put("fpl:bootstrap", JSON.stringify({ value: bootstrap, cachedAt }));
@@ -48,7 +52,7 @@ async function seedEnv(events, roster) {
   return { FPL_CACHE: kv, LEAGUE_ID: "511690" };
 }
 
-function installFplMock({ failOnceForEntry } = {}) {
+function installFplMock({ failOnceForEntry, liveStatsOverride = {} } = {}) {
   const calls = [];
   let pendingFailure = failOnceForEntry;
   let livePointsBonus = 0;
@@ -66,7 +70,11 @@ function installFplMock({ failOnceForEntry } = {}) {
         return new Response("temporary outage", { status: 503 });
       }
       const captainId = 101 + (entryId % 4);
-      return Response.json({ picks: [{ element: captainId, multiplier: 2, is_captain: true }] });
+      const viceCaptainId = 101 + ((entryId + 1) % 4);
+      return Response.json({ picks: [
+        { element: captainId, multiplier: 2, is_captain: true, is_vice_captain: false },
+        { element: viceCaptainId, multiplier: 1, is_captain: false, is_vice_captain: true },
+      ] });
     }
 
     const liveMatch = url.pathname.match(/\/event\/(\d+)\/live\/$/);
@@ -75,9 +83,16 @@ function installFplMock({ failOnceForEntry } = {}) {
       return Response.json({
         elements: Array.from({ length: 4 }, (_, index) => ({
           id: 101 + index,
-          stats: { total_points: gw + index + livePointsBonus },
+          stats: liveStatsOverride[101 + index] ?? { total_points: gw + index + livePointsBonus, minutes: 90 },
         })),
       });
+    }
+
+    if (url.pathname === "/api/fixtures/") {
+      return Response.json([
+        { team_h: 1, team_a: 2, started: true, finished: true, finished_provisional: true },
+        { team_h: 3, team_a: 4, started: true, finished: true, finished_provisional: true },
+      ]);
     }
 
     throw new Error(`Unexpected FPL request: ${url.pathname}`);
@@ -93,6 +108,58 @@ function installFplMock({ failOnceForEntry } = {}) {
     },
   };
 }
+
+test("keeps an unstarted captain and switches only a confirmed DNP to an available vice captain", () => {
+  const names = { 101: "Original", 102: "Vice" };
+  const teams = { 101: 1, 102: 2 };
+  const pick = { captainId: 101, viceCaptainId: 102, multiplier: 2 };
+  const stats = {
+    101: { total_points: 0, minutes: 0 },
+    102: { total_points: 7, minutes: 90 },
+  };
+
+  const beforeKickoff = resolveCaptainResult(pick, names, teams, stats, [
+    { team_h: 1, team_a: 3, started: false, finished: false, finished_provisional: false },
+    { team_h: 2, team_a: 4, started: true, finished: true, finished_provisional: true },
+  ]);
+  assert.equal(beforeKickoff.scoringCaptainName, "Original");
+  assert.equal(beforeKickoff.status, "not_started");
+  assert.equal(beforeKickoff.usedViceCaptain, false);
+
+  const afterConfirmedDnp = resolveCaptainResult(pick, names, teams, stats, [
+    { team_h: 1, team_a: 3, started: true, finished: true, finished_provisional: true },
+    { team_h: 2, team_a: 4, started: true, finished: true, finished_provisional: true },
+  ]);
+  assert.equal(afterConfirmedDnp.scoringCaptainName, "Vice");
+  assert.equal(afterConfirmedDnp.points, 7);
+  assert.equal(afterConfirmedDnp.originalCaptainPoints, 0);
+  assert.equal(afterConfirmedDnp.usedViceCaptain, true);
+});
+
+test("uses the vice captain for scoring without moving the original captain's pick rate", async () => {
+  const [event] = createEvents(1);
+  const env = await seedEnv([event], [{ entryId: 4, teamName: "Vice example" }]);
+  const mock = installFplMock({
+    liveStatsOverride: {
+      101: { total_points: 0, minutes: 0 },
+      102: { total_points: 7, minutes: 90 },
+    },
+  });
+
+  try {
+    await captureDueCaptainPicks(env, Date.parse(event.deadline_time) + 90 * 60 * 1000);
+    await publishDailySnapshot(env, 1, Date.parse(event.deadline_time) + 24 * 60 * 60 * 1000);
+    const [team] = (await env.FPL_CACHE.get("snapshot:gw:1", "json")).teams;
+
+    assert.equal(team.captainName, "Captain 101");
+    assert.equal(team.captainPickRate, 100);
+    assert.equal(team.scoringCaptainName, "Captain 102");
+    assert.equal(team.captainPoints, 7);
+    assert.equal(team.usedViceCaptain, true);
+  } finally {
+    mock.restore();
+  }
+});
 
 test("honors the DDL plus 90-minute gate and never publishes a partial roster", async () => {
   const [event] = createEvents(1);

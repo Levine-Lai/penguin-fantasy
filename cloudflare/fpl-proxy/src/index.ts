@@ -30,7 +30,7 @@ type FplEvent = {
 
 type Bootstrap = {
   events: FplEvent[];
-  elements: Array<{ id: number; web_name: string }>;
+  elements: Array<{ id: number; web_name: string; team: number }>;
 };
 
 type LeagueMember = {
@@ -40,8 +40,24 @@ type LeagueMember = {
 
 type PickRecord = {
   captainId: number;
+  viceCaptainId: number;
   multiplier: number;
 };
+
+type PlayerLiveStats = {
+  total_points: number;
+  minutes: number;
+};
+
+type FplFixture = {
+  team_h: number;
+  team_a: number;
+  started: boolean;
+  finished: boolean;
+  finished_provisional: boolean;
+};
+
+type CaptainStatus = "not_started" | "playing" | "finished";
 
 type PicksDocument = {
   gw: number;
@@ -59,6 +75,7 @@ type CachedValue<T> = {
 const FPL_ORIGIN = "https://fantasy.premierleague.com/api";
 const JSON_HEADERS = { "content-type": "application/json; charset=utf-8" };
 const PICKS_BATCH_SIZE = 40;
+const CAPTAIN_RESOLUTION_VERSION = 2;
 
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContextLike): Promise<Response> {
@@ -195,12 +212,16 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
       return;
     }
 
-    const live = deadlineHasPassed
-      ? await fetchFpl<{ elements: Array<{ id: number; stats: { total_points: number } }> }>(`/event/${event.id}/live/`)
-      : { elements: [] };
+    const [live, fixtures] = deadlineHasPassed
+      ? await Promise.all([
+          fetchFpl<{ elements: Array<{ id: number; stats: PlayerLiveStats }> }>(`/event/${event.id}/live/`),
+          fetchFpl<FplFixture[]>(`/fixtures/?event=${event.id}`),
+        ])
+      : [{ elements: [] }, []] as [{ elements: Array<{ id: number; stats: PlayerLiveStats }> }, FplFixture[]];
 
     const playerNames = Object.fromEntries(bootstrap.elements.map((player) => [player.id, player.web_name]));
-    const livePoints = Object.fromEntries(live.elements.map((player) => [player.id, player.stats.total_points]));
+    const playerTeams = Object.fromEntries(bootstrap.elements.map((player) => [player.id, player.team]));
+    const liveStats = Object.fromEntries(live.elements.map((player) => [player.id, player.stats]));
     const validPicks = roster
       .map((member) => picksDocument.picksByEntry[member.entryId] ?? null)
       .filter((pick): pick is PickRecord => Boolean(pick));
@@ -212,16 +233,26 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
 
     const teams = roster.map((member) => {
       const pick = picksDocument.picksByEntry[member.entryId] ?? null;
-      const rawPoints = pick ? Number(livePoints[pick.captainId] ?? 0) : 0;
       const captainPickRate = pick && denominator > 0
         ? Number((((captainCounts[pick.captainId] ?? 0) / denominator) * 100).toFixed(1))
+        : null;
+      const resolution = pick
+        ? resolveCaptainResult(pick, playerNames, playerTeams, liveStats, fixtures)
         : null;
 
       return {
         ...member,
         captainId: pick?.captainId ?? null,
         captainName: pick ? playerNames[pick.captainId] ?? `Player ${pick.captainId}` : null,
-        captainPoints: rawPoints,
+        viceCaptainId: pick?.viceCaptainId ?? null,
+        viceCaptainName: pick ? playerNames[pick.viceCaptainId] ?? `Player ${pick.viceCaptainId}` : null,
+        scoringCaptainId: resolution?.scoringCaptainId ?? null,
+        scoringCaptainName: resolution?.scoringCaptainName ?? null,
+        captainPoints: resolution?.points ?? 0,
+        originalCaptainPoints: resolution?.originalCaptainPoints ?? 0,
+        captainStatus: resolution?.status ?? "finished",
+        originalCaptainStatus: resolution?.originalCaptainStatus ?? "finished",
+        usedViceCaptain: resolution?.usedViceCaptain ?? false,
         captainPickRate,
       };
     });
@@ -234,6 +265,7 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
       eventName: event.name,
       deadlineTime: event.deadline_time,
       deadlineHasPassed,
+      captainResolutionVersion: CAPTAIN_RESOLUTION_VERSION,
       picksSync: {
         checked: picksChecked,
         total: roster.length,
@@ -241,7 +273,7 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
         completed,
         capturedAt: picksDocument.completedAt,
       },
-      pointsDefinition: "队长球员在 FPL 的基础得分，不计算队长双倍或三倍倍率",
+      pointsDefinition: "原队长完赛且未出场时改用已出场副队长的基础分；不计算队长双倍或三倍倍率",
       captainPickRateDefinition: "本联赛中选择该球员为当周队长的有效队伍数 / 本联赛当周可读取队长选择的队伍数",
       teams,
       updatedAt: new Date().toISOString(),
@@ -258,8 +290,8 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
         .filter((item) => item.id !== event.id && now >= Date.parse(item.deadline_time))
         .sort((left, right) => left.id - right.id);
       for (const passedEvent of passedEvents) {
-        const existingSnapshot = await env.FPL_CACHE.get(`snapshot:gw:${passedEvent.id}`, "json");
-        if (existingSnapshot) continue;
+        const existingSnapshot = await env.FPL_CACHE.get<{ captainResolutionVersion?: number }>(`snapshot:gw:${passedEvent.id}`, "json");
+        if (existingSnapshot?.captainResolutionVersion === CAPTAIN_RESOLUTION_VERSION) continue;
         const backfillPicks = await getPicksDocument(env, passedEvent.id);
         if (isPicksCompleteForRoster(backfillPicks, roster)) {
           await publishDailySnapshot(env, passedEvent.id, now);
@@ -358,7 +390,9 @@ async function syncPicksBatch(
   document: PicksDocument,
 ): Promise<PicksDocument> {
   const checked = new Set(document.checkedEntryIds);
-  const pending = roster.filter((member) => !checked.has(member.entryId)).slice(0, PICKS_BATCH_SIZE);
+  const pending = roster
+    .filter((member) => !checked.has(member.entryId) || needsViceCaptainMigration(document.picksByEntry[member.entryId]))
+    .slice(0, PICKS_BATCH_SIZE);
   if (pending.length === 0) {
     if (isPicksCompleteForRoster(document, roster) && !document.completedAt) {
       document.updatedAt = new Date().toISOString();
@@ -371,12 +405,15 @@ async function syncPicksBatch(
   const results = await mapWithConcurrency(pending, 6, async (member) => {
     try {
       const payload = await fetchFpl<{
-        picks: Array<{ element: number; multiplier: number; is_captain: boolean }>;
+        picks: Array<{ element: number; multiplier: number; is_captain: boolean; is_vice_captain: boolean }>;
       }>(`/entry/${member.entryId}/event/${gw}/picks/`);
       const captain = payload.picks.find((pick) => pick.is_captain);
+      const viceCaptain = payload.picks.find((pick) => pick.is_vice_captain);
       return {
         entryId: member.entryId,
-        pick: captain ? { captainId: captain.element, multiplier: captain.multiplier } : null,
+        pick: captain && viceCaptain
+          ? { captainId: captain.element, viceCaptainId: viceCaptain.element, multiplier: captain.multiplier }
+          : null,
       };
     } catch (error) {
       if (error instanceof FplHttpError && error.status === 404) {
@@ -404,7 +441,81 @@ function countCheckedRosterEntries(document: PicksDocument, roster: LeagueMember
 
 function isPicksCompleteForRoster(document: PicksDocument, roster: LeagueMember[]): boolean {
   const checked = new Set(document.checkedEntryIds);
-  return roster.length > 0 && roster.every((member) => checked.has(member.entryId));
+  return roster.length > 0 && roster.every((member) => (
+    checked.has(member.entryId) && !needsViceCaptainMigration(document.picksByEntry[member.entryId])
+  ));
+}
+
+function needsViceCaptainMigration(pick: PickRecord | null | undefined): boolean {
+  return Boolean(pick && !Number.isFinite(pick.viceCaptainId));
+}
+
+function fixtureStatusForPlayer(
+  playerId: number,
+  playerTeams: Record<string, number>,
+  fixtures: FplFixture[],
+): CaptainStatus {
+  const teamId = playerTeams[playerId];
+  const fixture = fixtures.find((item) => item.team_h === teamId || item.team_a === teamId);
+  if (!fixture?.started) return "not_started";
+  return fixture.finished || fixture.finished_provisional ? "finished" : "playing";
+}
+
+function resolveCaptainResult(
+  pick: PickRecord,
+  playerNames: Record<string, string>,
+  playerTeams: Record<string, number>,
+  liveStats: Record<string, PlayerLiveStats>,
+  fixtures: FplFixture[],
+): {
+  scoringCaptainId: number;
+  scoringCaptainName: string;
+  points: number;
+  originalCaptainPoints: number;
+  status: CaptainStatus;
+  originalCaptainStatus: CaptainStatus;
+  usedViceCaptain: boolean;
+} {
+  const captainStats = liveStats[pick.captainId] ?? { total_points: 0, minutes: 0 };
+  const originalCaptainStatus = fixtureStatusForPlayer(pick.captainId, playerTeams, fixtures);
+  const captainName = playerNames[pick.captainId] ?? `Player ${pick.captainId}`;
+
+  if (originalCaptainStatus !== "finished" || captainStats.minutes > 0) {
+    return {
+      scoringCaptainId: pick.captainId,
+      scoringCaptainName: captainName,
+      points: Number(captainStats.total_points ?? 0),
+      originalCaptainPoints: Number(captainStats.total_points ?? 0),
+      status: originalCaptainStatus,
+      originalCaptainStatus,
+      usedViceCaptain: false,
+    };
+  }
+
+  const viceStats = liveStats[pick.viceCaptainId] ?? { total_points: 0, minutes: 0 };
+  const viceStatus = fixtureStatusForPlayer(pick.viceCaptainId, playerTeams, fixtures);
+  const viceCanStillScore = viceStatus !== "finished" || viceStats.minutes > 0;
+  if (viceCanStillScore) {
+    return {
+      scoringCaptainId: pick.viceCaptainId,
+      scoringCaptainName: playerNames[pick.viceCaptainId] ?? `Player ${pick.viceCaptainId}`,
+      points: Number(viceStats.total_points ?? 0),
+      originalCaptainPoints: Number(captainStats.total_points ?? 0),
+      status: viceStatus,
+      originalCaptainStatus,
+      usedViceCaptain: true,
+    };
+  }
+
+  return {
+    scoringCaptainId: pick.captainId,
+    scoringCaptainName: captainName,
+    points: 0,
+    originalCaptainPoints: Number(captainStats.total_points ?? 0),
+    status: "finished",
+    originalCaptainStatus,
+    usedViceCaptain: false,
+  };
 }
 
 async function selectCaptureTarget(
@@ -474,6 +585,7 @@ export {
   countCheckedRosterEntries,
   isPicksCompleteForRoster,
   publishDailySnapshot,
+  resolveCaptainResult,
   selectLatestCaptureEvent,
   selectLatestPassedEvent,
 };

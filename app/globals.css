@@ -3992,10 +3992,29 @@ main > * {
   }
 
   .blood-drop {
-    width: 0.6rem;
-    height: 0.52rem;
-    flex-basis: 0.6rem;
+    width: 0.44rem;
+    height: 0.39rem;
+    flex-basis: 0.44rem;
   }
+
+  .pixel-health {
+    width: auto;
+    display: grid;
+    grid-template-columns: repeat(7, 0.44rem);
+    gap: var(--rule-hair);
+    justify-content: center;
+  }
+
+  .rank-row,
+  .rank-row:nth-of-type(even),
+  .rank-row.selected { min-height: 4.35rem; }
+}
+
+.score-pending {
+  font-family: var(--font-label);
+  font-size: 0.66rem;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 /* Remembered player identity and personal standing */

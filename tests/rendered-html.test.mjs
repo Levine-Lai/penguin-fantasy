@@ -150,6 +150,9 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /选择该队长的玩家/);
   assert.match(page, /myStandingExpanded/);
   assert.match(page, /setRankingPage\(0\);[\s\S]*closeLogin/);
+  assert.match(page, /result\.scoringCaptainName \?\? result\.captainName/);
+  assert.match(page, /originalCaptainPoints \?\? team\.captainPoints/);
+  assert.match(page, /gpcStatus === "not_started" \? "未开赛"/);
   assert.match(page, /right\.selections - left\.selections/);
   assert.doesNotMatch(page, /\.at\(-1\)/);
   assert.doesNotMatch(page, /Array\.from\(\{ length: relevantGw \}/);
@@ -229,6 +232,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(css, /\.pixel-health\s*\{/);
   assert.match(css, /\.blood-drop\s*\{/);
   assert.match(css, /\.blood-drop::before\s*\{/);
+  assert.match(css, /grid-template-columns:\s*repeat\(7,\s*0\.44rem\)/);
   assert.doesNotMatch(css, /\.ranking-panel \.panel-title::before/);
   assert.match(css, /\.ranking-pagination/);
   assert.doesNotMatch(css, /\.data-refresh|\.refresh-status/);
@@ -273,13 +277,16 @@ test("locks captain picks after DDL and publishes base points once at 07:30", as
   assert.match(worker, /captureDueCaptainPicks\(env, controller\.scheduledTime\)/);
   assert.match(worker, /90 \* 60 \* 1000/);
   assert.match(worker, /PICKS_BATCH_SIZE = 40/);
-  assert.match(worker, /roster\.every\(\(member\) => checked\.has\(member\.entryId\)\)/);
+  assert.match(worker, /checked\.has\(member\.entryId\) && !needsViceCaptainMigration/);
   assert.match(worker, /if \(picksDocument\.completedAt\) delete picksDocument\.completedAt/);
   assert.match(worker, /countCheckedRosterEntries/);
   assert.match(worker, /roster\s*\.map\(\(member\) => picksDocument\.picksByEntry\[member\.entryId\]/);
   assert.match(worker, /sort\(\(left, right\) => right\.id - left\.id\)/);
   assert.match(worker, /state: "waiting_for_picks"/);
-  assert.match(worker, /pointsDefinition: "队长球员在 FPL 的基础得分，不计算队长双倍或三倍倍率"/);
+  assert.match(worker, /viceCaptainId/);
+  assert.match(worker, /originalCaptainStatus !== "finished" \|\| captainStats\.minutes > 0/);
+  assert.match(worker, /captainCounts\[pick\.captainId\]/);
+  assert.match(worker, /pointsDefinition: "原队长完赛且未出场时改用已出场副队长的基础分；不计算队长双倍或三倍倍率"/);
   assert.doesNotMatch(worker, /captainPointsWithMultiplier/);
   assert.match(worker, /url\.pathname === "\/api\/history"/);
   assert.match(worker, /getSeasonDeadlines\(env\)/);

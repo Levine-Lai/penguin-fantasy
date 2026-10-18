@@ -8,13 +8,19 @@ const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const fplApiBase = "https://penguin-fantasy.pages.dev";
 
 type StageId = 1 | 2 | 3 | 4 | 5;
-type RankedPlayer = { entryId: number; name: string; rank: number | null; gpc: number; captainTotal: number; captainRateTotal: number; hp: number; history: CaptainHistoryEntry[] };
-type CaptainHistoryEntry = { gw: number; captain: string; rate: number; points: number; life: number };
-type CaptainPopularity = { name: string; points: number; selections: number; rate: number; selectors: string[] };
+type CaptainStatus = "not_started" | "playing" | "finished";
+type RankedPlayer = { entryId: number; name: string; rank: number | null; gpc: number; gpcStatus?: CaptainStatus; captainTotal: number; captainRateTotal: number; hp: number; history: CaptainHistoryEntry[] };
+type CaptainHistoryEntry = { gw: number; captain: string; rate: number; points: number; life: number; status?: CaptainStatus; usedViceCaptain?: boolean };
+type CaptainPopularity = { name: string; points: number; selections: number; rate: number; selectors: string[]; status?: CaptainStatus };
 type LeagueTeam = { entryId: number; teamName: string };
 type ApiTeam = LeagueTeam & {
   captainName: string | null;
+  scoringCaptainName?: string | null;
   captainPoints: number;
+  originalCaptainPoints?: number;
+  captainStatus?: CaptainStatus;
+  originalCaptainStatus?: CaptainStatus;
+  usedViceCaptain?: boolean;
   captainPickRate: number | null;
 };
 type GwSnapshot = {
@@ -410,13 +416,13 @@ function InlineCaptainHistory({ playerName, history, currentGwLabel, stage }: { 
         {chapterHistory.length === 0 ? <p className="history-empty">本章节尚无队长选择记录</p> : chapterHistory.map((item) => (
           <article className="history-row" key={item.gw}>
             <strong className="history-gw">GW{item.gw}</strong>
-            <div className="history-captain"><b>{item.captain}</b><small className={item.rate < 10 ? "rare-pick" : ""}>选择率 {item.rate}%</small></div>
+            <div className="history-captain"><b>{item.captain}{item.usedViceCaptain ? "（副）" : ""}</b><small className={item.rate < 10 ? "rare-pick" : ""}>选择率 {item.rate}%</small></div>
             <div
               className="history-result"
-              aria-label={`${item.points} 分，血量变化 ${signedLife(item.life)}`}
+              aria-label={item.status === "not_started" ? "未开赛，暂未增加血量" : `${item.points} 分，血量变化 ${signedLife(item.life)}`}
             >
               <span className="history-result-box history-points" aria-hidden="true">
-                <b>{item.points}</b><em>分</em>
+                <b className={item.status === "not_started" ? "score-pending" : undefined}>{item.status === "not_started" ? "未开赛" : item.points}</b>{item.status === "not_started" ? null : <em>分</em>}
               </span>
               <span className={`history-result-box history-life ${item.life === 2 ? "life-rare" : ""}`} aria-hidden="true">
                 <b>{signedLife(item.life)}</b><em>血</em>
@@ -439,7 +445,7 @@ function InlineCaptainHistory({ playerName, history, currentGwLabel, stage }: { 
 }
 
 function RankedPlayerCells({ player }: { player: RankedPlayer }) {
-  const { name, rank, gpc, captainTotal, hp } = player;
+  const { name, rank, gpc, gpcStatus, captainTotal, hp } = player;
   return (
     <>
       <strong
@@ -450,7 +456,7 @@ function RankedPlayerCells({ player }: { player: RankedPlayer }) {
       <div className="player-id-cell">
         <strong className={`player-id ${featuredTeamOrder.has(name) ? "featured-player" : ""}`}>{name}</strong>
       </div>
-      <strong className="stat-score"><span>{gpc}</span></strong>
+      <strong className="stat-score"><span className={gpcStatus === "not_started" ? "score-pending" : undefined}>{gpcStatus === "not_started" ? "未开赛" : gpc}</span></strong>
       <strong className="stat-score stat-captain-total"><span>{captainTotal}</span></strong>
       <div className="hp-cell" aria-label={`${hp} 点血量`}>
         <span className="pixel-health" aria-hidden="true">
@@ -648,10 +654,12 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
         const life = lifeEarnedInStage(stageForGw(snapshot.gw), result.captainPoints, result.captainPickRate);
         return [{
           gw: snapshot.gw,
-          captain: result.captainName,
+          captain: result.scoringCaptainName ?? result.captainName,
           rate: result.captainPickRate ?? 0,
           points: result.captainPoints,
           life,
+          status: result.captainStatus,
+          usedViceCaptain: result.usedViceCaptain,
         }];
       });
       const latest = history.length > 0 ? history[history.length - 1] : undefined;
@@ -660,6 +668,7 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
         name: team.teamName,
         rank: null,
         gpc: latest?.points ?? 0,
+        gpcStatus: latest?.status,
         captainTotal: history.reduce((total, item) => total + item.points, 0),
         captainRateTotal: history.reduce((total, item) => total + item.rate, 0),
         hp: Math.max(0, 1 + history.reduce((total, item) => total + item.life, 0)),
@@ -684,15 +693,16 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
     if (!latestCaptainSnapshot) return [];
 
     const selections = latestCaptainSnapshot.teams.filter((team) => team.captainName);
-    const grouped = new Map<string, { points: number; selections: number; selectors: string[] }>();
+    const grouped = new Map<string, { points: number; selections: number; selectors: string[]; status?: CaptainStatus }>();
     for (const team of selections) {
       const name = team.captainName;
       if (!name) continue;
       const current = grouped.get(name);
       grouped.set(name, {
-        points: team.captainPoints,
+        points: team.originalCaptainPoints ?? team.captainPoints,
         selections: (current?.selections ?? 0) + 1,
         selectors: [...(current?.selectors ?? []), team.teamName],
+        status: team.originalCaptainStatus ?? team.captainStatus,
       });
     }
 
@@ -702,6 +712,7 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
       selections: captain.selections,
       rate: selections.length > 0 ? captain.selections / selections.length * 100 : 0,
       selectors: captain.selectors.sort((left, right) => left.localeCompare(right, "zh-CN")),
+      status: captain.status,
     })).sort((left, right) => right.selections - left.selections || right.points - left.points || left.name.localeCompare(right.name, "zh-CN"));
   }, [latestCaptainSnapshot]);
   const deadlineSchedule = gwDeadlines.length > 0
@@ -881,7 +892,7 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
               return <Fragment key={captain.name}>
               <article className={`captain-rate-row selectable ${isExpanded ? "selected" : ""}`} role="button" tabIndex={0} aria-expanded={isExpanded} onClick={() => setExpandedCaptain((current) => current === captain.name ? null : captain.name)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setExpandedCaptain((current) => current === captain.name ? null : captain.name); } }}>
                 <strong className="captain-rate-name">{captain.name}</strong>
-                <strong>{captain.points}</strong>
+                <strong className={captain.status === "not_started" ? "score-pending" : undefined}>{captain.status === "not_started" ? "未开赛" : captain.points}</strong>
                 <strong>{captain.selections} 人</strong>
                 <strong className={isRare ? "rare-captain-rate" : undefined}>{captain.rate.toFixed(1)}%</strong>
               </article>
