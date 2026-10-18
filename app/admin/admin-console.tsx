@@ -14,8 +14,8 @@ type Overview = {
   logs: Array<{ id: string; action: string; target: string; detail: string; created_at: string }>;
   codes: Array<{ entry_id: number; updated_at: string }>;
 };
-type Tab = 'duels' | 'announcements' | 'visits' | 'players' | 'audit';
-const tabs: Array<[Tab, string]> = [['duels', '决斗管理'], ['announcements', '公告'], ['visits', '浏览与登录'], ['players', '玩家口令'], ['audit', '操作记录']];
+type Tab = 'duels' | 'announcements' | 'visits' | 'audit';
+const tabs: Array<[Tab, string]> = [['duels', '决斗管理'], ['announcements', '公告'], ['visits', '浏览与登录'], ['audit', '操作记录']];
 const today = () => new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
 const actionLabels: Record<string, string> = { admin_login: '管理员登录', arena_settings: '调整报名', reset_player_code: '重置玩家口令', publish_announcement: '发布公告', remove_duels: '移除决斗', remove_announcements: '撤下公告' };
 
@@ -32,8 +32,6 @@ export default function AdminConsole() {
   const [page, setPage] = useState(0);
   const [gw, setGw] = useState(9);
   const [showRemoved, setShowRemoved] = useState(false);
-  const [entryId, setEntryId] = useState('');
-  const [issuedCode, setIssuedCode] = useState<{ code: string; entryId: number } | null>(null);
 
   const load = useCallback(async (selectedDay?: string, selectedPage = 0) => {
     const response = await operationsFetch<Overview>(`/admin/overview?day=${selectedDay ?? today()}&page=${selectedPage}`);
@@ -73,9 +71,9 @@ export default function AdminConsole() {
       {error ? <p role="alert" className={styles.error}>{error}</p> : null}<button disabled={busy}>{busy ? '正在登录…' : '登录'}</button></form>
   </section></main>;
   return <main className={styles.shell}>
-    <header className={styles.header}><div><small>PENGUIN CUP · ADMIN</small><h1>联赛管理</h1></div><div className={styles.actions}><a href="/arena/" target="_blank" rel="noreferrer">正式决斗页 ↗</a><Link href="/">战榜</Link><button disabled={busy} onClick={() => void operationsFetch('/admin/logout', { method: 'POST', body: '{}' }).then(() => { setLoggedIn(false); setData(null); setIssuedCode(null); }).catch(() => setError('退出失败，请重试'))}>退出</button></div></header>
-    <div className={styles.metrics}>{[['当日浏览', data?.stats.views], ['当日访客', data?.stats.visitors], ['登录/验证次数', data?.stats.logins], ['累计浏览（保留90天）', data?.total.views]].map(([label, value]) => <article key={String(label)}><span>{label}</span><strong>{value ?? 0}</strong></article>)}</div>
-    <nav className={styles.tabs} aria-label="后台模块">{tabs.map(([id, label]) => <button aria-current={tab === id ? 'page' : undefined} key={id} onClick={() => { setTab(id); setIssuedCode(null); }}>{label}</button>)}</nav>
+    <header className={styles.header}><div><small>PENGUIN CUP · ADMIN</small><h1>联赛管理</h1></div><div className={styles.actions}><a href="/arena/" target="_blank" rel="noreferrer">正式决斗页 ↗</a><Link href="/">战榜</Link><button disabled={busy} onClick={() => void operationsFetch('/admin/logout', { method: 'POST', body: '{}' }).then(() => { setLoggedIn(false); setData(null); }).catch(() => setError('退出失败，请重试'))}>退出</button></div></header>
+    <div className={styles.metrics}>{[['当日浏览', data?.stats.views], ['当日访客', data?.stats.visitors], ['登录次数', data?.stats.logins], ['累计浏览（保留90天）', data?.total.views]].map(([label, value]) => <article key={String(label)}><span>{label}</span><strong>{value ?? 0}</strong></article>)}</div>
+    <nav className={styles.tabs} aria-label="后台模块">{tabs.map(([id, label]) => <button aria-current={tab === id ? 'page' : undefined} key={id} onClick={() => { setTab(id); }}>{label}</button>)}</nav>
     <div className={styles.toolbar}><label>统计日期（北京时间）<input type="date" value={day} onChange={event => { setDay(event.target.value); setPage(0); }} /></label><button disabled={busy || !day} onClick={() => { setPage(0); void run(() => load(day, 0), '', false); }}>刷新数据</button></div>
     {error ? <p role="alert" className={styles.error}>{error}</p> : null}{notice ? <p role="status" className={styles.notice}>{notice}</p> : null}
     {tab === 'duels' ? <>
@@ -93,12 +91,9 @@ export default function AdminConsole() {
       <section className={styles.panel}><h2>已发布公告</h2>{data?.announcements.map(item => <article className={styles.record} key={item.id}><div><small>{item.display_day} {item.deleted_at ? '· 已撤下' : ''}</small><h3>{item.title}</h3><p className={styles.pre}>{item.body}</p></div>{!item.deleted_at ? <button disabled={busy} className={styles.danger} onClick={() => remove('announcements', item.id, item.title)}>撤下</button> : null}</article>)}{!data?.announcements.length ? <p className={styles.empty}>暂无公告。</p> : null}</section>
     </> : null}
     {tab === 'visits' ? <>
-      <section className={styles.panel}><h2>当天识别玩家</h2><p className={styles.muted}>FPL ID 识别由玩家填写；“口令验证”表示使用了你发放的决斗口令。访客数按浏览器标识去重，统计从本次上线开始。</p><div className={styles.tableWrap}><table><thead><tr><th>玩家</th><th>最近访问</th><th>最近口令验证</th><th>最近 ID 登录</th><th>事件数</th></tr></thead><tbody>{data?.players.map(player => <tr key={player.entry_id}><td>{name(player.entry_id)}<small>ID {player.entry_id}</small></td><td>{chinaTime(player.lastSeen)}</td><td>{chinaTime(player.lastVerified)}</td><td>{chinaTime(player.lastIdentified)}</td><td>{player.events}</td></tr>)}</tbody></table></div>{!data?.players.length ? <p className={styles.empty}>当天暂无识别玩家。</p> : null}</section>
+      <section className={styles.panel}><h2>当天识别玩家</h2><p className={styles.muted}>登录按玩家填写的 FPL ID 统计，访客数按浏览器标识去重。</p><div className={styles.tableWrap}><table><thead><tr><th>玩家</th><th>最近访问</th><th>最近 ID 登录</th><th>事件数</th></tr></thead><tbody>{data?.players.map(player => <tr key={player.entry_id}><td>{name(player.entry_id)}<small>ID {player.entry_id}</small></td><td>{chinaTime(player.lastSeen)}</td><td>{chinaTime(player.lastIdentified)}</td><td>{player.events}</td></tr>)}</tbody></table></div>{!data?.players.length ? <p className={styles.empty}>当天暂无识别玩家。</p> : null}</section>
       <section className={styles.panel}><h2>访问记录</h2><div className={styles.tableWrap}><table><thead><tr><th>时间</th><th>玩家 / 访客</th><th>行为</th><th>页面</th><th>设备</th></tr></thead><tbody>{data?.activity.map(item => <tr key={item.id}><td>{chinaTime(item.created_at)}</td><td>{name(item.entry_id)}<small>{item.visitor_id.slice(0, 8)}</small></td><td>{{ pageview: '浏览', identify: 'ID 登录', verified_login: '口令验证' }[item.kind] ?? item.kind}</td><td>{item.path}</td><td>{item.device}</td></tr>)}</tbody></table></div><div className={styles.actions}><button disabled={busy || page === 0} onClick={() => { const next = page - 1; setPage(next); void run(() => load(day, next), '', false); }}>上一页</button><span>第 {page + 1} 页</span><button disabled={busy || (data?.activity.length ?? 0) < 50} onClick={() => { const next = page + 1; setPage(next); void run(() => load(day, next), '', false); }}>下一页</button></div></section>
     </> : null}
-    {tab === 'players' ? <section className={styles.panel}><h2>玩家决斗口令</h2><p className={styles.muted}>生成后将口令私下交给对应玩家。口令只显示一次；重置会立即使旧口令和旧验证失效。</p><form className={styles.inline} onSubmit={event => { event.preventDefault(); if (!window.confirm('确认生成新口令？已有口令和登录验证将失效。')) return; void run(async () => { const issued = await operationsFetch<{ code: string; entryId: number }>('/admin/player-code', { method: 'POST', body: JSON.stringify({ entryId: Number(entryId) }) }); setIssuedCode(issued); }, '口令已生成，请立即保存并交给对应玩家'); }}><label>玩家<select value={entryId} onChange={event => { setEntryId(event.target.value); setIssuedCode(null); }} required><option value="">选择玩家</option>{data?.members.map(member => <option key={member.entryId} value={member.entryId}>{member.teamName} · {member.entryId}</option>)}</select></label><button disabled={busy || !entryId}>生成 / 重置口令</button></form>
-      {issuedCode ? <div className={styles.secret}><strong>{name(issuedCode.entryId)} · ID {issuedCode.entryId}</strong><code>{issuedCode.code}</code><button onClick={() => void navigator.clipboard.writeText(`FPL ID：${issuedCode.entryId}\n决斗口令：${issuedCode.code}\nhttps://penguin-fantasy.pages.dev/arena/`).then(() => setNotice('已复制')).catch(() => setError('无法自动复制，请手动选择口令'))}>复制给玩家</button></div> : null}
-      <h3>已发放</h3>{data?.codes.map(code => <p key={code.entry_id}>{name(code.entry_id)} <small>· {chinaTime(code.updated_at)}</small></p>)}{!data?.codes.length ? <p className={styles.empty}>尚未发放玩家口令。</p> : null}</section> : null}
     {tab === 'audit' ? <section className={styles.panel}><h2>最近操作</h2><div className={styles.tableWrap}><table><thead><tr><th>时间</th><th>操作</th><th>对象</th><th>说明</th></tr></thead><tbody>{data?.logs.map(log => <tr key={log.id}><td>{chinaTime(log.created_at)}</td><td>{actionLabels[log.action] ?? log.action}</td><td>{log.target}</td><td>{log.detail || '—'}</td></tr>)}</tbody></table></div></section> : null}
   </main>;
 }

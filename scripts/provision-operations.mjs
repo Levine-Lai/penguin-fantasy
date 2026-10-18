@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
 import { passwordHash } from '../cloudflare/fpl-proxy/src/operations.ts';
+import { createInterface } from 'node:readline/promises';
 
 // Run once on the owner's machine. Nothing in .private is committed or bundled.
 const directory = resolve('.private');
@@ -16,7 +17,17 @@ catch (error) {
   config = { password, SESSION_SECRET: randomBytes(32).toString('base64url'), OPS_PROXY_SECRET: randomBytes(32).toString('base64url'), ADMIN_PASSWORD_HASH: await passwordHash(password, randomBytes(16).toString('hex')) };
   await writeFile(path, JSON.stringify(config), { mode: 0o600, flag: 'wx' });
 }
-await writeFile(resolve(directory, 'admin-access.txt'), `企鹅杯后台\n地址：https://penguin-fantasy.pages.dev/admin/\n管理员密码：${config.password}\n\n请保存在你自己的密码管理器中，不要发给玩家。\n玩家口令在后台逐人生成。\n`, { mode: 0o600 });
+if (process.argv.includes('--change-password')) {
+  const input = createInterface({ input: process.stdin });
+  const password = (await input[Symbol.asyncIterator]().next()).value?.trim();
+  input.close();
+  if (!password || password.length > 160) throw new Error('Invalid password');
+  config.password = password;
+  config.SESSION_SECRET = randomBytes(32).toString('base64url');
+  config.ADMIN_PASSWORD_HASH = await passwordHash(password, randomBytes(16).toString('hex'));
+  await writeFile(path, JSON.stringify(config), { mode: 0o600 });
+}
+await writeFile(resolve(directory, 'admin-access.txt'), `企鹅杯后台\n地址：https://penguin-fantasy.pages.dev/admin/\n管理员密码：${config.password}\n\n请保存在你自己的密码管理器中，不要发给玩家。\n玩家使用登录的 FPL ID 直接报名。\n`, { mode: 0o600 });
 async function command(args, input) {
   await new Promise((resolvePromise, reject) => {
     const child = spawn(process.execPath, [resolve('node_modules/wrangler/bin/wrangler.js'), ...args], { stdio: ['pipe', 'pipe', 'pipe'] });

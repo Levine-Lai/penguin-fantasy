@@ -117,24 +117,26 @@ test('visits are idempotent, filter unknown IDs and keep private activity behind
   assert.equal((await request('/admin/overview')).status, 401);
 });
 
-test('player code verification, reset revocation, DDL lock and own-duel lookup work together', async () => {
+test('FPL ID login needs no code, keeps registration private and locks at DDL', async () => {
   const { request, adminHeaders, cache } = await setup();
-  const issued = await (await request('/admin/player-code', 'POST', { entryId: 1 }, adminHeaders)).json();
-  assert.ok(issued.code);
-  assert.equal((await request('/player/session', 'POST', { entryId: 1, code: 'bad' })).status, 401);
-  const login = await (await request('/player/session', 'POST', { entryId: 1, code: issued.code })).json();
+  assert.equal((await request('/player/session', 'POST', { entryId: 9999 })).status, 403);
+  assert.equal((await request('/duels', 'POST', { targetId: 2, gw: 9 })).status, 401);
+  const login = await (await request('/player/session', 'POST', { entryId: 1 })).json();
   const playerHeaders = { authorization: `Bearer ${login.token}` };
   await request('/admin/arena', 'POST', { gw: 9, open: true }, adminHeaders);
   assert.equal((await request('/duels', 'POST', { targetId: 2, gw: 9 }, playerHeaders)).status, 201);
   const mine = await (await request('/duels/mine', 'GET', undefined, playerHeaders)).json();
-  assert.equal(mine.duels.length, 1);
+  assert.equal(mine.submitted, true);
+  assert.equal('duels' in mine, false);
   assert.equal(mine.remaining, 4);
   assert.equal((await (await request('/community')).json()).duels.length, 0);
+  assert.equal('count' in (await (await request('/community')).json()).arena, false);
+  assert.equal((await request('/duels', 'POST', { targetId: 3, gw: 9 }, playerHeaders)).status, 409);
   cache.set('fpl:bootstrap', { value: { events: [{ id: 9, deadline_time: new Date(Date.now() - 10000).toISOString() }] } });
   assert.equal((await request('/duels', 'POST', { targetId: 3, gw: 9 }, playerHeaders)).status, 409);
   assert.equal((await (await request('/community')).json()).duels.length, 1);
-  await request('/admin/player-code', 'POST', { entryId: 1 }, adminHeaders);
-  assert.equal((await request('/duels/mine', 'GET', undefined, playerHeaders)).status, 401);
+  cache.set('league:roster', [{ entryId: 2, teamName: 'Player 2' }]);
+  assert.equal((await request('/duels/mine', 'GET', undefined, playerHeaders)).status, 403);
 });
 
 test('settlement waits for final snapshots, is idempotent, and deletion reverses derived results', async () => {

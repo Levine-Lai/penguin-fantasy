@@ -804,6 +804,7 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
       // In-memory logout still works when storage is unavailable.
     }
     setPlayerEntryId(null);
+    window.dispatchEvent(new Event('penguin-player-login'));
     setMyStandingExpanded(false);
     setExpandedPlayer(null);
   };

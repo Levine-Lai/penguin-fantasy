@@ -119,9 +119,8 @@ async function adminSession(env: OpsEnv, request: Request): Promise<void> {
 }
 async function playerSession(env: OpsEnv, request: Request): Promise<number> {
   const session = await readSession(env.SESSION_SECRET!, request.headers.get('authorization')?.replace(/^Bearer /, '') ?? '');
-  if (session?.role !== 'player' || !session.entryId) throw new ApiError(401, '请先验证玩家口令');
-  const row = await env.OPS_DB!.prepare('SELECT code_hash FROM player_codes WHERE entry_id=?').bind(session.entryId).first<{ code_hash: string }>();
-  if (!row || row.code_hash !== session.codeHash) throw new ApiError(401, '玩家口令已重置，请重新验证');
+  if (session?.role !== 'player' || !session.entryId) throw new ApiError(401, '请先登录');
+  if (!(await roster(env)).some(member => member.entryId === session.entryId)) throw new ApiError(403, '玩家不在当前联赛中');
   return session.entryId;
 }
 async function audit(db: OpsDatabase, action: string, target: string, detail = ''): Promise<void> {
@@ -202,17 +201,6 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
         ]);
         return response({ ok: true }, request);
       }
-      if (path === '/api/admin/player-code' && request.method === 'POST') {
-        const input = await body(request); const entryId = Number(input.entryId);
-        if (!(await roster(env)).some(member => member.entryId === entryId)) throw new ApiError(400, '玩家不在当前联赛中');
-        const code = b64(crypto.getRandomValues(new Uint8Array(15)));
-        const codeHash = await mac(env.SESSION_SECRET, `player:${entryId}:${code}`);
-        await db.batch([
-          db.prepare('INSERT INTO player_codes VALUES (?,?,?) ON CONFLICT(entry_id) DO UPDATE SET code_hash=excluded.code_hash, updated_at=excluded.updated_at').bind(entryId, codeHash, now),
-          db.prepare('INSERT INTO audit_log VALUES (?,?,?,?,?)').bind(crypto.randomUUID(), 'reset_player_code', String(entryId), '', now),
-        ]);
-        return response({ entryId, code }, request);
-      }
       if (path === '/api/admin/announcements' && request.method === 'POST') {
         const input = await body(request); const title = text(input.title, 60); const content = text(input.body, 2000);
         const day = text(input.day, 10); if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || !Number.isFinite(Date.parse(`${day}T00:00:00Z`))) throw new ApiError(400, '日期无效');
@@ -246,7 +234,7 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
         db.prepare('SELECT gw,challenger_id,target_id,challenger_delta,target_delta FROM duels WHERE deleted_at IS NULL AND settled_at IS NOT NULL').all(),
       ]);
       const revealed = Boolean(ddl && Date.now() >= Date.parse(ddl));
-      return response({ arena: { ...config, deadline: ddl, open: config.open && Boolean(ddl) && !revealed, count: duelRows.results.length },
+      return response({ arena: { ...config, deadline: ddl, open: config.open && Boolean(ddl) && !revealed, ...(revealed ? { count: duelRows.results.length } : {}) },
         duels: revealed ? namedDuels(duelRows.results, members) : [], results: results.results, announcements: announcementRows.results, members }, request);
     }
     if (path === '/api/visits' && request.method === 'POST') {
@@ -263,21 +251,20 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
       return response({ ok: true }, request);
     }
     if (path === '/api/player/session' && request.method === 'POST') {
-      await limit(env, request, 'player-login', 12, 15 * 60000);
-      const input = await body(request); const entryId = Number(input.entryId); const code = text(input.code, 80);
-      const row = await db.prepare('SELECT code_hash FROM player_codes WHERE entry_id=?').bind(entryId).first<{ code_hash: string }>();
-      if (!row || !same(row.code_hash, await mac(env.SESSION_SECRET, `player:${entryId}:${code}`))) throw new ApiError(401, 'FPL ID 或玩家口令不正确');
+      await limit(env, request, 'player-login', 60, 15 * 60000);
+      const input = await body(request); const entryId = Number(input.entryId);
       if (!(await roster(env)).some(member => member.entryId === entryId)) throw new ApiError(403, '玩家不在当前联赛中');
-      const token = await signSession(env.SESSION_SECRET, { role: 'player', entryId, codeHash: row.code_hash, exp: Date.now() + 12 * 3600000 });
+      const token = await signSession(env.SESSION_SECRET, { role: 'player', entryId, exp: Date.now() + 12 * 3600000 });
       await db.prepare('INSERT INTO visits VALUES (?,?,?,?,?,?,?,?)').bind(crypto.randomUUID(), idPattern.test(String(input.visitorId)) ? input.visitorId : crypto.randomUUID(),
-        idPattern.test(String(input.sessionId)) ? input.sessionId : crypto.randomUUID(), entryId, 'verified_login', '/arena/', '验证登录', now).run();
+        idPattern.test(String(input.sessionId)) ? input.sessionId : crypto.randomUUID(), entryId, 'identify', '/arena/', /mobile|android|iphone/i.test(request.headers.get('user-agent') ?? '') ? '手机' : '电脑/其他', now).run();
       return response({ token, entryId }, request);
     }
     if (path === '/api/duels/mine' && request.method === 'GET') {
       const entryId = await playerSession(env, request); const config = await arena(db);
       const rows = await db.prepare('SELECT * FROM duels WHERE deleted_at IS NULL AND (challenger_id=? OR target_id=?) ORDER BY created_at DESC').bind(entryId, entryId).all<Duel>();
       const used = rows.results.filter(row => row.challenger_id === entryId && (row.settled_at === null || row.challenger_score !== row.target_score)).length;
-      return response({ entryId, remaining: Math.max(0, 5 - used), gw: config.gw, duels: namedDuels(rows.results, await roster(env)) }, request);
+      return response({ entryId, remaining: Math.max(0, 5 - used), gw: config.gw,
+        submitted: rows.results.some(row => row.gw === config.gw && row.challenger_id === entryId) }, request);
     }
     if (path === '/api/duels' && request.method === 'POST') {
       await limit(env, request, 'duel-submit', 20, 60000);
