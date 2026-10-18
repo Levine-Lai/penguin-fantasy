@@ -5,7 +5,7 @@ import { chinaTime, loadCommunity, operationsFetch, visitorIdentity, type Commun
 import frame from '../test/arena.module.css';
 import styles from './live-arena.module.css';
 
-type Mine = { entryId: number; remaining: number; gw: number; submitted: boolean };
+type Mine = { entryId: number; remaining: number; gw: number; submitted: boolean; challenge: { targetId: number; targetName: string } | null };
 export type DuelPlayer = { entryId: number; name: string; rank: number | null; hp: number; captainTotal: number };
 type PlayerSession = { entryId: number; token: string; mine: Mine };
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
@@ -19,9 +19,23 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [failure, setFailure] = useState('');
+  const errorDialog = useRef<HTMLDialogElement>(null);
+  const reportError = useCallback((reason: unknown) => {
+    const detail = reason instanceof Error ? reason.message : '请求失败，请稍后再试';
+    const message = /fetch|network|load failed/i.test(detail) ? '网络连接失败，请检查网络后重试' : /timeout|aborted/i.test(detail) ? '请求超时，请稍后再试' : detail;
+    setError(message); setFailure(message);
+  }, []);
   const [clock, setClock] = useState(() => Date.now());
   const [confirmation, setConfirmation] = useState<{ entryId: number; targetId: number; targetName: string; gw: number } | null>(null);
   const confirmDialog = useRef<HTMLDialogElement>(null);
+  const modalOpen = Boolean(confirmation || failure);
+  useEffect(() => {
+    if (!modalOpen) return;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = overflow; };
+  }, [modalOpen]);
   const submitting = useRef(false);
   const health = new Map(players.map(candidate => [candidate.entryId, candidate.hp]));
   const identity = player?.entryId ?? null;
@@ -43,15 +57,21 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   useEffect(() => {
     let active = true;
     void Promise.resolve().then(async () => {
-      setTargetId(''); setSearch(''); setMessage(''); setError(''); setConfirmation(null);
+      setTargetId(''); setSearch(''); setMessage(''); setError(''); setFailure(''); setConfirmation(null);
       if (!identity) { setSession(null); await reload(); return; }
       const result = await operationsFetch<{ token: string }>('/player/session', {
         method: 'POST', body: JSON.stringify({ entryId: identity, ...visitorIdentity() }),
       });
       if (active) await reload(result.token, identity);
-    }).catch(reason => { if (active) setError((reason as Error).message); });
+    }).catch(reason => { if (active) reportError(reason); });
     return () => { active = false; };
-  }, [identity, reload]);
+  }, [identity, reload, reportError]);
+  useEffect(() => {
+    if (!failure || !errorDialog.current) return;
+    const dialog = errorDialog.current;
+    dialog.showModal();
+    return () => { dialog.close(); };
+  }, [failure]);
   useEffect(() => {
     const timer = window.setInterval(() => setClock(Date.now()), 30000);
     return () => window.clearInterval(timer);
@@ -79,10 +99,8 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   useEffect(() => {
     const dialog = confirmDialog.current;
     if (!confirmation || !dialog) return;
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     dialog.showModal();
-    return () => { dialog.close(); document.body.style.overflow = overflow; };
+    return () => { dialog.close(); };
   }, [confirmation]);
   const askConfirmation = (event: FormEvent) => {
     event.preventDefault();
@@ -102,7 +120,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
       await reload(token, submittedAs);
       if (submittedAs === currentIdentity.current) { setTargetId(''); setMessage('报名已提交，不可修改。'); }
     } catch (reason) {
-      if (submittedAs === currentIdentity.current) setError((reason as Error).message);
+      if (submittedAs === currentIdentity.current) { setConfirmation(null); reportError(reason); }
       await reload(token, submittedAs).catch(() => {});
     } finally { submitting.current = false; setBusy(false); setConfirmation(null); }
   };
@@ -137,7 +155,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
           {player ? <><p className={styles.playerId}>FPL ID {player.entryId}</p><div className={styles.life} aria-label={`血量 ${player.hp}`}><span>血量</span><strong>{player.hp}</strong><span className={styles.drops} aria-hidden="true">{Array.from({ length: player.hp }, (_, index) => <i className="blood-drop" key={index} />)}</span></div></> : <p className={styles.muted}>请先在右上角登录。</p>}
         </aside>
         <form className={styles.form} onSubmit={askConfirmation}>
-          {mine?.submitted ? <div className={styles.submitted} role="status"><strong>本轮已报名</strong><p>提交后不可修改</p></div> : <>
+          {mine?.submitted ? <div className={styles.submitted} role="status"><h3>决斗情况</h3><small>GW{mine.gw} · 已提交挑战</small><span>挑战对象</span><strong className={mine.challenge && isFeatured(mine.challenge.targetName) ? styles.featured : undefined}>{mine.challenge?.targetName ?? '正在读取…'}</strong>{mine.challenge ? <small>FPL ID {mine.challenge.targetId}</small> : null}<p>提交后不可修改</p></div> : <>
             <label className={frame.candidateSearch} htmlFor="duel-search"><span>搜索挑战对象</span><input id="duel-search" type="search" placeholder="玩家名称 / FPL ID" value={search} onChange={event => { setSearch(event.target.value); setTargetId(''); }} disabled={!player || busy} autoComplete="off" /></label>
             <fieldset className={styles.fieldset} disabled={locked}><legend className={styles.srOnly}>选择挑战对象</legend><div className={`${frame.candidateList} ${styles.candidates}`}>
               {candidates.map(member => <label key={member.entryId} className={targetId === String(member.entryId) ? frame.selectedCandidate : ''}>
@@ -169,6 +187,10 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
         <p id="confirm-duel-note">每轮只能提交一次，提交后不能修改。</p>
         <div className={styles.confirmActions}><button type="button" disabled={busy} onClick={() => setConfirmation(null)}>取消</button><button type="submit" disabled={busy}>{busy ? '正在提交…' : '确认提交'}</button></div>
       </form>
+    </dialog>
+    <dialog ref={errorDialog} className={styles.confirmDialog} style={assets} aria-labelledby="duel-error-title" aria-describedby="duel-error-detail" onCancel={() => setFailure('')}>
+      <h2 id="duel-error-title">操作失败</h2><p id="duel-error-detail" className={styles.failureDetail}>{failure}</p>
+      <div className={styles.confirmActions}><button type="button" onClick={() => setFailure('')}>知道了</button></div>
     </dialog>
   </div>;
 }

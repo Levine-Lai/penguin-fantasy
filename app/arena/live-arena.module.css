@@ -1,16 +1,16 @@
 .panel { width: 100%; margin: 0; }
 .header { grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; }
 .deadline, .muted { color: var(--arena-muted); font-size: .8rem; line-height: 1.6; }
-.registration { display: grid; grid-template-columns: minmax(15rem, .7fr) minmax(0, 1.3fr); gap: 1.5rem; align-items: start; }
-.profile { min-width: 0; padding: 1.5rem; border: 1px solid var(--arena-rule); background: linear-gradient(155deg, rgba(5,36,47,.82), rgba(1,14,21,.96)); }
+.registration { display: grid; grid-template-columns: minmax(12rem, .6fr) minmax(0, 1.4fr); gap: 1rem; align-items: start; }
+.profile { min-width: 0; padding: 1rem; border: 1px solid var(--arena-rule); background: linear-gradient(155deg, rgba(5,36,47,.82), rgba(1,14,21,.96)); }
 .profile > small { color: var(--arena-cyan); font-size: .75rem; }
 .profile h3 { margin: .7rem 0; color: var(--arena-ink); font-size: 1.55rem; overflow-wrap: anywhere; }
-.profile h3.featured, .candidates strong.featured { color: var(--color-gold); }
+.profile h3.featured, .candidates strong.featured, .submitted strong.featured { color: var(--color-gold); }
 .playerId { color: var(--arena-muted); font: .8rem var(--font-label); }
-.life { display: grid; justify-items: center; gap: 1rem; margin-top: 1.5rem; padding: 1.2rem; border: 1px solid var(--arena-rule); }
+.life { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: .7rem; }
 .life > span:first-child { color: var(--arena-muted); font-size: .85rem; }
-.life > strong { color: var(--arena-cyan); font: 700 2rem var(--font-label); }
-.drops { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; max-width: 10rem; }
+.life > strong { color: var(--arena-cyan); font: 700 1.1rem var(--font-label); }
+.drops { display: grid; grid-template-columns: repeat(6, 1rem); gap: .3rem; }
 .drops :global(.blood-drop) { width: 1rem; height: .9rem; flex: 0 0 1rem; }
 .candidateMeta { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; }
 .candidateHealth { display: inline-flex; align-items: center; gap: .3rem; color: #ff879a; }
@@ -23,8 +23,11 @@
 .candidates label > span:last-child { justify-items: start; }
 .candidates strong { max-width: 100%; }
 .candidates small { margin-top: .4rem; }
-.submitted { min-height: 15rem; display: grid; place-content: center; gap: .7rem; text-align: center; border: 1px solid var(--arena-rule); }
-.submitted strong { color: var(--arena-cyan); font-size: 1.5rem; }
+.submitted { display: grid; justify-items: center; gap: .6rem; padding: 1.2rem; text-align: center; border: 1px solid var(--arena-rule); }
+.submitted h3 { margin: 0; color: var(--arena-cyan); font-size: 1.1rem; }
+.submitted strong { max-width: 100%; overflow-wrap: anywhere; color: var(--arena-ink); font-size: 1.3rem; }
+.submitted small, .submitted > span { color: var(--arena-muted); font-size: .8rem; }
+.submitted > span { margin-top: .4rem; }
 .submitted p { color: var(--arena-muted); font-size: .85rem; }
 .message { margin-bottom: 1rem; color: var(--arena-cyan); font-size: .85rem; }
 .error { margin-bottom: 1rem; color: #ff9aa9; font-size: .85rem; }
@@ -35,7 +38,7 @@
   .registration, .duels { grid-template-columns: minmax(0, 1fr); }
   .header { grid-template-columns: minmax(0, 1fr); gap: .4rem; }
   .profile { padding: 1rem; }
-  .life { margin-top: 1rem; }
+  .profile h3 { margin-block: .5rem; font-size: 1.25rem; }
 }
 @media (max-width: 30rem) { .candidates { grid-template-columns: minmax(0, 1fr); } }
 .confirmDialog { position: fixed; inset: 0; width: min(34rem, calc(100% - 1.5rem)); max-height: calc(100dvh - 2rem); margin: auto; padding: clamp(1rem, 3vw, 1.6rem); overflow-y: auto; border: 1.2rem solid var(--arena-rule); border-image: var(--arena-frame-image) 155 / 1.2rem stretch; color: var(--arena-ink); background: #02121a; background-clip: padding-box; box-shadow: 0 1.5rem 5rem #000a; }
@@ -50,6 +53,7 @@
 .confirmHealth { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; color: #ff879a; font-size: .85rem; }
 .confirmHealth :global(.blood-drop) { flex-shrink: 0; margin: 0; }
 .confirmDialog p { color: var(--arena-muted); line-height: 1.7; font-size: .85rem; margin: 1rem 0 1.5rem; }
+.confirmDialog p.failureDetail { color: #ff9aa9; overflow-wrap: anywhere; }
 .confirmActions { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
 .confirmActions button { min-height: 2.8rem; border: 1px solid var(--arena-rule); background: #031c27; color: var(--arena-ink); cursor: pointer; }
 .confirmActions button[type=submit] { border-color: var(--arena-cyan); color: var(--arena-cyan); background: #06313c; }

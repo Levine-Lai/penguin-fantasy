@@ -136,6 +136,7 @@ test('FPL ID login needs no code, keeps registration private and locks at DDL', 
   assert.equal((await request('/duels', 'POST', { targetId: 2, gw: 9 }, playerHeaders)).status, 201);
   const mine = await (await request('/duels/mine', 'GET', undefined, playerHeaders)).json();
   assert.equal(mine.submitted, true);
+  assert.deepEqual(mine.challenge, { targetId: 2, targetName: 'Player 2' });
   assert.equal('duels' in mine, false);
   assert.equal(mine.remaining, 4);
   assert.equal((await (await request('/community')).json()).duels.length, 0);
@@ -153,6 +154,45 @@ test('FPL ID login needs no code, keeps registration private and locks at DDL', 
   assert.equal((await (await request('/community')).json()).duels.length, 1);
   cache.set('league:roster', [{ entryId: 2, teamName: 'Player 2' }]);
   assert.equal((await request('/duels/mine', 'GET', undefined, playerHeaders)).status, 403);
+});
+
+test('private status reveals only the signed-in player outgoing challenge and clears deleted submissions', async () => {
+  const { request, db } = await setup();
+  await submitDuel(db, 9, 1, 2);
+  await submitDuel(db, 9, 3, 4);
+  const getMine = async entryId => {
+    const { token } = await (await request('/player/session', 'POST', { entryId })).json();
+    return (await request('/duels/mine', 'GET', undefined, { authorization: `Bearer ${token}` })).json();
+  };
+  assert.deepEqual((await getMine(1)).challenge, { targetId: 2, targetName: 'Player 2' });
+  assert.equal((await getMine(2)).challenge, null);
+  assert.equal((await getMine(5)).challenge, null);
+  assert.equal((await (await request('/community')).json()).duels.length, 0);
+  assert.equal((await request('/duels/mine')).status, 401);
+  await db.prepare("UPDATE duels SET deleted_at='removed' WHERE challenger_id=1").run();
+  const removed = await getMine(1);
+  assert.equal(removed.submitted, false);
+  assert.equal(removed.challenge, null);
+});
+
+test('atomic rejection returns the specific participation, capacity, or season-limit reason', async () => {
+  const { request, db, adminHeaders } = await setup();
+  await request('/admin/arena', 'POST', { gw: 9, open: true }, adminHeaders);
+  const reject = async (entryId, targetId, message) => {
+    const { token } = await (await request('/player/session', 'POST', { entryId })).json();
+    const response = await request('/duels', 'POST', { gw: 9, targetId }, { authorization: `Bearer ${token}` });
+    assert.equal(response.status, 409);
+    assert.equal((await response.json()).error, message);
+  };
+  await submitDuel(db, 9, 1, 2);
+  await reject(1, 3, '你本轮已提交挑战，不可重复报名');
+  await reject(2, 3, '你已在本轮对阵中，不能再次发起挑战');
+  await reject(3, 1, '该玩家已在本轮对阵中，请选择其他挑战对象');
+  for (let gw = 10; gw <= 14; gw++) await submitDuel(db, gw, 11, 12);
+  await reject(11, 12, '你的五次主动挑战权已用完');
+  for (let entry = 3; entry <= 9; entry += 2) await submitDuel(db, 9, entry, entry + 1);
+  await reject(12, 11, '本轮五组决斗名额已满');
+  assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM duels WHERE gw=9').first()).count, 5);
 });
 
 test('settlement waits for final snapshots, is idempotent, and deletion reverses derived results', async () => {

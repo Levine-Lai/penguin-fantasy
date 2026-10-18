@@ -4051,6 +4051,14 @@ main > * {
 .live-arena :focus-visible { outline:2px solid var(--color-gold); outline-offset:3px; }
 @media(max-width:32rem) { .arena-page,.arena-home{padding:1rem .7rem;} .live-arena{padding:1rem;} .arena-duel{grid-template-columns:1fr;} }
 
+/* Health wraps after six drops, including narrow leaderboard columns. */
+.pixel-health {
+  display: grid;
+  grid-template-columns: repeat(6, max-content);
+  justify-content: center;
+  row-gap: .25rem;
+}
+
 /* Remembered player identity and personal standing */
 .header-inner {
   grid-template-columns: minmax(0, 1fr) auto auto auto;
@@ -4386,6 +4394,34 @@ main > * {
   .captain-selector-detail { margin-inline: var(--space-2xs); }
   .captain-selector-detail > header,
   .captain-selector-detail li { padding-inline: var(--space-sm); }
+}
+
+@media (max-width: 48rem) {
+  .top-nav { display: block; width: 4.5rem; min-width: 0; border: 0; }
+  .top-nav a:last-child { border: var(--rule-hair) solid var(--color-rule-2); }
+  .top-nav a:last-child,
+  .player-login-button {
+    box-sizing: border-box;
+    width: 4.5rem;
+    min-width: 4.5rem;
+    height: 2.5rem;
+    min-height: 2.5rem;
+    padding: 0 .25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .7rem;
+    letter-spacing: .02em;
+    line-height: 1;
+  }
+  .player-login-button small { display: none; }
+  .player-login-button strong { margin: 0; font-size: inherit; letter-spacing: inherit; }
+}
+
+@media (max-width: 32rem) {
+  .top-nav { width: 3.7rem; }
+  .top-nav a:last-child,
+  .player-login-button { width: 3.7rem; min-width: 3.7rem; height: 2.4rem; min-height: 2.4rem; font-size: .68rem; }
 }
 
 /* Final mobile header and personal-standing refinements. */

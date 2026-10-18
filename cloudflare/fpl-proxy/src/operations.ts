@@ -252,20 +252,34 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
       const entryId = await playerSession(env, request); const config = await arena(db);
       const rows = await db.prepare('SELECT * FROM duels WHERE deleted_at IS NULL AND (challenger_id=? OR target_id=?) ORDER BY created_at DESC').bind(entryId, entryId).all<Duel>();
       const used = rows.results.filter(row => row.challenger_id === entryId && (row.settled_at === null || row.challenger_score !== row.target_score)).length;
+      const submitted = rows.results.find(row => row.gw === config.gw && row.challenger_id === entryId);
+      const target = submitted ? (await roster(env)).find(member => member.entryId === submitted.target_id) : null;
       return response({ entryId, remaining: Math.max(0, 5 - used), gw: config.gw,
-        submitted: rows.results.some(row => row.gw === config.gw && row.challenger_id === entryId) }, request);
+        submitted: Boolean(submitted), challenge: submitted ? { targetId: submitted.target_id, targetName: target?.teamName ?? `ID ${submitted.target_id}` } : null }, request);
     }
     if (path === '/api/duels' && request.method === 'POST') {
       await limit(env, request, 'duel-submit', 20, 60000);
       const entryId = await playerSession(env, request); const input = await body(request);
       const config = await arena(db); const ddl = await deadline(env, config.gw);
-      if (!config.open || !ddl || Date.now() >= Date.parse(ddl)) throw new ApiError(409, '当前轮报名未开放或 DDL 已过');
+      if (!ddl) throw new ApiError(409, '本轮 DDL 尚未就绪，请稍后再试');
+      if (Date.now() >= Date.parse(ddl)) throw new ApiError(409, '本轮报名已截止');
+      if (!config.open) throw new ApiError(409, '本轮报名尚未开放');
       const targetId = Number(input.targetId);
       if (Number(input.gw) !== config.gw) throw new ApiError(409, '比赛周已变化，请重新加载');
       const members = await roster(env);
       if (!members.some(member => member.entryId === targetId) || targetId === entryId) throw new ApiError(400, '挑战目标无效');
       const id = crypto.randomUUID();
-      if (!await submitDuel(db, config.gw, entryId, targetId, id)) throw new ApiError(409, '名额已满、双方已在本轮对阵中，或你的决斗权已用完');
+      if (!await submitDuel(db, config.gw, entryId, targetId, id)) {
+        // Diagnose only after the atomic insert rejects the request; these reads never authorize a write.
+        const rows = await db.prepare('SELECT * FROM duels WHERE deleted_at IS NULL AND (gw=? OR challenger_id=?)').bind(config.gw, entryId).all<Duel>();
+        const current = rows.results.filter(row => row.gw === config.gw);
+        if (current.some(row => row.challenger_id === entryId)) throw new ApiError(409, '你本轮已提交挑战，不可重复报名');
+        if (current.some(row => row.target_id === entryId)) throw new ApiError(409, '你已在本轮对阵中，不能再次发起挑战');
+        if (current.some(row => row.challenger_id === targetId || row.target_id === targetId)) throw new ApiError(409, '该玩家已在本轮对阵中，请选择其他挑战对象');
+        if (rows.results.filter(row => row.challenger_id === entryId && row.gw >= 9 && row.gw <= 20 && (row.settled_at === null || row.challenger_score !== row.target_score)).length >= 5) throw new ApiError(409, '你的五次主动挑战权已用完');
+        if (current.length >= 5) throw new ApiError(409, '本轮五组决斗名额已满');
+        throw new ApiError(409, '报名状态已变化，请重新选择后提交');
+      }
       return response({ ok: true, id }, request, 201);
     }
     throw new ApiError(405, '请求方式不支持');
