@@ -651,7 +651,9 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
       const history = gwSnapshots.flatMap<CaptainHistoryEntry>((snapshot) => {
         const result = snapshot.teams.find((entry) => entry.entryId === team.entryId);
         if (!result?.captainName) return [];
-        const life = lifeEarnedInStage(stageForGw(snapshot.gw), result.captainPoints, result.captainPickRate);
+        const life = result.captainStatus && result.captainStatus !== "finished" && result.captainPoints <= 3
+          ? 0
+          : lifeEarnedInStage(stageForGw(snapshot.gw), result.captainPoints, result.captainPickRate);
         return [{
           gw: snapshot.gw,
           captain: result.scoringCaptainName ?? result.captainName,

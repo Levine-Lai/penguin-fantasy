@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-18T06:43:12.242Z",
+  "generatedAt": "2026-10-18T07:15:24.579Z",
   "league": {
     "ready": true,
     "leagueId": 511690,
@@ -25,12 +25,12 @@
         "teamName": "Team Blue"
       },
       {
-        "entryId": 29876,
-        "teamName": "Seawuwu"
-      },
-      {
         "entryId": 368278,
         "teamName": "F.C. Chelion"
+      },
+      {
+        "entryId": 29876,
+        "teamName": "Seawuwu"
       },
       {
         "entryId": 349454,
@@ -141,12 +141,12 @@
         "teamName": "柯北"
       },
       {
-        "entryId": 13130,
-        "teamName": "光之围棋俱乐部"
-      },
-      {
         "entryId": 25503,
         "teamName": "联曼"
+      },
+      {
+        "entryId": 13130,
+        "teamName": "光之围棋俱乐部"
       },
       {
         "entryId": 93912,
@@ -189,12 +189,12 @@
         "teamName": "SSU - 珍惜当下❤️"
       },
       {
-        "entryId": 15316,
-        "teamName": "咻狗勾不在家"
-      },
-      {
         "entryId": 15944,
         "teamName": "ParisAintGerman"
+      },
+      {
+        "entryId": 15316,
+        "teamName": "咻狗勾不在家"
       },
       {
         "entryId": 79852,

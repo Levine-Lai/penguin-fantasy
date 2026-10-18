@@ -456,9 +456,9 @@ function fixtureStatusForPlayer(
   fixtures: FplFixture[],
 ): CaptainStatus {
   const teamId = playerTeams[playerId];
-  const fixture = fixtures.find((item) => item.team_h === teamId || item.team_a === teamId);
-  if (!fixture?.started) return "not_started";
-  return fixture.finished || fixture.finished_provisional ? "finished" : "playing";
+  const playerFixtures = fixtures.filter((item) => item.team_h === teamId || item.team_a === teamId);
+  if (playerFixtures.length === 0 || playerFixtures.every((fixture) => !fixture.started)) return "not_started";
+  return playerFixtures.every((fixture) => fixture.finished || fixture.finished_provisional) ? "finished" : "playing";
 }
 
 function resolveCaptainResult(

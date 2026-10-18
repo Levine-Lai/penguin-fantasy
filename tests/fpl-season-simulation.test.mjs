@@ -134,6 +134,15 @@ test("keeps an unstarted captain and switches only a confirmed DNP to an availab
   assert.equal(afterConfirmedDnp.points, 7);
   assert.equal(afterConfirmedDnp.originalCaptainPoints, 0);
   assert.equal(afterConfirmedDnp.usedViceCaptain, true);
+
+  const doubleGameweek = resolveCaptainResult(pick, names, teams, stats, [
+    { team_h: 1, team_a: 3, started: true, finished: true, finished_provisional: true },
+    { team_h: 1, team_a: 4, started: false, finished: false, finished_provisional: false },
+    { team_h: 2, team_a: 5, started: true, finished: true, finished_provisional: true },
+  ]);
+  assert.equal(doubleGameweek.usedViceCaptain, false);
+  assert.equal(doubleGameweek.scoringCaptainName, "Original");
+  assert.equal(doubleGameweek.status, "playing");
 });
 
 test("uses the vice captain for scoring without moving the original captain's pick rate", async () => {
