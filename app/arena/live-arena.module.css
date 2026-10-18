@@ -10,7 +10,8 @@
 .life { display: grid; justify-items: center; gap: 1rem; margin-top: 1.5rem; padding: 1.2rem; border: 1px solid var(--arena-rule); }
 .life > span:first-child { color: var(--arena-muted); font-size: .85rem; }
 .life > strong { color: var(--arena-cyan); font: 700 2rem var(--font-label); }
-.drops { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; max-width: 9.5rem; }
+.drops { display: flex; flex-wrap: wrap; justify-content: center; gap: .5rem; max-width: 10rem; }
+.drops :global(.blood-drop) { width: 1rem; height: .9rem; flex: 0 0 1rem; }
 .candidateMeta { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; }
 .candidateHealth { display: inline-flex; align-items: center; gap: .3rem; color: #ff879a; }
 .candidateHealth i { margin: 0; }

@@ -405,6 +405,7 @@ test("formal arena uses the header identity and searchable framed registration",
   assert.match(arena, /length: player\.hp/);
   assert.match(arena, /health\.get\(member.entryId\)/);
   assert.match(css, /@media \(max-width: 48rem\)/);
+  assert.match(css, /\.drops :global\(\.blood-drop\)[^}]*flex: 0 0 1rem/);
 });
 
 test("ships a double-clickable local HTML edition without network or API calls", async () => {
