@@ -34,6 +34,18 @@ export default function LiveArena() {
     const timer = window.setInterval(() => setClock(Date.now()), 30000);
     return () => window.clearInterval(timer);
   }, []);
+  useEffect(() => {
+    let checkedAt = Date.now();
+    const updated = (event: Event) => setCommunity((event as CustomEvent<Community>).detail);
+    const visible = () => {
+      if (document.visibilityState === 'visible' && Date.now() - checkedAt > 5 * 60000) {
+        checkedAt = Date.now(); void reload(token).catch(() => {});
+      }
+    };
+    window.addEventListener('penguin-community-updated', updated);
+    document.addEventListener('visibilitychange', visible);
+    return () => { window.removeEventListener('penguin-community-updated', updated); document.removeEventListener('visibilitychange', visible); };
+  }, [token, reload]);
   const login = async (event: FormEvent) => {
     event.preventDefault(); setBusy(true); setError(''); setMessage('');
     try {

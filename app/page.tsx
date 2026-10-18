@@ -539,8 +539,10 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    const updated = (event: Event) => { if (active) setCommunity((event as CustomEvent<Community>).detail); };
+    window.addEventListener('penguin-community-updated', updated);
     void loadCommunity().then(data => { if (active) setCommunity(data); }).catch(() => {});
-    return () => { active = false; };
+    return () => { active = false; window.removeEventListener('penguin-community-updated', updated); };
   }, []);
 
   const loadFplData = useCallback((force = false) => {
@@ -928,7 +930,7 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
             <label htmlFor="player-fpl-id">FPL ID</label>
             <input id="player-fpl-id" name="fpl-id" type="text" inputMode="numeric" pattern="[0-9]*" autoComplete="off" autoFocus value={loginValue} onChange={(event) => { setLoginValue(event.target.value); setLoginError(""); }} aria-describedby={loginError ? "player-login-note player-login-error" : "player-login-note"} />
             {loginError ? <strong className="player-login-error" id="player-login-error" role="alert">{loginError}</strong> : null}
-            <small id="player-login-note">此功能只用于个性化显示，ID 仅保存在当前浏览器，不代表账号所有权。</small>
+            <small id="player-login-note">FPL ID 用于个人战榜及登录统计，不代表官方账号认证。</small>
             <div className="player-login-actions"><button type="button" onClick={closeLogin}>取消</button><button type="submit">{loginStep === "identify" ? "下一步" : "确认登录"}</button></div>
           </form>
         </section>

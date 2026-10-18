@@ -22,7 +22,10 @@ export async function operationsFetch<T>(path: string, init: RequestInit = {}): 
 let communityRequest: Promise<Community> | null = null;
 export function loadCommunity(): Promise<Community> {
   if (!communityRequest) {
-    communityRequest = operationsFetch<Community>('/community').finally(() => { communityRequest = null; });
+    communityRequest = operationsFetch<Community>('/community').then(data => {
+      if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('penguin-community-updated', { detail: data }));
+      return data;
+    }).finally(() => { communityRequest = null; });
   }
   return communityRequest;
 }
