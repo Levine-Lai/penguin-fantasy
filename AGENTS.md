@@ -23,7 +23,7 @@
 - Cloudflare Pages 项目名：`penguin-fantasy`
 - GitHub 仓库：`Levine-Lai/penguin-fantasy`
 
-两个前端必须通过 `https://penguin-fantasy.pages.dev/api/*` 使用同一个数据代理；Cloudflare Pages Function 再从 Worker API 读取数据，不得为两个域名维护不同的数据逻辑，也不得让玩家浏览器直接请求 `workers.dev`。
+两个前端必须通过 `https://penguin-fantasy.pages.dev/api/*` 使用同一个数据代理；Cloudflare Pages Function 再访问 Worker API，不得为两个域名维护不同的数据逻辑，也不得让玩家浏览器直接请求 `workers.dev`。FPL 数据端点保持只读；管理、决斗、公告和统计使用单独鉴权的运营端点。
 
 ## 每次修改流程
 
@@ -106,6 +106,7 @@ npx wrangler pages deploy out --project-name penguin-fantasy --branch main --com
 - 07:30 若队长选择尚未全部锁定，不得发布半成品排行榜；内部选人批次继续补齐，等下一次 07:30 再发布。
 - 前端通过单个 `GET /api/history` 获取全部历史快照，不得在每次打开页面时逐轮请求 `/api/gw/1` 到当前 GW。
 - 玩家前端的数据地址固定为 Cloudflare Pages 同域代理 `https://penguin-fantasy.pages.dev/api`，避免中国大陆移动网络直接访问 `workers.dev`；代理只转发公开只读端点。
+- 上一条的只读限制针对 FPL 数据；运营接口必须验证代理密钥，管理操作还必须验证 HttpOnly 管理员会话及来源，玩家决斗提交必须验证玩家口令会话。不得把管理员密码、会话密钥或玩家口令打进静态包。
 - 前端不得用高频 API 轮询更新时间；右上角“当前试炼”使用快照中的 `deadlineTime` 和本地时钟判断。
 - 前端首次打开时读取一次完整快照；页面保持打开时在北京时间 07:31 安全读取一次当天 07:30 快照；手机或浏览器标签页恢复时，只有跨过新的 07:30 数据日界线才自动重读。不得高频轮询或因普通切换前后台而重复请求。
 - 排行榜不显示手动刷新按钮或数据更新提示；请求进行中要合并重复操作，请求失败时静默保留最近一次成功数据与本地降级名单。
@@ -126,6 +127,16 @@ npx wrangler pages deploy out --project-name penguin-fantasy --branch main --com
 6. Cloudflare Pages 最新 Production 部署对应同一个提交。
 
 任意一端失败时，继续排查安全且在范围内的问题。最终必须明确说明“全部成功”或“仅哪一端成功、哪一端失败”，不得把部分成功描述为完整同步。
+
+## 管理后台与正式决斗
+
+- 管理入口 `/admin/` 固定使用 Cloudflare Pages 主域；GitHub Pages 和 Sites 入口自动跳转，确保管理员 cookie 为第一方。
+- 管理员凭据只保存在本机 `.private/` 和 Worker secrets，`.private/` 必须被 Git 和部署包排除；玩家口令在后台逐人生成，不得通过只填写 FPL ID 授予决斗提交权限。
+- 正式数据在 `penguin-fantasy-operations` D1 中，`/test/` 演示不得产生正式记录。
+- GW9–GW20 报名由管理员开放，DDL 自动锁定。单条原子 SQL 检查前5组、参与人互斥和剩余挑战次数，禁止先读计数后写入。
+- 删除决斗采用软删除并保留审计；公开对阵、剩余次数和血量从有效记录派生。已结算记录移除后不得残留重复加减血。
+- 每日07:30仅在全部比赛结束的快照就绪后结算；结算幂等，平局返还主动挑战权。
+- 公告以北京时间日期匹配，纯文本展示；访问统计不保存原始IP，浏览事件使用唯一ID去重，保留90天，识别登录与口令验证分开显示。
 
 ## 最终回复格式
 

@@ -4017,6 +4017,33 @@ main > * {
   white-space: nowrap;
 }
 
+.site-announcements { max-width:76rem; margin:0 auto; padding:.75rem 1.5rem; border-block-end:1px solid var(--color-gold-a55); color:var(--color-ink); background:var(--color-paper-3); }
+.site-announcements article + article { margin-top:.8rem; }
+.site-announcements strong { color:var(--color-gold); font-size:.95rem; }
+.site-announcements p { margin:.4rem 0 0; white-space:pre-wrap; overflow-wrap:anywhere; font-size:.86rem; line-height:1.6; }
+.arena-page,.arena-home { max-width:76rem; margin:auto; padding:1.5rem; }
+.arena-page { min-height:100vh; }
+.arena-page-head { margin:1rem 0 2rem; color:var(--color-ink); }
+.arena-page-head a { color:var(--color-gold); font-size:.9rem; }
+.arena-page-head h1 { margin-top:1.5rem; font-size:2rem; }
+.live-arena { color:var(--color-ink); border:1px solid var(--color-rule-bright); background:rgba(3,15,23,.94); padding:1.7rem; }
+.live-arena>header,.arena-identity { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; }
+.live-arena h2 { font-size:1.5rem; margin:.5rem 0; }
+.live-arena small,.arena-meta { color:var(--color-muted); font-size:.8rem; line-height:1.7; }
+.live-arena header>strong { color:var(--color-gold); font-size:1.2rem; }
+.live-arena button { padding:.65rem .9rem; border:1px solid var(--color-rule-bright); background:var(--color-paper-3); color:var(--color-ink); cursor:pointer; font:inherit; font-size:.85rem; }
+.live-arena button:disabled { opacity:.45; cursor:default; }
+.live-arena input,.live-arena select { display:block; margin-top:.5rem; padding:.7rem; width:100%; min-width:0; border:1px solid var(--color-rule-bright); background:#07141c; color:var(--color-ink); font:inherit; }
+.arena-form { display:flex; gap:1rem; flex-wrap:wrap; align-items:end; margin:1.5rem 0; }
+.arena-form label { flex:1 1 12rem; font-size:.85rem; }
+.arena-form small { flex-basis:100%; }
+.arena-error { color:#ffb4b4; }
+.arena-identity { padding-top:1rem; font-size:.9rem; }
+.arena-duel { display:grid; gap:.7rem; grid-template-columns:2fr 1fr auto; padding:1.2rem 0; border-top:1px solid var(--color-rule); font-size:.85rem; }
+.arena-duel span { color:var(--color-muted); font-size:.75rem; }
+.live-arena :focus-visible { outline:2px solid var(--color-gold); outline-offset:3px; }
+@media(max-width:32rem) { .arena-page,.arena-home{padding:1rem .7rem;} .live-arena{padding:1rem;} .arena-duel{grid-template-columns:1fr;} }
+
 /* Remembered player identity and personal standing */
 .header-inner {
   grid-template-columns: minmax(0, 1fr) auto auto auto;

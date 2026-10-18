@@ -3,6 +3,8 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import { currentTrialBootstrapScript, fallbackGwDeadlines, type GwDeadline } from "./current-trial";
 import staticFplData from "./static-fpl-data.json";
+import LiveArena from './arena/live-arena';
+import { loadCommunity, type Community } from './operations-client';
 
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const fplApiBase = "https://penguin-fantasy.pages.dev";
@@ -10,7 +12,7 @@ const fplApiBase = "https://penguin-fantasy.pages.dev";
 type StageId = 1 | 2 | 3 | 4 | 5;
 type CaptainStatus = "not_started" | "playing" | "finished";
 type RankedPlayer = { entryId: number; name: string; rank: number | null; gpc: number; gpcStatus?: CaptainStatus; captainTotal: number; captainRateTotal: number; hp: number; history: CaptainHistoryEntry[] };
-type CaptainHistoryEntry = { gw: number; captain: string; rate: number; points: number; life: number; status?: CaptainStatus; usedViceCaptain?: boolean };
+type CaptainHistoryEntry = { gw: number; captain: string; rate: number; points: number; life: number; duelLife?: number; status?: CaptainStatus; usedViceCaptain?: boolean };
 type CaptainPopularity = { name: string; points: number; selections: number; rate: number; selectors: string[]; status?: CaptainStatus };
 type LeagueTeam = { entryId: number; teamName: string };
 type ApiTeam = LeagueTeam & {
@@ -407,14 +409,14 @@ function InlineCaptainHistory({ playerName, history, currentGwLabel, stage }: { 
   // Chapter panels stay independent: chapter II never shows chapter I records,
   // while total life and captain totals keep ranking players across all chapters.
   const chapterHistory = history.filter((item) => item.gw >= stage.gwFrom && item.gw <= stage.gwTo);
-  const chapterLife = chapterHistory.reduce((total, item) => total + item.life, 0);
+  const chapterLife = chapterHistory.reduce((total, item) => total + item.life + (item.duelLife ?? 0), 0);
 
   return (
     <section className="rank-history" aria-label={`${playerName} 在${stage.title}的队长选择记录`}>
       <header><strong>队长选择记录</strong><small>{currentGwLabel}</small></header>
       <div>
         {chapterHistory.length === 0 ? <p className="history-empty">本章节尚无队长选择记录</p> : chapterHistory.map((item) => (
-          <article className="history-row" key={item.gw}>
+          <Fragment key={item.gw}><article className="history-row">
             <strong className="history-gw">GW{item.gw}</strong>
             <div className="history-captain"><b>{item.captain}{item.usedViceCaptain ? "（副）" : ""}</b><small className={item.rate < 10 ? "rare-pick" : ""}>选择率 {item.rate}%</small></div>
             <div
@@ -428,7 +430,7 @@ function InlineCaptainHistory({ playerName, history, currentGwLabel, stage }: { 
                 <b>{signedLife(item.life)}</b><em>血</em>
               </span>
             </div>
-          </article>
+          </article>{item.duelLife !== undefined ? <article className="history-row"><strong className="history-gw">GW{item.gw}</strong><div className="history-captain"><b>决斗结算</b><small>{item.duelLife > 0 ? '胜利' : item.duelLife < 0 ? '失败' : '平局'}</small></div><div className="history-result"><span className="history-result-box history-life"><b>{signedLife(item.duelLife)}</b><em>血</em></span></div></article> : null}</Fragment>
         ))}
         <article className="history-row history-chapter-summary">
           <strong className="history-gw">CH.{stage.roman}</strong>
@@ -521,6 +523,7 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
   const [gwDeadlines, setGwDeadlines] = useState<GwDeadline[]>(() => isHistoryResponse(bundledFplData.history) ? bundledFplData.history.deadlines : []);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [playerEntryId, setPlayerEntryId] = useState<number | null>(null);
+  const [community, setCommunity] = useState<Community | null>(null);
   const [myStandingExpanded, setMyStandingExpanded] = useState(false);
   const [expandedCaptain, setExpandedCaptain] = useState<string | null>(null);
   const [loginStep, setLoginStep] = useState<LoginStep>("closed");
@@ -533,6 +536,12 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
   const lastRefreshAttemptRef = useRef(0);
   const lastSuccessfulRefreshRef = useRef<number | null>(Number.isFinite(bundledSnapshotTime) ? bundledSnapshotTime : null);
   const stage = stages.find((item) => item.id === activeStage) ?? stages[1];
+
+  useEffect(() => {
+    let active = true;
+    void loadCommunity().then(data => { if (active) setCommunity(data); }).catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   const loadFplData = useCallback((force = false) => {
     if (refreshInFlightRef.current) return refreshInFlightRef.current;
@@ -654,12 +663,14 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
         const life = result.captainStatus && result.captainStatus !== "finished" && result.captainPoints <= 3
           ? 0
           : lifeEarnedInStage(stageForGw(snapshot.gw), result.captainPoints, result.captainPickRate);
+        const duel = community?.results.find(duel => duel.gw === snapshot.gw && (duel.challenger_id === team.entryId || duel.target_id === team.entryId));
         return [{
           gw: snapshot.gw,
           captain: result.scoringCaptainName ?? result.captainName,
           rate: result.captainPickRate ?? 0,
           points: result.captainPoints,
           life,
+          duelLife: duel ? duel.challenger_id === team.entryId ? duel.challenger_delta : duel.target_delta : undefined,
           status: result.captainStatus,
           usedViceCaptain: result.usedViceCaptain,
         }];
@@ -673,7 +684,7 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
         gpcStatus: latest?.status,
         captainTotal: history.reduce((total, item) => total + item.points, 0),
         captainRateTotal: history.reduce((total, item) => total + item.rate, 0),
-        hp: Math.max(0, 1 + history.reduce((total, item) => total + item.life, 0)),
+        hp: Math.max(0, 1 + history.reduce((total, item) => total + item.life + (item.duelLife ?? 0), 0)),
         history,
       };
     });
@@ -682,7 +693,7 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
 
     return orderedRows
       .map((player, index) => ({ ...player, rank: index + 1 }));
-  }, [gwSnapshots, leagueTeams]);
+  }, [gwSnapshots, leagueTeams, community]);
   const pageSize = 20;
   const pageCount = Math.ceil(ranking.length / pageSize);
   const visibleRanking = ranking.slice(rankingPage * pageSize, (rankingPage + 1) * pageSize);
@@ -779,6 +790,7 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
     }
 
     setPlayerEntryId(confirmedEntryId);
+    window.dispatchEvent(new Event('penguin-player-login'));
     setRankingPage(0);
     closeLogin();
   };
@@ -844,6 +856,7 @@ export function HomeView({ arenaPreview }: { arenaPreview?: ReactNode }) {
         <p>{stage.description}</p>
       </section>
 
+      {!isArenaPreview && activeStage === 2 ? <div className="arena-home"><LiveArena /></div> : null}
       {isArenaPreview && activeStage === 2 ? arenaPreview : <section className="boards">
         <article className="panel ranking-panel" id="ranking" style={rankingPanelAssets}>
           <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>

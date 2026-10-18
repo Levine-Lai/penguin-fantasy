@@ -17,6 +17,12 @@
       "id": "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
     }
   ],
+  "d1_databases": [{
+    "binding": "OPS_DB",
+    "database_name": "penguin-fantasy-operations",
+    "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+    "migrations_dir": "migrations"
+  }],
   "triggers": {
     "crons": ["*/5 * * * *", "30 23 * * *"]
   }

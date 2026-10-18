@@ -1,3 +1,5 @@
+import { handleOperations, settleDuels, type OpsDatabase } from './operations.ts';
+
 interface KVNamespace {
   get<T>(key: string, type: "json"): Promise<T | null>;
   put(key: string, value: string): Promise<void>;
@@ -13,6 +15,10 @@ interface Env {
   LEAGUE_ID: string;
   ALLOWED_ORIGINS?: string;
   ADMIN_TOKEN?: string;
+  OPS_DB?: OpsDatabase;
+  SESSION_SECRET?: string;
+  ADMIN_PASSWORD_HASH?: string;
+  OPS_PROXY_SECRET?: string;
 }
 
 interface ExecutionContextLike {
@@ -80,6 +86,8 @@ const CAPTAIN_RESOLUTION_VERSION = 2;
 const worker = {
   async fetch(request: Request, env: Env, ctx: ExecutionContextLike): Promise<Response> {
     const url = new URL(request.url);
+    const operationsResponse = await handleOperations(request, env);
+    if (operationsResponse) return operationsResponse;
 
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers: corsHeaders(request, env) });
@@ -141,7 +149,7 @@ const worker = {
 
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContextLike): Promise<void> {
     if (controller.cron === "30 23 * * *") {
-      ctx.waitUntil(publishDailySnapshot(env, undefined, controller.scheduledTime));
+      ctx.waitUntil(publishDailySnapshot(env, undefined, controller.scheduledTime).then(() => settleDuels(env)));
       return;
     }
     ctx.waitUntil(captureDueCaptainPicks(env, controller.scheduledTime));
@@ -266,6 +274,7 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
       deadlineTime: event.deadline_time,
       deadlineHasPassed,
       captainResolutionVersion: CAPTAIN_RESOLUTION_VERSION,
+      finished: fixtures.length > 0 && fixtures.every(fixture => fixture.finished || fixture.finished_provisional),
       picksSync: {
         checked: picksChecked,
         total: roster.length,
@@ -290,8 +299,8 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
         .filter((item) => item.id !== event.id && now >= Date.parse(item.deadline_time))
         .sort((left, right) => left.id - right.id);
       for (const passedEvent of passedEvents) {
-        const existingSnapshot = await env.FPL_CACHE.get<{ captainResolutionVersion?: number }>(`snapshot:gw:${passedEvent.id}`, "json");
-        if (existingSnapshot?.captainResolutionVersion === CAPTAIN_RESOLUTION_VERSION) continue;
+        const existingSnapshot = await env.FPL_CACHE.get<{ captainResolutionVersion?: number; finished?: boolean }>(`snapshot:gw:${passedEvent.id}`, "json");
+        if (existingSnapshot?.captainResolutionVersion === CAPTAIN_RESOLUTION_VERSION && existingSnapshot.finished) continue;
         const backfillPicks = await getPicksDocument(env, passedEvent.id);
         if (isPicksCompleteForRoster(backfillPicks, roster)) {
           await publishDailySnapshot(env, passedEvent.id, now);

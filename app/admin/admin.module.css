@@ -1,0 +1,49 @@
+.shell { min-height:100vh; max-width:86rem; margin:auto; padding:2.5rem 1.5rem 5rem; color:var(--color-ink); }
+.shell h1 { font-size:clamp(1.8rem,4vw,2.8rem); margin:.3rem 0; }
+.shell h2 { font-size:1.3rem; margin:0 0 1.2rem; }
+.shell h3 { font-size:1rem; margin:.7rem 0; }
+.shell small,.muted { color:var(--color-muted); font-size:.8rem; line-height:1.6; }
+.shell a { color:var(--color-gold); text-decoration:none; }
+.shell button { cursor:pointer; padding:.65rem 1rem; border:1px solid var(--color-rule-bright); border-radius:.25rem; color:var(--color-ink); background:var(--color-paper-3); font:inherit; font-size:.86rem; }
+.shell button:hover { border-color:var(--color-gold); }
+.shell button:disabled { opacity:.5; cursor:default; }
+.shell button:focus-visible,.shell input:focus-visible,.shell textarea:focus-visible,.shell select:focus-visible { outline:2px solid var(--color-gold); outline-offset:3px; }
+.shell input:not([type=checkbox]),.shell select,.shell textarea { display:block; width:100%; min-width:0; margin-top:.5rem; border:1px solid var(--color-rule-bright); border-radius:.2rem; background:#07141c; color:var(--color-ink); padding:.7rem; font:inherit; }
+.shell label { display:block; font-size:.86rem; }
+.shell select { max-width:32rem; }
+.header,.sectionHead,.record { display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+.header { padding-bottom:1.8rem; border-bottom:1px solid var(--color-rule); }
+.header small { letter-spacing:.15em; }
+.actions,.toolbar,.inline { display:flex; flex-wrap:wrap; align-items:center; gap:1rem; }
+.actions { font-size:.85rem; }
+.metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); margin:1.8rem 0; border-block:1px solid var(--color-rule); }
+.metrics article { padding:1.4rem 1rem; border-right:1px solid var(--color-rule); }
+.metrics article:last-child { border:0; }
+.metrics span { display:block; color:var(--color-muted); font-size:.8rem; }
+.metrics strong { display:block; font-size:2rem; margin-top:.4rem; color:var(--color-gold); }
+.tabs { display:flex; gap:.5rem; flex-wrap:wrap; }
+.tabs button[aria-current] { color:var(--color-gold); border-color:var(--color-gold); }
+.toolbar { margin:1.5rem 0; align-items:end; }
+.toolbar input { max-width:14rem; }
+.panel { margin:1.5rem 0; padding:1.5rem; border:1px solid var(--color-rule); background:rgba(3,15,23,.93); }
+.inline { align-items:end; }
+.inline p { margin:0; font-size:.9rem; }
+.form { display:grid; gap:1rem; max-width:45rem; }
+.form button { justify-self:start; }
+.tableWrap { overflow-x:auto; }
+.shell table { width:100%; border-collapse:collapse; text-align:left; font-size:.85rem; }
+.shell th { color:var(--color-muted); font-weight:500; white-space:nowrap; }
+.shell th,.shell td { padding:.9rem .7rem; border-bottom:1px solid var(--color-rule); vertical-align:middle; }
+.shell td small { display:block; font-size:.7rem; }
+.shell .danger { color:#ffaaaa; border-color:#874848; }
+.error,.notice { padding:.8rem 1rem; border-left:3px solid currentColor; background:var(--color-paper-3); }
+.error { color:#ffb4b4; }.notice { color:var(--color-gold); }
+.record { padding:1rem 0; align-items:start; border-bottom:1px solid var(--color-rule); }
+.pre { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; font-size:.9rem; }
+.empty { color:var(--color-muted); text-align:center; padding:2rem .5rem; font-size:.9rem; }
+.secret { margin:1.5rem 0; padding:1.2rem; border:1px solid var(--color-gold); display:grid; gap:1rem; justify-items:start; }
+.secret code { font-size:1.2rem; overflow-wrap:anywhere; user-select:all; }
+.login { max-width:25rem; margin:10vh auto 0; padding:2rem; background:rgba(3,15,23,.96); border:1px solid var(--color-rule-bright); }
+.login>small { display:block; margin-top:2rem; }
+.login form { display:grid; gap:1rem; margin-top:1.5rem; }
+@media(max-width:48rem) { .shell {padding:1.5rem .8rem 3rem;} .header{align-items:start;flex-direction:column;} .metrics{grid-template-columns:repeat(2,minmax(0,1fr));} .metrics article{padding:1rem .7rem;} .panel{padding:1rem .8rem;} .inline{flex-direction:column;align-items:stretch;} .inline button{align-self:start;} .record{flex-direction:column;} }
