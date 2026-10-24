@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { database } from './helpers/operations-db.mjs';
+import { submitDuel } from '../cloudflare/fpl-proxy/src/operations.ts';
+import { publishedHistory } from '../cloudflare/fpl-proxy/src/publication.ts';
 
 import { captureDueCaptainPicks, publishDailySnapshot, resolveCaptainResult } from "../cloudflare/fpl-proxy/src/index.ts";
 
@@ -52,7 +55,7 @@ async function seedEnv(events, roster) {
   return { FPL_CACHE: kv, LEAGUE_ID: "511690" };
 }
 
-function installFplMock({ failOnceForEntry, liveStatsOverride = {} } = {}) {
+function installFplMock({ failOnceForEntry, liveStatsOverride = {}, bootstrap } = {}) {
   const calls = [];
   let pendingFailure = failOnceForEntry;
   let livePointsBonus = 0;
@@ -61,6 +64,7 @@ function installFplMock({ failOnceForEntry, liveStatsOverride = {} } = {}) {
   globalThis.fetch = async (input) => {
     const url = new URL(String(input));
     calls.push(url.pathname);
+    if (url.pathname === '/api/bootstrap-static/') return Response.json(bootstrap);
 
     const picksMatch = url.pathname.match(/\/entry\/(\d+)\/event\/(\d+)\/picks\/$/);
     if (picksMatch) {
@@ -149,6 +153,7 @@ test("uses the vice captain for scoring without moving the original captain's pi
   const [event] = createEvents(1);
   const env = await seedEnv([event], [{ entryId: 4, teamName: "Vice example" }]);
   const mock = installFplMock({
+    bootstrap: (await env.FPL_CACHE.get('fpl:bootstrap', 'json')).value,
     liveStatsOverride: {
       101: { total_points: 0, minutes: 0 },
       102: { total_points: 7, minutes: 90 },
@@ -173,7 +178,7 @@ test("uses the vice captain for scoring without moving the original captain's pi
 test("honors the DDL plus 90-minute gate and never publishes a partial roster", async () => {
   const [event] = createEvents(1);
   const env = await seedEnv([event], createRoster(1, 111));
-  const mock = installFplMock();
+  const mock = installFplMock({ bootstrap: (await env.FPL_CACHE.get('fpl:bootstrap', 'json')).value });
   const deadline = Date.parse(event.deadline_time);
 
   try {
@@ -197,7 +202,7 @@ test("honors the DDL plus 90-minute gate and never publishes a partial roster", 
 test("refreshes the same GW snapshot each morning without duplicating its history entry", async () => {
   const [event] = createEvents(1);
   const env = await seedEnv([event], createRoster(1, 111));
-  const mock = installFplMock();
+  const mock = installFplMock({ bootstrap: (await env.FPL_CACHE.get('fpl:bootstrap', 'json')).value });
   const firstPublish = Date.parse(event.deadline_time) + 24 * 60 * 60 * 1000;
 
   try {
@@ -230,7 +235,7 @@ test("simulates GW1–GW8 without duplicate picks, missing history, or mixed sna
   const events = createEvents(8);
   const roster = createRoster(1, 111);
   const env = await seedEnv(events, roster);
-  const mock = installFplMock();
+  const mock = installFplMock({ bootstrap: (await env.FPL_CACHE.get('fpl:bootstrap', 'json')).value });
 
   try {
     for (const event of events) {
@@ -262,7 +267,7 @@ test("reconciles a same-size roster replacement without polluting captain rates"
   const [event] = createEvents(1);
   const originalRoster = createRoster(1, 111);
   const env = await seedEnv([event], originalRoster);
-  const mock = installFplMock();
+  const mock = installFplMock({ bootstrap: (await env.FPL_CACHE.get('fpl:bootstrap', 'json')).value });
 
   try {
     await captureWholeRoster(env, event);
@@ -291,7 +296,7 @@ test("captures the current GW first, then backfills an older incomplete GW and i
   const events = createEvents(2);
   const roster = createRoster(1, 111);
   const env = await seedEnv(events, roster);
-  const mock = installFplMock();
+  const mock = installFplMock({ bootstrap: (await env.FPL_CACHE.get('fpl:bootstrap', 'json')).value });
 
   try {
     const gw2CaptureTime = Date.parse(events[1].deadline_time) + 90 * 60 * 1000;
@@ -317,7 +322,7 @@ test("captures the current GW first, then backfills an older incomplete GW and i
 test("retries a temporary FPL failure without committing a partial batch", async () => {
   const [event] = createEvents(1);
   const env = await seedEnv([event], createRoster(1, 111));
-  const mock = installFplMock({ failOnceForEntry: 5 });
+  const mock = installFplMock({ failOnceForEntry: 5, bootstrap: (await env.FPL_CACHE.get('fpl:bootstrap', 'json')).value });
   const firstCapture = Date.parse(event.deadline_time) + 90 * 60 * 1000;
 
   try {
@@ -333,4 +338,28 @@ test("retries a temporary FPL failure without committing a partial batch", async
   } finally {
     mock.restore();
   }
+});
+
+test('daily publishing refreshes completed second-stage duel rounds without refetching picks', async () => {
+  const events = createEvents(10);
+  const env = await seedEnv(events, createRoster(1, 2));
+  const mock = installFplMock({ bootstrap: (await env.FPL_CACHE.get('fpl:bootstrap', 'json')).value });
+  try {
+    for (const gw of [9, 10]) {
+      const capturedAt = Date.parse(events[gw - 1].deadline_time) + 90 * 60000;
+      // Seed locked selections; this test covers publishing rather than capture target selection.
+      await env.FPL_CACHE.put(`picks:gw:${gw}`, JSON.stringify({ gw, checkedEntryIds: [1, 2], picksByEntry: { 1: { captainId: 101, viceCaptainId: 102, multiplier: 2 }, 2: { captainId: 102, viceCaptainId: 101, multiplier: 2 } }, completedAt: new Date(capturedAt).toISOString() }));
+      await publishDailySnapshot(env, gw, capturedAt + 86400000);
+    }
+    const oldScore = (await env.FPL_CACHE.get('snapshot:gw:9', 'json')).teams[0].captainPoints;
+    env.OPS_DB = database();
+    await submitDuel(env.OPS_DB, 9, 1, 2);
+    mock.setLivePointsBonus(3);
+    await publishDailySnapshot(env, undefined, Date.parse(events[9].deadline_time) + 2 * 86400000);
+    const corrected = await env.FPL_CACHE.get('snapshot:gw:9', 'json');
+    assert.equal(corrected.teams[0].captainPoints, oldScore + 3);
+    assert.equal((await publishedHistory(env)).find(s => s.gw === 9).teams[0].captainPoints, oldScore + 3);
+    assert.equal((await env.FPL_CACHE.get('sync:status', 'json')).gw, 10);
+    assert.equal(mock.calls.filter(path => path.includes('/picks/')).length, 0);
+  } finally { mock.restore(); }
 });

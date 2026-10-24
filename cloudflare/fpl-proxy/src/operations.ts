@@ -1,3 +1,6 @@
+import { arenaWindow, selectRound, usedChallengeSql, usesChallenge } from './duel-rules.ts';
+import { commitRound, publicationRevision, publishedHistory, publishedRound } from './publication.ts';
+
 export interface OpsStatement {
   bind(...values: unknown[]): OpsStatement;
   first<T = Record<string, unknown>>(): Promise<T | null>;
@@ -16,10 +19,9 @@ export interface OpsEnv {
   FPL_CACHE: { get<T>(key: string, type: 'json'): Promise<T | null> };
 }
 type Member = { entryId: number; teamName: string };
-type Arena = { gw: number; open: boolean };
 type Session = { role: 'admin' | 'player'; exp: number; entryId?: number; codeHash?: string };
-type Duel = { id: string; gw: number; challenger_id: number; target_id: number; created_at: string; deleted_at: string | null; settled_at: string | null; challenger_score: number | null; target_score: number | null; challenger_delta: number | null; target_delta: number | null };
-type Snapshot = { gw: number; finished?: boolean; teams: Array<{ entryId: number; captainPoints: number; scoringCaptainName?: string; captainName: string | null }> };
+export type Duel = { id: string; gw: number; challenger_id: number; target_id: number; created_at: string; selection_status: 'pending' | 'selected' | 'same_captain' | 'overflow' | 'missing_captain'; deleted_at: string | null; settled_at: string | null; challenger_score: number | null; target_score: number | null; challenger_delta: number | null; target_delta: number | null };
+export type Snapshot = { gw: number; finished?: boolean; officialFinalized?: boolean; duelResults?: Duel[]; publicationRevision?: number; teams: Array<{ entryId: number; captainPoints: number; scoringCaptainName?: string; captainName?: string | null }> };
 
 const canonicalOrigin = 'https://penguin-fantasy.pages.dev';
 const origins = new Set([canonicalOrigin, 'https://levine-lai.github.io', 'https://penguin-cup-2627.hazy-lemon-8599.chatgpt.site']);
@@ -96,10 +98,6 @@ function text(value: unknown, max: number, required = true): string {
   return result;
 }
 async function roster(env: OpsEnv): Promise<Member[]> { return await env.FPL_CACHE.get<Member[]>('league:roster', 'json') ?? []; }
-async function arena(db: OpsDatabase): Promise<Arena> {
-  const row = await db.prepare("SELECT value FROM settings WHERE key='arena'").first<{ value: string }>();
-  return row ? JSON.parse(row.value) : { gw: 9, open: false };
-}
 async function deadline(env: OpsEnv, gw: number): Promise<string | undefined> {
   const bootstrap = await env.FPL_CACHE.get<{ value: { events: Array<{ id: number; deadline_time: string }> } }>('fpl:bootstrap', 'json');
   return bootstrap?.value.events.find(event => event.id === gw)?.deadline_time;
@@ -130,16 +128,16 @@ function namedDuels(rows: Duel[], members: Member[]) {
   const names = new Map(members.map(member => [member.entryId, member.teamName]));
   return rows.map(row => ({ ...row, challengerName: names.get(row.challenger_id) ?? `ID ${row.challenger_id}`, targetName: names.get(row.target_id) ?? `ID ${row.target_id}` }));
 }
-export async function submitDuel(db: OpsDatabase, gw: number, challengerId: number, targetId: number, id = crypto.randomUUID()): Promise<boolean> {
+export async function submitDuel(db: OpsDatabase, gw: number, challengerId: number, targetId: number, id = crypto.randomUUID(), gate?: { deadline: string }): Promise<boolean> {
   const result = await db.prepare(`INSERT INTO duels(id,gw,challenger_id,target_id,created_at)
     SELECT ?,?,?,?,? WHERE ? != ?
-    AND (SELECT COUNT(*) FROM duels WHERE gw=? AND deleted_at IS NULL)<5
     AND NOT EXISTS(SELECT 1 FROM duels WHERE gw=? AND deleted_at IS NULL AND
       (challenger_id IN (?,?) OR target_id IN (?,?)))
     AND (SELECT COUNT(*) FROM duels WHERE challenger_id=? AND gw BETWEEN 9 AND 20 AND deleted_at IS NULL
-      AND (settled_at IS NULL OR challenger_score != target_score))<5`)
-    .bind(id, gw, challengerId, targetId, new Date().toISOString(), challengerId, targetId, gw, gw,
-      challengerId, targetId, challengerId, targetId, challengerId).run();
+      AND ${usedChallengeSql})<5
+    ${gate ? `AND julianday('now') >= julianday(?,'-12 hours') AND julianday('now') < julianday(?)` : ''}`)
+    .bind(id, gw, challengerId, targetId, new Date().toISOString(), challengerId, targetId, gw,
+      challengerId, targetId, challengerId, targetId, challengerId, ...(gate ? [gate.deadline, gate.deadline] : [])).run();
   return result.meta.changes === 1;
 }
 export async function handleOperations(request: Request, env: OpsEnv): Promise<Response | null> {
@@ -172,7 +170,7 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
         const end = new Date(Date.parse(start) + 86400000).toISOString();
         const page = Math.max(0, Math.min(10000, Number(url.searchParams.get('page')) || 0));
         const [members, config, duelRows, announcements, activity, players, logs] = await Promise.all([
-          roster(env), arena(db),
+          roster(env), arenaWindow(env),
           db.prepare('SELECT * FROM duels ORDER BY created_at DESC LIMIT 300').all<Duel>(),
           db.prepare('SELECT * FROM announcements ORDER BY created_at DESC LIMIT 100').all(),
           db.prepare('SELECT * FROM player_logins WHERE created_at>=? AND created_at<? ORDER BY created_at DESC LIMIT 50 OFFSET ?').bind(start, end, page * 50).all(),
@@ -184,14 +182,7 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
           activity: activity.results, players: players.results, logs: logs.results }, request);
       }
       if (path === '/api/admin/arena' && request.method === 'POST') {
-        const input = await body(request); const gw = Number(input.gw);
-        if (!Number.isInteger(gw) || gw < 9 || gw > 20 || typeof input.open !== 'boolean') throw new ApiError(400, '请选择 GW9–GW20');
-        if (input.open && Date.now() >= Date.parse(await deadline(env, gw) ?? '1970-01-01')) throw new ApiError(400, '该轮 DDL 已过或时间未就绪');
-        await db.batch([
-          db.prepare("INSERT INTO settings VALUES ('arena',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(JSON.stringify({ gw, open: input.open })),
-          db.prepare('INSERT INTO audit_log VALUES (?,?,?,?,?)').bind(crypto.randomUUID(), 'arena_settings', String(gw), JSON.stringify({ open: input.open }), now),
-        ]);
-        return response({ ok: true }, request);
+        throw new ApiError(409, '报名已改为每轮 DDL 前 12 小时自动开放');
       }
       if (path === '/api/admin/announcements' && request.method === 'POST') {
         const input = await body(request); const title = text(input.title, 60); const content = text(input.body, 2000);
@@ -219,15 +210,26 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
       throw new ApiError(404, '接口不存在');
     }
     if (path === '/api/community' && request.method === 'GET') {
-      const config = await arena(db); const ddl = await deadline(env, config.gw);
-      const [members, duelRows, announcementRows, results] = await Promise.all([
+      const config = await arenaWindow(env); const ddl = await deadline(env, config.gw);
+      const [members, duelRows, announcementRows, deleted, history] = await Promise.all([
         roster(env), db.prepare('SELECT * FROM duels WHERE gw=? AND deleted_at IS NULL ORDER BY created_at').bind(config.gw).all<Duel>(),
         db.prepare('SELECT id,title,body,display_day FROM announcements WHERE display_day=? AND deleted_at IS NULL ORDER BY created_at DESC').bind(beijingDay()).all(),
-        db.prepare('SELECT gw,challenger_id,target_id,challenger_delta,target_delta FROM duels WHERE deleted_at IS NULL AND settled_at IS NOT NULL').all(),
+        db.prepare('SELECT id FROM duels WHERE deleted_at IS NOT NULL AND settled_at IS NOT NULL').all<{ id: string }>(),
+        publishedHistory(env),
       ]);
+      const removedDuelIds = deleted.results.map(row => row.id);
+      const removed = new Set(removedDuelIds);
+      const published = (history ?? []).flatMap(snapshot => snapshot.duelResults ?? []).filter(row => !removed.has(row.id));
+      const publishedById = new Map(published.map(row => [row.id, row]));
+      const selectionReady = duelRows.results.every(row => row.selection_status !== 'pending');
+      const publicDuels = duelRows.results.filter(row => row.selection_status === 'selected').map(row => {
+        const settled = publishedById.get(row.id);
+        return { ...row, settled_at: settled?.settled_at ?? null, challenger_score: settled?.challenger_score ?? null,
+          target_score: settled?.target_score ?? null, challenger_delta: settled?.challenger_delta ?? null, target_delta: settled?.target_delta ?? null };
+      });
       const revealed = Boolean(ddl && Date.now() >= Date.parse(ddl));
-      return response({ arena: { ...config, deadline: ddl, open: config.open && Boolean(ddl) && !revealed, ...(revealed ? { count: duelRows.results.length } : {}) },
-        duels: revealed ? namedDuels(duelRows.results, members) : [], results: results.results, announcements: announcementRows.results, members }, request);
+      return response({ arena: { ...config, deadline: ddl, open: config.open && Boolean(ddl) && !revealed, ...(revealed ? { count: publicDuels.length, selectionReady } : {}) },
+        duels: revealed ? namedDuels(publicDuels, members) : [], results: published, removedDuelIds, announcements: announcementRows.results, members }, request);
     }
     if (path === '/api/visits' && request.method === 'POST') {
       await limit(env, request, 'visits', 180, 60000);
@@ -249,18 +251,18 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
       return response({ token, entryId }, request);
     }
     if (path === '/api/duels/mine' && request.method === 'GET') {
-      const entryId = await playerSession(env, request); const config = await arena(db);
+      const entryId = await playerSession(env, request); const config = await arenaWindow(env);
       const rows = await db.prepare('SELECT * FROM duels WHERE deleted_at IS NULL AND (challenger_id=? OR target_id=?) ORDER BY created_at DESC').bind(entryId, entryId).all<Duel>();
-      const used = rows.results.filter(row => row.challenger_id === entryId && (row.settled_at === null || row.challenger_score !== row.target_score)).length;
+      const used = rows.results.filter(row => row.challenger_id === entryId && usesChallenge(row)).length;
       const submitted = rows.results.find(row => row.gw === config.gw && row.challenger_id === entryId);
       const target = submitted ? (await roster(env)).find(member => member.entryId === submitted.target_id) : null;
-      return response({ entryId, remaining: Math.max(0, 5 - used), gw: config.gw,
+      return response({ entryId, remaining: Math.max(0, 5 - used), gw: config.gw, selectionStatus: submitted?.selection_status ?? null,
         submitted: Boolean(submitted), challenge: submitted ? { targetId: submitted.target_id, targetName: target?.teamName ?? `ID ${submitted.target_id}` } : null }, request);
     }
     if (path === '/api/duels' && request.method === 'POST') {
       await limit(env, request, 'duel-submit', 20, 60000);
       const entryId = await playerSession(env, request); const input = await body(request);
-      const config = await arena(db); const ddl = await deadline(env, config.gw);
+      const config = await arenaWindow(env); const ddl = await deadline(env, config.gw);
       if (!ddl) throw new ApiError(409, '本轮 DDL 尚未就绪，请稍后再试');
       if (Date.now() >= Date.parse(ddl)) throw new ApiError(409, '本轮报名已截止');
       if (!config.open) throw new ApiError(409, '本轮报名尚未开放');
@@ -269,15 +271,18 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
       const members = await roster(env);
       if (!members.some(member => member.entryId === targetId) || targetId === entryId) throw new ApiError(400, '挑战目标无效');
       const id = crypto.randomUUID();
-      if (!await submitDuel(db, config.gw, entryId, targetId, id)) {
+      if (!await submitDuel(db, config.gw, entryId, targetId, id, { deadline: ddl })) {
+        const currentConfig = await arenaWindow(env);
+        if (currentConfig.gw !== config.gw) throw new ApiError(409, '比赛周已变化，请重新加载');
+        if (Date.now() >= Date.parse(ddl)) throw new ApiError(409, '本轮报名已截止');
+        if (!currentConfig.open) throw new ApiError(409, '本轮报名尚未开放');
         // Diagnose only after the atomic insert rejects the request; these reads never authorize a write.
         const rows = await db.prepare('SELECT * FROM duels WHERE deleted_at IS NULL AND (gw=? OR challenger_id=?)').bind(config.gw, entryId).all<Duel>();
         const current = rows.results.filter(row => row.gw === config.gw);
         if (current.some(row => row.challenger_id === entryId)) throw new ApiError(409, '你本轮已提交挑战，不可重复报名');
         if (current.some(row => row.target_id === entryId)) throw new ApiError(409, '你已在本轮对阵中，不能再次发起挑战');
         if (current.some(row => row.challenger_id === targetId || row.target_id === targetId)) throw new ApiError(409, '该玩家已在本轮对阵中，请选择其他挑战对象');
-        if (rows.results.filter(row => row.challenger_id === entryId && row.gw >= 9 && row.gw <= 20 && (row.settled_at === null || row.challenger_score !== row.target_score)).length >= 5) throw new ApiError(409, '你的五次主动挑战权已用完');
-        if (current.length >= 5) throw new ApiError(409, '本轮五组决斗名额已满');
+        if (rows.results.filter(row => row.challenger_id === entryId && row.gw >= 9 && row.gw <= 20 && usesChallenge(row)).length >= 5) throw new ApiError(409, '你的五次主动挑战权已用完');
         throw new ApiError(409, '报名状态已变化，请重新选择后提交');
       }
       return response({ ok: true, id }, request, 201);
@@ -290,27 +295,28 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
   }
 }
 
-export async function settleDuels(env: OpsEnv): Promise<void> {
-  const db = env.OPS_DB; if (!db) return;
-  const pending = await db.prepare('SELECT * FROM duels WHERE deleted_at IS NULL AND settled_at IS NULL LIMIT 100').all<Duel>();
-  const groups = new Set(pending.results.map(row => row.gw));
-  for (const gw of groups) {
-    const snapshot = await env.FPL_CACHE.get<Snapshot>(`snapshot:gw:${gw}`, 'json');
-    if (!snapshot?.finished) continue;
-    const scores = new Map(snapshot.teams.map(team => [team.entryId, team.captainPoints]));
-    const updates: OpsStatement[] = [];
-    for (const duel of pending.results.filter(row => row.gw === gw)) {
-      const left = scores.get(duel.challenger_id); const right = scores.get(duel.target_id);
-      if (left === undefined || right === undefined) continue;
-      const delta = Math.sign(left - right);
-      updates.push(db.prepare(`UPDATE duels SET settled_at=?,challenger_score=?,target_score=?,challenger_delta=?,target_delta=?
-        WHERE id=? AND settled_at IS NULL AND deleted_at IS NULL`).bind(new Date().toISOString(), left, right, delta, -delta, duel.id));
-    }
-    if (updates.length) await db.batch(updates);
+export async function settleDuels(env: OpsEnv, snapshotOverride?: Snapshot): Promise<Duel[]> {
+  if (!env.OPS_DB) return [];
+  const rows = await env.OPS_DB.prepare('SELECT DISTINCT gw FROM duels WHERE deleted_at IS NULL AND gw BETWEEN 9 AND 20').all<{ gw: number }>();
+  const results: Duel[] = [];
+  for (const { gw } of rows.results) {
+    if (snapshotOverride && snapshotOverride.gw !== gw) continue;
+    const revision = await publicationRevision(env, gw);
+    const snapshot = snapshotOverride ?? await publishedRound(env, gw);
+    if (!snapshot?.finished || !snapshot.officialFinalized) continue;
+    if (!await selectRound(env, gw)) continue;
+    const committed = await commitRound(env, snapshot, revision);
+    results.push(...committed.duelResults ?? []);
   }
-  await db.batch([
-    db.prepare('DELETE FROM rate_limits WHERE expires_at<?').bind(Date.now() - 86400000),
-    db.prepare('DELETE FROM visits WHERE created_at<?').bind(new Date(Date.now() - 90 * 86400000).toISOString()),
-    db.prepare('DELETE FROM player_logins WHERE created_at<?').bind(new Date(Date.now() - 90 * 86400000).toISOString()),
+  if (!snapshotOverride) await pruneOperations(env);
+  return results;
+}
+
+export async function pruneOperations(env: OpsEnv): Promise<void> {
+  if (!env.OPS_DB) return;
+  await env.OPS_DB.batch([
+    env.OPS_DB.prepare('DELETE FROM rate_limits WHERE expires_at<?').bind(Date.now() - 86400000),
+    env.OPS_DB.prepare('DELETE FROM visits WHERE created_at<?').bind(new Date(Date.now() - 90 * 86400000).toISOString()),
+    env.OPS_DB.prepare('DELETE FROM player_logins WHERE created_at<?').bind(new Date(Date.now() - 90 * 86400000).toISOString()),
   ]);
 }

@@ -1,4 +1,6 @@
-import { handleOperations, settleDuels, type OpsDatabase } from './operations.ts';
+import { selectDueRounds, selectRound } from './duel-rules.ts';
+import { handleOperations, pruneOperations, type OpsDatabase, type Snapshot } from './operations.ts';
+import { commitRound, publicationRevision, publishedHistory, publishedRound } from './publication.ts';
 
 interface KVNamespace {
   get<T>(key: string, type: "json"): Promise<T | null>;
@@ -32,6 +34,7 @@ type FplEvent = {
   is_current: boolean;
   is_next: boolean;
   finished: boolean;
+  data_checked?: boolean;
 };
 
 type Bootstrap = {
@@ -114,7 +117,7 @@ const worker = {
       const gwMatch = url.pathname.match(/^\/api\/gw\/(\d{1,2})$/);
       if (gwMatch) {
         const gw = Number(gwMatch[1]);
-        const snapshot = await env.FPL_CACHE.get(`snapshot:gw:${gw}`, "json");
+        const snapshot = await publishedRound(env, gw);
         if (!snapshot) {
           return json({ ready: false, gw, message: "该周数据尚未发布" }, request, env, 5, 202);
         }
@@ -149,7 +152,7 @@ const worker = {
 
   async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContextLike): Promise<void> {
     if (controller.cron === "30 23 * * *") {
-      ctx.waitUntil(publishDailySnapshot(env, undefined, controller.scheduledTime).then(() => settleDuels(env)));
+      ctx.waitUntil(publishDailySnapshot(env, undefined, controller.scheduledTime).then(() => pruneOperations(env)));
       return;
     }
     ctx.waitUntil(captureDueCaptainPicks(env, controller.scheduledTime));
@@ -164,12 +167,13 @@ async function captureDueCaptainPicks(env: Env, scheduledTime = Date.now()): Pro
     ?? await cachedFetch<Bootstrap>(env, "fpl:bootstrap", "/bootstrap-static/", 6 * 60 * 60);
   const roster = await getRoster(env);
   const captureTarget = await selectCaptureTarget(env, bootstrap.events, roster, scheduledTime);
-  if (!captureTarget) return;
+  if (!captureTarget) { await selectDueRounds(env, scheduledTime); return; }
 
   const { event } = captureTarget;
   let { picksDocument } = captureTarget;
   if (picksDocument.completedAt) delete picksDocument.completedAt;
   picksDocument = await syncPicksBatch(env, event.id, roster, picksDocument);
+  await selectDueRounds(env, scheduledTime);
   const picksChecked = countCheckedRosterEntries(picksDocument, roster);
   const completed = isPicksCompleteForRoster(picksDocument, roster);
   await env.FPL_CACHE.put(
@@ -192,7 +196,10 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
   await env.FPL_CACHE.put("sync:status", JSON.stringify({ ...previousStatus, state: "running", startedAt }));
 
   try {
-    const bootstrap = await cachedFetch<Bootstrap>(env, "fpl:bootstrap", "/bootstrap-static/", 6 * 60 * 60);
+    const bootstrap = requestedGw === undefined
+      ? await fetchFpl<Bootstrap>('/bootstrap-static/')
+      : await cachedFetch<Bootstrap>(env, "fpl:bootstrap", "/bootstrap-static/", 6 * 60 * 60);
+    if (requestedGw === undefined) await env.FPL_CACHE.put('fpl:bootstrap', JSON.stringify({ value: bootstrap, cachedAt: new Date().toISOString() }));
     const roster = await getRoster(env);
     const event = requestedGw
       ? bootstrap.events.find((item) => item.id === requestedGw)
@@ -201,6 +208,9 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
     if (!event) {
       throw new Error("No relevant FPL event found");
     }
+
+    // Capture the expected committed version before fetching scores; overlapping stale work must fail closed.
+    const expectedRevision = await publicationRevision(env, event.id);
 
     const deadlineHasPassed = now >= Date.parse(event.deadline_time);
     const picksDocument = await getPicksDocument(env, event.id);
@@ -275,6 +285,7 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
       deadlineHasPassed,
       captainResolutionVersion: CAPTAIN_RESOLUTION_VERSION,
       finished: fixtures.length > 0 && fixtures.every(fixture => fixture.finished || fixture.finished_provisional),
+      officialFinalized: event.finished === true && event.data_checked === true,
       picksSync: {
         checked: picksChecked,
         total: roster.length,
@@ -288,22 +299,38 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
       updatedAt: new Date().toISOString(),
     };
 
-    await env.FPL_CACHE.put(`snapshot:gw:${event.id}`, JSON.stringify(snapshot));
-    const history = await getSnapshotHistory(env);
-    const nextHistory = [...history.filter((item) => item.gw !== event.id), snapshot]
-      .sort((left, right) => left.gw - right.gw);
-    await env.FPL_CACHE.put("snapshot:history", JSON.stringify(nextHistory));
+    // Commit the public snapshot and its matching duel results together.
+    await selectRound(env, event.id, now);
+    const publishedSnapshot = await commitRound(env, snapshot, expectedRevision);
+    if (env.OPS_DB) {
+      // Compatibility mirror only. Public APIs and challenge rights use the atomic D1 commit.
+      try { await env.FPL_CACHE.put(`snapshot:gw:${event.id}`, JSON.stringify(publishedSnapshot)); }
+      catch { console.error('Snapshot mirror failed', event.id); }
+    } else {
+      await env.FPL_CACHE.put(`snapshot:gw:${event.id}`, JSON.stringify(publishedSnapshot));
+      const history = await getSnapshotHistory(env);
+      await env.FPL_CACHE.put('snapshot:history', JSON.stringify([...history.filter(item => item.gw !== event.id), publishedSnapshot].sort((a, b) => a.gw - b.gw)));
+    }
 
     if (requestedGw === undefined) {
+      // Completed second-stage rounds with valid duels must still observe score corrections at 07:30.
+      const duelRounds = new Set(env.OPS_DB
+        ? (await env.OPS_DB.prepare('SELECT DISTINCT gw FROM duels WHERE deleted_at IS NULL AND gw BETWEEN 9 AND 20').all<{ gw: number }>()).results.map(row => row.gw)
+        : []);
       const passedEvents = bootstrap.events
         .filter((item) => item.id !== event.id && now >= Date.parse(item.deadline_time))
         .sort((left, right) => left.id - right.id);
       for (const passedEvent of passedEvents) {
-        const existingSnapshot = await env.FPL_CACHE.get<{ captainResolutionVersion?: number; finished?: boolean }>(`snapshot:gw:${passedEvent.id}`, "json");
-        if (existingSnapshot?.captainResolutionVersion === CAPTAIN_RESOLUTION_VERSION && existingSnapshot.finished) continue;
-        const backfillPicks = await getPicksDocument(env, passedEvent.id);
-        if (isPicksCompleteForRoster(backfillPicks, roster)) {
-          await publishDailySnapshot(env, passedEvent.id, now);
+        try {
+          const existingSnapshot = await env.FPL_CACHE.get<{ captainResolutionVersion?: number; finished?: boolean }>(`snapshot:gw:${passedEvent.id}`, "json");
+          if (existingSnapshot?.captainResolutionVersion === CAPTAIN_RESOLUTION_VERSION && existingSnapshot.finished && !duelRounds.has(passedEvent.id)) continue;
+          const backfillPicks = await getPicksDocument(env, passedEvent.id);
+          if (isPicksCompleteForRoster(backfillPicks, roster)) {
+            await publishDailySnapshot(env, passedEvent.id, now);
+          }
+        } catch (error) {
+          // A historical FPL outage must not prevent publication/settlement of ready rounds.
+          console.error('Historical snapshot refresh failed', passedEvent.id, error instanceof Error ? error.message : 'unknown');
         }
       }
     }
@@ -334,13 +361,13 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
 }
 
 async function getSnapshotHistory(env: Env): Promise<Array<{ gw: number } & Record<string, unknown>>> {
-  const history = await env.FPL_CACHE.get<Array<{ gw: number } & Record<string, unknown>>>("snapshot:history", "json");
-  if (history) return history;
+  const history = await publishedHistory(env);
+  if (history.length) return history as Array<Snapshot & Record<string, unknown>>;
 
   const status = await env.FPL_CACHE.get<{ gw?: number }>("sync:status", "json");
   if (!status?.gw) return [];
-  const current = await env.FPL_CACHE.get<{ gw: number } & Record<string, unknown>>(`snapshot:gw:${status.gw}`, "json");
-  return current ? [current] : [];
+  const current = await publishedRound(env, status.gw);
+  return current ? [current as Snapshot & Record<string, unknown>] : [];
 }
 
 async function getSeasonDeadlines(env: Env): Promise<Array<{ gw: number; deadlineTime: string }>> {

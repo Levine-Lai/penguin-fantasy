@@ -4,7 +4,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSPr
 import { currentTrialBootstrapScript, fallbackGwDeadlines, type GwDeadline } from "./current-trial";
 import staticFplData from "./static-fpl-data.json";
 import LiveArena from './arena/live-arena';
-import { loadCommunity, recordPlayerLogin, type Community } from './operations-client';
+import { loadCommunity, recordPlayerLogin, type Community, type PublishedDuel } from './operations-client';
 
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const fplApiBase = "https://penguin-fantasy.pages.dev";
@@ -26,6 +26,7 @@ type ApiTeam = LeagueTeam & {
   captainPickRate: number | null;
 };
 type GwSnapshot = {
+  duelResults?: PublishedDuel[];
   ready: boolean;
   gw: number;
   deadlineTime: string;
@@ -572,6 +573,8 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
           setLeagueTeams(league.teams);
           writeCachedFplPayload(leagueCacheKey, league);
         }),
+        // The same daily refresh updates duel blood deltas and the signed-in player's refunded rights.
+        loadCommunity(),
       ]);
     }).finally(() => {
       refreshInFlightRef.current = null;
@@ -665,14 +668,14 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
         const life = result.captainStatus && result.captainStatus !== "finished" && result.captainPoints <= 3
           ? 0
           : lifeEarnedInStage(stageForGw(snapshot.gw), result.captainPoints, result.captainPickRate);
-        const duel = community?.results.find(duel => duel.gw === snapshot.gw && (duel.challenger_id === team.entryId || duel.target_id === team.entryId));
+        const duel = (snapshot.duelResults?.filter(row => !community?.removedDuelIds?.includes(row.id)) ?? community?.results)?.find(duel => duel.gw === snapshot.gw && (duel.challenger_id === team.entryId || duel.target_id === team.entryId));
         return [{
           gw: snapshot.gw,
           captain: result.scoringCaptainName ?? result.captainName,
           rate: result.captainPickRate ?? 0,
           points: result.captainPoints,
           life,
-          duelLife: duel ? duel.challenger_id === team.entryId ? duel.challenger_delta : duel.target_delta : undefined,
+          duelLife: duel ? (duel.challenger_id === team.entryId ? duel.challenger_delta : duel.target_delta) ?? 0 : undefined,
           status: result.captainStatus,
           usedViceCaptain: result.usedViceCaptain,
         }];

@@ -32,7 +32,10 @@ were recovered, so an outage spanning a later DDL cannot leave a permanent gap.
 
 At Beijing time 07:30, the Worker reads the FPL live-points and fixture endpoints, records
 each captain's base points before any captain multiplier, and publishes one
-complete snapshot. Player page views only read KV-backed API responses and do
+complete snapshot. Scores, matching duel results and derived challenge refunds commit
+in one D1 transaction in `published_rounds`. A per-round revision rejects overlapping
+stale writes; separate rows retain concurrent updates to different rounds. KV keeps
+legacy history and a best-effort per-round mirror. Player page views only read published API responses and do
 not call the official FPL API.
 
 The locked pick stores both the original captain and vice captain. Captain
@@ -56,3 +59,18 @@ batches.
 See the project handoff instructions. Copy `wrangler.example.jsonc` to
 `wrangler.jsonc`, create a KV namespace, paste its ID into the config, set the
 admin secret and run Wrangler deploy.
+
+Before deploying the publication changes, apply the D1 migrations (including
+`0003_published_rounds.sql` and `0004_duel_queue.sql`) to `penguin-fantasy-operations` with
+`wrangler d1 migrations apply penguin-fantasy-operations --remote --config cloudflare/fpl-proxy/wrangler.jsonc`. Deploy the Worker
+only after the migration succeeds.
+
+## Second-stage duel registration
+
+GW9–GW20 registration opens automatically 12 hours before each official DDL and
+closes at DDL. Submissions have no round-wide cap; participant exclusivity and the
+five season challenge rights remain atomic checks. Locked original captain picks
+select up to five eligible groups in submission order. Same-captain, unreadable-pick
+and overflow submissions do not consume rights or affect HP. Selection waits for
+all submitted participants to be checked, then freezes statuses and a per-round
+marker in one D1 transaction. Existing settled rounds retain their selections.

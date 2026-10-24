@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { operationsFetch, operationsOrigin, chinaTime, type ArenaConfig, type Announcement, type DuelRecord } from '../operations-client';
+import { operationsFetch, operationsOrigin, chinaTime, duelSelectionLabels, type ArenaConfig, type Announcement, type DuelRecord } from '../operations-client';
 import styles from './admin.module.css';
 
 type Member = { entryId: number; teamName: string };
@@ -28,12 +28,11 @@ export default function AdminConsole() {
   const [tab, setTab] = useState<Tab>('duels');
   const [day, setDay] = useState(today);
   const [page, setPage] = useState(0);
-  const [gw, setGw] = useState(9);
   const [showRemoved, setShowRemoved] = useState(false);
 
   const load = useCallback(async (selectedDay?: string, selectedPage = 0) => {
     const response = await operationsFetch<Overview>(`/admin/overview?day=${selectedDay ?? today()}&page=${selectedPage}`);
-    setData(response); setGw(response.arena.gw); setLoggedIn(true);
+    setData(response); setLoggedIn(true);
   }, []);
   useEffect(() => {
     if (window.location.origin !== operationsOrigin && window.location.hostname !== 'localhost') {
@@ -45,7 +44,13 @@ export default function AdminConsole() {
   }, [load]);
   const run = async (operation: () => Promise<unknown>, success: string, refresh = true) => {
     setBusy(true); setError(''); setNotice('');
-    try { await operation(); if (refresh) await load(day, page); setNotice(success); }
+    try {
+      await operation(); setNotice(success);
+      if (refresh) {
+        try { await load(day, page); }
+        catch { setError(success ? '操作已完成，列表暂未刷新，请稍后刷新数据。' : '登录已完成，列表读取失败，请重试。'); }
+      }
+    }
     catch (reason) { const failure = reason as Error & { status?: number }; setError(failure.message); if (failure.status === 401) setLoggedIn(false); }
     finally { setBusy(false); }
   };
@@ -56,7 +61,10 @@ export default function AdminConsole() {
   const remove = (type: 'duels' | 'announcements', id: string, label: string) => {
     if (!window.confirm(`确认${type === 'duels' ? '移除' : '撤下'}「${label}」？`)) return;
     const reason = window.prompt('操作原因（可选）', ''); if (reason === null) return;
-    void run(() => operationsFetch(`/admin/${type}/${id}`, { method: 'DELETE', body: JSON.stringify({ reason }) }), '已移除，后台保留操作记录');
+    void run(async () => {
+      await operationsFetch(`/admin/${type}/${id}`, { method: 'DELETE', body: JSON.stringify({ reason }) });
+      setData(previous => previous ? { ...previous, [type]: previous[type].map(item => item.id === id ? { ...item, deleted_at: new Date().toISOString(), ...(type === 'duels' ? { delete_reason: reason } : {}) } : item) } : previous);
+    }, '已移除，后台保留操作记录');
   };
   const names = new Map(data?.members.map(member => [member.entryId, member.teamName]));
   const name = (id: number | null) => id ? names.get(id) ?? `ID ${id}` : '匿名访客';
@@ -74,12 +82,11 @@ export default function AdminConsole() {
     <div className={styles.toolbar}><label>统计日期（北京时间）<input type="date" value={day} onChange={event => { setDay(event.target.value); setPage(0); }} /></label><button disabled={busy || !day} onClick={() => { setPage(0); void run(() => load(day, 0), '', false); }}>刷新数据</button></div>
     {error ? <p role="alert" className={styles.error}>{error}</p> : null}{notice ? <p role="status" className={styles.notice}>{notice}</p> : null}
     {tab === 'duels' ? <>
-      <section className={styles.panel}><h2>报名控制</h2><form className={styles.inline} onSubmit={event => { event.preventDefault(); void run(() => operationsFetch('/admin/arena', { method: 'POST', body: JSON.stringify({ gw, open: !data?.arena.open }) }), '报名状态已更新'); }}>
-        <label>比赛周<select value={gw} onChange={event => setGw(Number(event.target.value))}>{Array.from({ length: 12 }, (_, i) => <option key={i + 9} value={i + 9}>GW{i + 9}</option>)}</select></label>
-        <p>当前 GW{data?.arena.gw} · {data?.arena.open ? '已开放' : '未开放'} · {activeDuels.length}/5 组<br /><small>DDL {chinaTime(data?.arena.deadline)}</small></p><button disabled={busy}>{data?.arena.open ? '关闭报名' : '保存并开放报名'}</button></form>
-        <p className={styles.muted}>DDL 自动停止提交。先到先得，每轮最多 5 组，双方本轮只能参加一组；每位玩家在 GW9–GW20 有 5 次主动挑战权，平局返还。</p></section>
+      <section className={styles.panel}><h2>报名时间</h2>
+        <p>GW{data?.arena.gw} · {data?.arena.open ? '已开放' : '未开放'} · 已报名 {activeDuels.length} 组<br /><small>开放 {chinaTime(data?.arena.opensAt)} · DDL {chinaTime(data?.arena.deadline)}</small></p>
+        <p className={styles.muted}>每轮 DDL 前 12 小时自动开放，DDL 截止。报名不限组数，按提交顺序选出 5 组；同队长不计并顺延，未入选不扣次数。双方本轮只能参与一组；GW9–GW20 共 5 次主动挑战权，平局返还。</p></section>
       <section className={styles.panel}><div className={styles.sectionHead}><h2>决斗记录</h2><label><input type="checkbox" checked={showRemoved} onChange={event => setShowRemoved(event.target.checked)} /> 显示已移除</label></div>
-        <div className={styles.tableWrap}><table><thead><tr><th>比赛周</th><th>提交时间（北京时间）</th><th>发起者 → 对手</th><th>结果</th><th>状态</th><th>操作</th></tr></thead><tbody>{data?.duels.filter(item => showRemoved || !item.deleted_at).map(item => <tr key={item.id}><td>GW{item.gw}</td><td>{chinaTime(item.created_at)}</td><td>{item.challengerName}<small>ID {item.challenger_id}</small> → {item.targetName}<small>ID {item.target_id}</small></td><td>{item.settled_at ? `${item.challenger_score} : ${item.target_score}` : '等待本轮结束'}</td><td>{item.deleted_at ? '已移除' : item.settled_at ? '已结算' : '已提交'}</td><td>{item.deleted_at ? item.delete_reason || '—' : <button disabled={busy} className={styles.danger} onClick={() => remove('duels', item.id, `${item.challengerName} → ${item.targetName}`)}>移除</button>}</td></tr>)}</tbody></table></div>
+        <div className={styles.tableWrap}><table><thead><tr><th>比赛周</th><th>提交时间（北京时间）</th><th>发起者 → 对手</th><th>结果</th><th>状态</th><th>操作</th></tr></thead><tbody>{data?.duels.filter(item => showRemoved || !item.deleted_at).map(item => <tr key={item.id}><td>GW{item.gw}</td><td>{chinaTime(item.created_at)}</td><td>{item.challengerName}<small>ID {item.challenger_id}</small> → {item.targetName}<small>ID {item.target_id}</small></td><td>{item.settled_at ? `${item.challenger_score} : ${item.target_score}` : item.selection_status && !['pending', 'selected'].includes(item.selection_status) ? '不计本轮' : '进行中'}</td><td>{item.deleted_at ? '已移除' : item.settled_at ? '已结算' : duelSelectionLabels[item.selection_status ?? 'pending']}</td><td>{item.deleted_at ? item.delete_reason || '—' : <button disabled={busy} className={styles.danger} onClick={() => remove('duels', item.id, `${item.challengerName} → ${item.targetName}`)}>移除</button>}</td></tr>)}</tbody></table></div>
         {!data?.duels.some(item => showRemoved || !item.deleted_at) ? <p className={styles.empty}>尚无正式提交的决斗。</p> : null}</section>
     </> : null}
     {tab === 'announcements' ? <>

@@ -1,16 +1,20 @@
+export type DuelSelection = 'pending' | 'selected' | 'same_captain' | 'overflow' | 'missing_captain';
+export const duelSelectionLabels: Record<DuelSelection, string> = { pending: '等待队长确认', selected: '已入选', same_captain: '同队长，本轮不计并返还次数', overflow: '未入选前 5 组，不扣次数', missing_captain: '队长数据不可用，不扣次数' };
 export const operationsOrigin = 'https://penguin-fantasy.pages.dev';
-export type ArenaConfig = { gw: number; open: boolean; count?: number; deadline?: string };
+export type ArenaConfig = { gw: number; open: boolean; count?: number; deadline?: string; opensAt?: string; nextOpensAt?: string; selectionReady?: boolean };
 export type Announcement = { id: string; title: string; body: string; display_day: string; deleted_at?: string | null };
 export type DuelRecord = {
   id: string; gw: number; challenger_id: number; target_id: number; challengerName: string; targetName: string;
-  created_at: string; deleted_at: string | null; delete_reason?: string; settled_at: string | null;
+  selection_status?: DuelSelection; created_at: string; deleted_at: string | null; delete_reason?: string; settled_at: string | null;
   challenger_score: number | null; target_score: number | null; challenger_delta: number | null; target_delta: number | null;
 };
 export type Community = {
   arena: ArenaConfig; announcements: Announcement[]; duels: DuelRecord[];
   members: Array<{ entryId: number; teamName: string }>;
   results: Array<{ gw: number; challenger_id: number; target_id: number; challenger_delta: number; target_delta: number }>;
+  removedDuelIds?: string[];
 };
+export type PublishedDuel = Omit<DuelRecord, 'challengerName' | 'targetName'>;
 export async function operationsFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.body) headers.set('content-type', 'application/json');

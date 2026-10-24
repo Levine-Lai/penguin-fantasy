@@ -291,7 +291,7 @@ test("locks captain picks after DDL and publishes base points once at 07:30", as
   assert.match(worker, /url\.pathname === "\/api\/history"/);
   assert.match(worker, /getSeasonDeadlines\(env\)/);
   assert.match(worker, /deadlineTime: event\.deadline_time/);
-  assert.match(worker, /FPL_CACHE\.put\("snapshot:history"/);
+  assert.match(worker, /publishedHistory\(env\)/);
   assert.match(workerReadme, /Starting 90 minutes after each official GW/);
   assert.match(workerReadme, /At Beijing time 07:30/);
 });
