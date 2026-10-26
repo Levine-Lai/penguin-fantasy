@@ -175,8 +175,8 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /本章节尚无队长选择记录/);
   assert.match(page, /gwFrom: 9,[\s\S]{0,40}gwTo: 20,/);
   assert.doesNotMatch(page, /<header><strong>队长选择记录<\/strong><small>见习者集结<\/small><\/header>/);
-  assert.match(page, /useState<StageId>\(initialStage \?\? \(isArenaPreview \? 2 : 1\)\)/);
-  assert.match(page, /item\.id === \(isArenaPreview \? 2 : 1\) \? <i>当前<\/i>/);
+  assert.match(page, /const activeStage = selectedStage \?\? currentStage/);
+  assert.match(page, /item\.id === currentStage \? <i>当前<\/i>/);
   assert.match(page, /className="brand-emblem"/);
   assert.match(page, /className="stage-relic"/);
   assert.match(page, /assets\/stages\/stage-\$\{item\.id\}\.webp/);

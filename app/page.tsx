@@ -1,7 +1,8 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import { currentTrialBootstrapScript, fallbackGwDeadlines, type GwDeadline } from "./current-trial";
+import { currentStageAt, type StageId } from "./current-stage";
 import staticFplData from "./static-fpl-data.json";
 import LiveArena from './arena/live-arena';
 import { loadCommunity, recordPlayerLogin, type Community, type PublishedDuel } from './operations-client';
@@ -9,7 +10,6 @@ import { loadCommunity, recordPlayerLogin, type Community, type PublishedDuel } 
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const fplApiBase = "https://penguin-fantasy.pages.dev";
 
-type StageId = 1 | 2 | 3 | 4 | 5;
 type CaptainStatus = "not_started" | "playing" | "finished";
 type RankedPlayer = { entryId: number; name: string; rank: number | null; gpc: number; gpcStatus?: CaptainStatus; captainTotal: number; captainRateTotal: number; hp: number; history: CaptainHistoryEntry[] };
 type CaptainHistoryEntry = { gw: number; captain: string; rate: number; points: number; life: number; duelLife?: number; status?: CaptainStatus; usedViceCaptain?: boolean };
@@ -64,6 +64,7 @@ function isHistoryResponse(value: unknown): value is HistoryResponse {
 
 const bundledFplData = staticFplData as StaticFplData;
 const bundledSnapshotTime = Date.parse(bundledFplData.generatedAt);
+const subscribeToHydration = () => () => {};
 
 function readCachedFplPayload<T>(key: string): CachedFplPayload<T> | null {
   try {
@@ -470,22 +471,23 @@ function RankedPlayerCells({ player }: { player: RankedPlayer }) {
   );
 }
 
-function CaptainSelectorList({ captain }: { captain: CaptainPopularity }) {
+function CaptainSelectorList({ captain, id }: { captain: CaptainPopularity; id: string }) {
   const pageSize = 10;
   const [page, setPage] = useState(0);
-  const pageCount = Math.ceil(captain.selectors.length / pageSize);
-  const visibleSelectors = captain.selectors.slice(page * pageSize, (page + 1) * pageSize);
+  const pageCount = Math.max(1, Math.ceil(captain.selectors.length / pageSize));
+  const currentPage = Math.min(page, pageCount - 1);
+  const visibleSelectors = captain.selectors.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
 
   return (
-    <section className="captain-selector-detail" aria-label={`选择 ${captain.name} 的玩家`}>
+    <section id={id} className="captain-selector-detail" aria-label={`选择 ${captain.name} 的玩家`}>
       <header><strong>选择该队长的玩家</strong><small>{captain.selections} 人</small></header>
       <ol>
-        {visibleSelectors.map((teamName, index) => <li key={teamName}><span>{page * pageSize + index + 1}</span><strong>{teamName}</strong></li>)}
+        {visibleSelectors.map((teamName, index) => <li key={teamName}><span>{currentPage * pageSize + index + 1}</span><strong>{teamName}</strong></li>)}
       </ol>
-      {pageCount > 1 ? <nav className="captain-selector-pagination" aria-label={`${captain.name} 选择者分页`}>
-        <button type="button" onClick={() => setPage((current) => Math.max(0, current - 1))} disabled={page === 0} aria-label="上一页"><span aria-hidden="true">‹</span></button>
-        <strong>第 {page + 1} 页</strong>
-        <button type="button" onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))} disabled={page === pageCount - 1} aria-label="下一页"><span aria-hidden="true">›</span></button>
+      {pageCount > 1 ? <nav className="ranking-pagination captain-selector-pagination" aria-label={`${captain.name} 选择者分页`}>
+        <button type="button" onClick={() => setPage(Math.max(0, currentPage - 1))} disabled={currentPage === 0} aria-label="上一页"><span aria-hidden="true">‹</span></button>
+        <strong>第 {currentPage + 1} 页</strong>
+        <button type="button" onClick={() => setPage(Math.min(pageCount - 1, currentPage + 1))} disabled={currentPage === pageCount - 1} aria-label="下一页"><span aria-hidden="true">›</span></button>
       </nav> : null}
     </section>
   );
@@ -516,7 +518,8 @@ function KnockoutPanel() {
 
 export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactNode; initialStage?: StageId }) {
   const isArenaPreview = Boolean(arenaPreview);
-  const [activeStage, setActiveStage] = useState<StageId>(initialStage ?? (isArenaPreview ? 2 : 1));
+  const isHydrated = useSyncExternalStore(subscribeToHydration, () => true, () => false);
+  const [selectedStage, setSelectedStage] = useState<StageId | null>(initialStage ?? (isArenaPreview ? 2 : null));
   const [expandedPlayer, setExpandedPlayer] = useState<number | null>(null);
   const [rankingPage, setRankingPage] = useState(0);
   const [leagueTeams, setLeagueTeams] = useState<LeagueTeam[]>(() => isLeagueResponse(bundledFplData.league) ? bundledFplData.league.teams : fallbackTeams);
@@ -536,6 +539,10 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
   const leagueResponseReceivedRef = useRef(false);
   const lastRefreshAttemptRef = useRef(0);
   const lastSuccessfulRefreshRef = useRef<number | null>(Number.isFinite(bundledSnapshotTime) ? bundledSnapshotTime : null);
+  const deadlineSchedule = gwDeadlines.length > 0 ? gwDeadlines : fallbackGwDeadlines;
+  // Static HTML and the first client render must agree even across a chapter DDL.
+  const currentStage = isArenaPreview ? 2 : currentStageAt(isHydrated ? currentTime : bundledSnapshotTime, deadlineSchedule);
+  const activeStage = selectedStage ?? currentStage;
   const stage = stages.find((item) => item.id === activeStage) ?? stages[1];
 
   useEffect(() => {
@@ -655,7 +662,8 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
   }, []);
 
   const selectStage = (stageId: StageId) => {
-    setActiveStage(stageId);
+    setSelectedStage(stageId);
+    setExpandedCaptain(null);
     setRankingPage(0);
     setExpandedPlayer(null);
   };
@@ -733,11 +741,6 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
       status: captain.status,
     })).sort((left, right) => right.selections - left.selections || right.points - left.points || left.name.localeCompare(right.name, "zh-CN"));
   }, [latestCaptainSnapshot]);
-  const deadlineSchedule = gwDeadlines.length > 0
-    ? gwDeadlines
-    : gwSnapshots.length > 0
-      ? gwSnapshots.map((snapshot) => ({ gw: snapshot.gw, deadlineTime: snapshot.deadlineTime }))
-      : fallbackGwDeadlines;
   const latestStartedGw = deadlineSchedule.reduce((latestGw, event) => {
     const deadline = Date.parse(event.deadlineTime);
     const hasStarted = Number.isFinite(deadline) && deadline <= currentTime;
@@ -835,7 +838,7 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
       <section className="stage-switcher" aria-label="选择阶段">
         {stages.map((item) => (
           <div className={`stage-slot stage-slot-${item.id} ${activeStage === item.id ? "active" : ""}`} data-stage={item.id} key={item.id}>
-            <button className={item.id === (isArenaPreview ? 2 : 1) ? "current-stage" : ""} onClick={() => selectStage(item.id)} aria-pressed={activeStage === item.id}>
+            <button className={item.id === currentStage ? "current-stage" : ""} onClick={() => selectStage(item.id)} aria-pressed={activeStage === item.id}>
               <span className="stage-relic" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -852,7 +855,7 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
               <strong className="stage-roman">{item.roman}</strong>
               <span className="stage-name">{item.title}</span>
               <small>{item.range}</small>
-              {item.id === (isArenaPreview ? 2 : 1) ? <i>当前</i> : null}
+              {item.id === currentStage ? <i>当前</i> : null}
             </button>
           </div>
         ))}
@@ -908,17 +911,18 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
           <header className="panel-title"><div><small>{latestCaptainSnapshot ? `GW${latestCaptainSnapshot.gw}` : "CURRENT GW"} · CAPTAIN PICKS</small><h2>队长选择率</h2></div></header>
           <div className="captain-rate-head"><span>队长名字</span><span>当轮分数</span><span>选择人数</span><span>选择率</span></div>
           <div className="captain-rate-list">
-            {captainPopularity.map((captain) => {
+            {captainPopularity.map((captain, index) => {
               const isRare = captain.rate < 10;
               const isExpanded = expandedCaptain === captain.name;
+              const detailId = `captain-selectors-${index}`;
               return <Fragment key={captain.name}>
-              <article className={`captain-rate-row selectable ${isExpanded ? "selected" : ""}`} role="button" tabIndex={0} aria-expanded={isExpanded} onClick={() => setExpandedCaptain((current) => current === captain.name ? null : captain.name)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setExpandedCaptain((current) => current === captain.name ? null : captain.name); } }}>
-                <strong className="captain-rate-name">{captain.name}</strong>
-                <strong className={captain.status === "not_started" ? "score-pending" : undefined}>{captain.status === "not_started" ? "未开赛" : captain.points}</strong>
+              <button type="button" className={`captain-rate-row selectable ${isExpanded ? "selected" : ""}`} aria-expanded={isExpanded} aria-controls={isExpanded ? detailId : undefined} aria-label={`${captain.name}，${captain.selections} 人选择，${isExpanded ? "收起" : "查看"}玩家名单`} onClick={() => setExpandedCaptain((current) => current === captain.name ? null : captain.name)}>
+                <strong className="captain-rate-name">{captain.name}<span className="captain-rate-toggle" aria-hidden="true">{isExpanded ? "−" : "+"}</span></strong>
+                <strong className="stat-score"><span className={captain.status === "not_started" ? "score-pending" : undefined}>{captain.status === "not_started" ? "未开赛" : captain.points}</span></strong>
                 <strong>{captain.selections} 人</strong>
                 <strong className={isRare ? "rare-captain-rate" : undefined}>{captain.rate.toFixed(1)}%</strong>
-              </article>
-              {isExpanded ? <CaptainSelectorList captain={captain} /> : null}
+              </button>
+              {isExpanded ? <CaptainSelectorList captain={captain} id={detailId} /> : null}
               </Fragment>;
             })}
           </div>
