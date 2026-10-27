@@ -4631,21 +4631,24 @@ main::before { transform: translateZ(0); }
 [data-scroll-reveal="pending"] { opacity: 0; transform: translate3d(0, 24px, 0); }
 [data-scroll-reveal="visible"] { opacity: 1; transform: none; }
 .stage-lore[data-scroll-reveal] { animation: none; }
-.captain-selector-collapse {
+.captain-selector-collapse,
+.ranking-disclosure {
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
   visibility: hidden;
   transition: grid-template-rows 380ms var(--ease-in-out), opacity 240ms var(--ease-out), visibility 0s 380ms;
 }
-.captain-selector-collapse[data-open="true"] {
+.captain-selector-collapse[data-open="true"],
+.ranking-disclosure[data-open="true"] {
   grid-template-rows: 1fr;
   opacity: 1;
   visibility: visible;
   transition: grid-template-rows 380ms var(--ease-in-out), opacity 300ms var(--ease-out), visibility 0s;
 }
-.captain-selector-clip { min-height: 0; min-width: 0; overflow: clip; }
-.captain-selector-collapse:not([data-open="true"]) .captain-selector-clip { pointer-events: none; }
+.captain-selector-clip, .ranking-disclosure-clip { min-height: 0; min-width: 0; overflow: clip; }
+.captain-selector-collapse:not([data-open="true"]) .captain-selector-clip,
+.ranking-disclosure:not([data-open="true"]) .ranking-disclosure-clip { pointer-events: none; }
 
 /* A single geometry for enabled/disabled arrows and both kinds of pagination. */
 .ranking-pagination {
@@ -4692,5 +4695,7 @@ main::before { transform: translateZ(0); }
 .ranking-pagination strong { font-size: 1rem; line-height: 1.3; }
 @media (prefers-reduced-motion: reduce) {
   [data-scroll-reveal], [data-scroll-reveal="pending"] { opacity: 1; transform: none; transition: none !important; }
-  .captain-selector-collapse { transition: none !important; }
+  .captain-selector-collapse, .ranking-disclosure { transition: none !important; }
 }
+
+.ranking-disclosure .rank-history-wrap { animation: none; }

@@ -872,8 +872,10 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
           <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>
           {myRanking ? <section className="my-ranking-strip" id="my-ranking" aria-label="我的成绩">
             <header><div><small>MY STANDING</small><strong>{myRanking.name}</strong></div></header>
-            <article className={`rank-row selectable current-player-row ${myStandingExpanded ? "selected" : ""}`} role="button" tabIndex={0} aria-expanded={myStandingExpanded} onClick={() => setMyStandingExpanded((expanded) => !expanded)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setMyStandingExpanded((expanded) => !expanded); } }}><RankedPlayerCells player={myRanking} /></article>
-            {myStandingExpanded ? <div className="rank-history-wrap"><InlineCaptainHistory playerName={myRanking.name} history={myRanking.history} currentGwLabel={currentTrialLabel} stage={stage} /></div> : null}
+            <article className={`rank-row selectable current-player-row ${myStandingExpanded ? "selected" : ""}`} role="button" tabIndex={0} aria-expanded={myStandingExpanded} aria-controls="my-ranking-history" onClick={() => setMyStandingExpanded((expanded) => !expanded)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setMyStandingExpanded((expanded) => !expanded); } }}><RankedPlayerCells player={myRanking} /></article>
+            <div id="my-ranking-history" className="ranking-disclosure" data-open={myStandingExpanded} aria-hidden={!myStandingExpanded} inert={!myStandingExpanded}>
+              <div className="ranking-disclosure-clip"><div className="rank-history-wrap"><InlineCaptainHistory playerName={myRanking.name} history={myRanking.history} currentGwLabel={currentTrialLabel} stage={stage} /></div></div>
+            </div>
           </section> : null}
           <div className="ranking-head"><span>阶位</span><span>玩家 ID</span><span>当周队长得分</span><span>队长总分</span><span>血量</span></div>
           <div className="ranking-list">
@@ -894,10 +896,13 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
                   role="button"
                   tabIndex={0}
                   aria-expanded={expandedPlayer === entryId}
+                  aria-controls={`ranking-history-${entryId}`}
                 >
                   <RankedPlayerCells player={player} />
                 </article>
-                {expandedPlayer === entryId ? <div className="rank-history-wrap"><InlineCaptainHistory playerName={name} history={history} currentGwLabel={currentTrialLabel} stage={stage} /></div> : null}
+                <div id={`ranking-history-${entryId}`} className="ranking-disclosure" data-open={expandedPlayer === entryId} aria-hidden={expandedPlayer !== entryId} inert={expandedPlayer !== entryId}>
+                  <div className="ranking-disclosure-clip"><div className="rank-history-wrap"><InlineCaptainHistory playerName={name} history={history} currentGwLabel={currentTrialLabel} stage={stage} /></div></div>
+                </div>
               </Fragment>;
             })}
           </div>
