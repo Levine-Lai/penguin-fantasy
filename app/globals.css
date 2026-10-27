@@ -4622,3 +4622,75 @@ main::before { transform: translateZ(0); }
   html { scroll-behavior: auto; }
   .captain-rate-row { transition: none; }
 }
+/* Scroll entrance and disclosure motion share the existing glacial palette.
+ * Hallmark · pre-emit critique: P5 H4 E4 S5 R5 V4.
+ */
+[data-scroll-reveal] {
+  transition: opacity 560ms var(--ease-out), transform 560ms var(--ease-out);
+}
+[data-scroll-reveal="pending"] { opacity: 0; transform: translate3d(0, 24px, 0); }
+[data-scroll-reveal="visible"] { opacity: 1; transform: none; }
+.stage-lore[data-scroll-reveal] { animation: none; }
+.captain-selector-collapse {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition: grid-template-rows 380ms var(--ease-in-out), opacity 240ms var(--ease-out), visibility 0s 380ms;
+}
+.captain-selector-collapse[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  transition: grid-template-rows 380ms var(--ease-in-out), opacity 300ms var(--ease-out), visibility 0s;
+}
+.captain-selector-clip { min-height: 0; min-width: 0; overflow: clip; }
+.captain-selector-collapse:not([data-open="true"]) .captain-selector-clip { pointer-events: none; }
+
+/* A single geometry for enabled/disabled arrows and both kinds of pagination. */
+.ranking-pagination {
+  --pager-button-size: max(2.75rem, 44px);
+  width: min(calc(100% - var(--space-md)), 24rem);
+  min-height: 4.25rem;
+  margin-inline: auto;
+  padding: var(--space-xs);
+  grid-template-columns: var(--pager-button-size) minmax(0, 1fr) var(--pager-button-size);
+  align-items: center;
+  justify-items: center;
+  gap: var(--space-sm);
+}
+.ranking-pagination button,
+.ranking-pagination button:disabled {
+  display: grid;
+  place-items: center;
+  width: var(--pager-button-size);
+  height: var(--pager-button-size);
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background-color: var(--color-clear);
+  background-image: var(--score-slot-image);
+  background-position: center;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  clip-path: none;
+  filter: none;
+  font-family: var(--font-label);
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--color-accent);
+  opacity: 1;
+  cursor: pointer;
+}
+.ranking-pagination button:disabled { color: var(--color-muted); opacity: .38; cursor: not-allowed; }
+.ranking-pagination button > span { display: block; line-height: 1; transform: none; }
+.ranking-pagination > strong,
+.ranking-pagination > span { min-width: 0; text-align: center; white-space: nowrap; }
+.ranking-pagination strong { font-size: 1rem; line-height: 1.3; }
+@media (prefers-reduced-motion: reduce) {
+  [data-scroll-reveal], [data-scroll-reveal="pending"] { opacity: 1; transform: none; transition: none !important; }
+  .captain-selector-collapse { transition: none !important; }
+}

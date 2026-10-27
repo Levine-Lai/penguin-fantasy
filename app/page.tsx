@@ -916,13 +916,15 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
               const isExpanded = expandedCaptain === captain.name;
               const detailId = `captain-selectors-${index}`;
               return <Fragment key={captain.name}>
-              <button type="button" className={`captain-rate-row selectable ${isExpanded ? "selected" : ""}`} aria-expanded={isExpanded} aria-controls={isExpanded ? detailId : undefined} aria-label={`${captain.name}，${captain.selections} 人选择，${isExpanded ? "收起" : "查看"}玩家名单`} onClick={() => setExpandedCaptain((current) => current === captain.name ? null : captain.name)}>
+              <button type="button" className={`captain-rate-row selectable ${isExpanded ? "selected" : ""}`} aria-expanded={isExpanded} aria-controls={detailId} aria-label={`${captain.name}，${captain.selections} 人选择，${isExpanded ? "收起" : "查看"}玩家名单`} onClick={() => setExpandedCaptain((current) => current === captain.name ? null : captain.name)}>
                 <strong className="captain-rate-name">{captain.name}<span className="captain-rate-toggle" aria-hidden="true">{isExpanded ? "−" : "+"}</span></strong>
                 <strong className="stat-score"><span className={captain.status === "not_started" ? "score-pending" : undefined}>{captain.status === "not_started" ? "未开赛" : captain.points}</span></strong>
                 <strong>{captain.selections} 人</strong>
                 <strong className={isRare ? "rare-captain-rate" : undefined}>{captain.rate.toFixed(1)}%</strong>
               </button>
-              {isExpanded ? <CaptainSelectorList captain={captain} id={detailId} /> : null}
+              <div className="captain-selector-collapse" data-open={isExpanded} aria-hidden={!isExpanded} inert={!isExpanded}>
+                <div className="captain-selector-clip"><CaptainSelectorList captain={captain} id={detailId} /></div>
+              </div>
               </Fragment>;
             })}
           </div>

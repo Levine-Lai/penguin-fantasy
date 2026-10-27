@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { preload } from "react-dom";
 import "./globals.css";
 import SitePresence from './site-presence';
+import ScrollReveal from './scroll-reveal';
 
 const basePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/[^a-zA-Z0-9/_-]/g, "");
 
@@ -22,7 +23,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <link rel="icon" href={`${basePath}/penguin-cup-logo.png`} />
         <style>{`:root{--asset-frozen-abyss:url("${basePath}/frozen-abyss-hero.webp");--asset-penguin-logo:url("${basePath}/penguin-cup-logo.webp")}`}</style>
       </head>
-      <body><SitePresence />{children}</body>
+      <body><SitePresence /><ScrollReveal />{children}</body>
     </html>
   );
 }
