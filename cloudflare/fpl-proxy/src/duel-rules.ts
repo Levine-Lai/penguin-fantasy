@@ -1,6 +1,6 @@
 import type { OpsEnv } from './operations.ts';
 
-export type ArenaWindow = { gw: number; open: boolean; deadline?: string; opensAt?: string; nextOpensAt?: string };
+export type ArenaWindow = { gw: number; open: boolean; deadline?: string; opensAt?: string; closesAt?: string; nextOpensAt?: string };
 type Events = { value: { events: Array<{ id: number; deadline_time: string }> } };
 export async function arenaWindow(env: OpsEnv, now = Date.now()): Promise<ArenaWindow> {
   const cached = await env.FPL_CACHE.get<Events>('fpl:bootstrap', 'json');
@@ -8,6 +8,18 @@ export async function arenaWindow(env: OpsEnv, now = Date.now()): Promise<ArenaW
     .sort((a, b) => Date.parse(a.deadline_time) - Date.parse(b.deadline_time));
   const next = events.find(e => now < Date.parse(e.deadline_time));
   const previous = events.filter(e => now >= Date.parse(e.deadline_time)).at(-1);
+  // An operator can grant a bounded test window without changing the official DDL.
+  const setting = await env.OPS_DB?.prepare("SELECT value FROM settings WHERE key='arena_test_window'").first<{ value: string }>();
+  if (setting && next) {
+    try {
+      const test = JSON.parse(setting.value) as { gw: number; opensAt: string; closesAt: string };
+      const start = Date.parse(test.opensAt); const end = Date.parse(test.closesAt);
+      if (test.gw === next.id && end > start && end - start <= 24 * 3600000 && now >= start && now < end && now < Date.parse(next.deadline_time)) {
+        return { gw: next.id, deadline: next.deadline_time, open: true, opensAt: test.opensAt,
+          closesAt: new Date(Math.min(end, Date.parse(next.deadline_time))).toISOString() };
+      }
+    } catch { /* Invalid settings leave the automatic schedule in control. */ }
+  }
   const event = next && now >= Date.parse(next.deadline_time) - 12 * 3600000 ? next : previous ?? next;
   if (!event) return { gw: 9, open: false };
   const opensAt = new Date(Date.parse(event.deadline_time) - 12 * 3600000).toISOString();

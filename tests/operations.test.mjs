@@ -512,3 +512,45 @@ test('capture cron finalizes the queue from already locked picks without refetch
     assert.equal((await env.OPS_DB.prepare("SELECT COUNT(*) AS count FROM duels WHERE selection_status='selected'").first()).count, 5);
   } finally { globalThis.fetch = original; }
 });
+
+test('temporary registration opens before the automatic window, keeps the official DDL, and expires', async () => {
+  const { db, cache, env, request } = await setup();
+  const ddl = new Date(Date.now() + 48 * 3600000).toISOString();
+  cache.set('fpl:bootstrap', { value: { events: [{ id: 9, deadline_time: ddl }] } });
+  assert.equal((await arenaWindow(env)).open, false);
+  const setting = { gw: 9, opensAt: new Date(Date.now() - 1000).toISOString(), closesAt: new Date(Date.now() + 3600000).toISOString() };
+  const write = value => db.prepare("INSERT INTO settings(key,value) VALUES ('arena_test_window',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(JSON.stringify(value)).run();
+  await write(setting);
+  const feed = await (await request('/community')).json();
+  assert.equal(feed.arena.open, true); assert.equal(feed.arena.deadline, ddl);
+  assert.equal(feed.arena.closesAt, setting.closesAt); assert.equal('count' in feed.arena, false);
+  assert.deepEqual(feed.duels, []);
+  const { token } = await (await request('/player/session', 'POST', { entryId: 1 })).json();
+  const headers = { authorization: `Bearer ${token}` };
+  assert.equal((await request('/duels', 'POST', { gw: 9, targetId: 2 }, headers)).status, 201);
+  assert.equal((await request('/duels', 'POST', { gw: 9, targetId: 3 }, headers)).status, 409);
+  const other = await (await request('/player/session', 'POST', { entryId: 3 })).json();
+  assert.equal((await request('/duels', 'POST', { gw: 9, targetId: 2 }, { authorization: `Bearer ${other.token}` })).status, 409);
+  await write({ ...setting, closesAt: new Date(Date.now() - 100).toISOString() });
+  assert.equal((await arenaWindow(env)).open, false);
+  assert.equal(await submitDuel(db, 9, 3, 4, 'expired-test', { deadline: ddl }), false);
+  assert.equal((await request('/duels', 'POST', { gw: 9, targetId: 4 }, { authorization: `Bearer ${other.token}` })).status, 409);
+});
+
+test('temporary registration cannot authorize a different round, future, overlong, or post-DDL window', async () => {
+  const { db, env, cache } = await setup();
+  const now = Date.now(); const ddl = new Date(now + 48 * 3600000).toISOString();
+  cache.set('fpl:bootstrap', { value: { events: [{ id: 9, deadline_time: ddl }] } });
+  const valid = { gw: 9, opensAt: new Date(now - 1000).toISOString(), closesAt: new Date(now + 3600000).toISOString() };
+  const write = value => db.prepare("INSERT INTO settings(key,value) VALUES ('arena_test_window',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(JSON.stringify(value)).run();
+  for (const value of [{ ...valid, gw: 10 }, { ...valid, opensAt: new Date(now + 60000).toISOString() }, { ...valid, closesAt: new Date(now + 25 * 3600000).toISOString() }]) {
+    await write(value); assert.equal((await arenaWindow(env)).open, false);
+    assert.equal(await submitDuel(db, 9, 1, 2, crypto.randomUUID(), { deadline: ddl }), false);
+  }
+  await write(valid);
+  assert.equal(await submitDuel(db, 9, 1, 2, 'after-ddl', { deadline: new Date(now - 1000).toISOString() }), false);
+  // Revoke after the request's initial open check; the insert must independently reject it.
+  assert.equal((await arenaWindow(env)).open, true);
+  await db.prepare("DELETE FROM settings WHERE key='arena_test_window'").run();
+  assert.equal(await submitDuel(db, 9, 1, 2, 'revoked-test', { deadline: ddl }), false);
+});

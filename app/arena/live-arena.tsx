@@ -86,14 +86,14 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   }, []);
   const deadline = community?.arena.deadline;
   useEffect(() => {
-    const transitions = [community?.arena.opensAt, community?.arena.nextOpensAt, deadline,
+    const transitions = [community?.arena.opensAt, community?.arena.closesAt, community?.arena.nextOpensAt, deadline,
       deadline ? new Date(Date.parse(deadline) + 100 * 60000).toISOString() : undefined];
     const next = transitions.filter((value): value is string => Boolean(value)).map(Date.parse).filter(time => time > Date.now()).sort((a, b) => a - b)[0];
     const delay = next - Date.now();
     if (!Number.isFinite(delay) || delay <= 0 || delay > 2147483000) return;
     const timer = window.setTimeout(() => { setClock(Date.now()); void reload().catch(() => {}); }, delay + 1000);
     return () => window.clearTimeout(timer);
-  }, [clock, deadline, community?.arena.opensAt, community?.arena.nextOpensAt, reload]);
+  }, [clock, deadline, community?.arena.opensAt, community?.arena.closesAt, community?.arena.nextOpensAt, reload]);
   useEffect(() => {
     let checkedAt = Date.now();
     const updated = (event: Event) => {
@@ -147,7 +147,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   };
   const round = community?.arena;
   const revealed = Boolean(round?.deadline && clock >= Date.parse(round.deadline));
-  const closed = !round?.open || revealed;
+  const closed = !round?.open || revealed || Boolean(round.closesAt && clock >= Date.parse(round.closesAt));
   const locked = busy || uncertain || closed || !mine || mine.gw !== round?.gw || mine.submitted || mine.remaining <= 0;
   const query = search.trim().toLocaleLowerCase();
   const candidates = community?.members.filter(member => member.entryId !== identity && (

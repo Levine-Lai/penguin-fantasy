@@ -74,3 +74,5 @@ select up to five eligible groups in submission order. Same-captain, unreadable-
 and overflow submissions do not consume rights or affect HP. Selection waits for
 all submitted participants to be checked, then freezes statuses and a per-round
 marker in one D1 transaction. Existing settled rounds retain their selections.
+
+临时真人测试报名使用 D1 `settings` 中的 `arena_test_window`：`{gw, opensAt, closesAt}`，时间使用 ISO UTC。仅允许下一轮、尚未到 DDL 且最长 24 小时的窗口；结束后自动回到 DDL 前 12 小时的常规安排。窗口同时受报名原子 SQL 校验，不能绕过参与人互斥、挑战次数或官方 DDL。运营开启时保留审计记录；测试报名仍为正式记录，不自动删除。

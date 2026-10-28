@@ -135,9 +135,16 @@ export async function submitDuel(db: OpsDatabase, gw: number, challengerId: numb
       (challenger_id IN (?,?) OR target_id IN (?,?)))
     AND (SELECT COUNT(*) FROM duels WHERE challenger_id=? AND gw BETWEEN 9 AND 20 AND deleted_at IS NULL
       AND ${usedChallengeSql})<5
-    ${gate ? `AND julianday('now') >= julianday(?,'-12 hours') AND julianday('now') < julianday(?)` : ''}`)
+    ${gate ? `AND (julianday('now') >= julianday(?,'-12 hours') OR EXISTS (
+      SELECT 1 FROM settings WHERE key='arena_test_window' AND json_valid(value)
+      AND json_extract(value,'$.gw')=?
+      AND julianday(json_extract(value,'$.closesAt')) > julianday(json_extract(value,'$.opensAt'))
+      AND julianday(json_extract(value,'$.closesAt')) <= julianday(json_extract(value,'$.opensAt'),'+1 day')
+      AND julianday('now') >= julianday(json_extract(value,'$.opensAt'))
+      AND julianday('now') < julianday(json_extract(value,'$.closesAt'))
+    )) AND julianday('now') < julianday(?)` : ''}`)
     .bind(id, gw, challengerId, targetId, new Date().toISOString(), challengerId, targetId, gw,
-      challengerId, targetId, challengerId, targetId, challengerId, ...(gate ? [gate.deadline, gate.deadline] : [])).run();
+      challengerId, targetId, challengerId, targetId, challengerId, ...(gate ? [gate.deadline, gw, gate.deadline] : [])).run();
   return result.meta.changes === 1;
 }
 export async function handleOperations(request: Request, env: OpsEnv): Promise<Response | null> {
