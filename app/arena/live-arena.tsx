@@ -10,6 +10,15 @@ export type DuelPlayer = { entryId: number; name: string; rank: number | null; h
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 const isFeatured = (name: string) => name === '企鹅' || name === 'SSU - Sakai Moka';
 
+function ConfirmHealth({ hp }: { hp: number }) {
+  return <span className={styles.confirmHealth} aria-label={`血量 ${hp}`}>
+    <span>血量 {hp}</span>
+    <span className={styles.confirmDrops} style={{ '--hp-columns': Math.max(1, Math.min(6, hp)) } as CSSProperties} aria-hidden="true">
+      {Array.from({ length: hp }, (_, index) => <i className="blood-drop" key={index} />)}
+    </span>
+  </span>;
+}
+
 export default function LiveArena({ player, players }: { player: DuelPlayer | null; players: DuelPlayer[] }) {
   const [community, setCommunity] = useState<Community | null>(null);
   const [session, setSession] = useState<PlayerSession | null>(null);
@@ -160,6 +169,8 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
     !query || member.teamName.toLocaleLowerCase().includes(query) || String(member.entryId).includes(query)
   ));
   const assets = { '--arena-frame-image': `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.webp")`, '--pixel-heart-image': `url("${siteBasePath}/assets/leaderboard/pixel-heart.svg")` } as CSSProperties;
+  const targetHealth = confirmation ? health.get(confirmation.targetId) ?? 0 : 0;
+  const healthRows = Math.max(1, Math.ceil(Math.max(player?.hp ?? 0, targetHealth) / 6));
   return <div className={frame.preview}>
     <section className={`${frame.arena} ${styles.panel}`} style={assets} aria-label="正式决斗">
       <header className={`${frame.arenaHeader} ${styles.header}`}>
@@ -201,15 +212,15 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
     <dialog ref={confirmDialog} className={styles.confirmDialog} style={assets} aria-labelledby="confirm-duel-title" aria-describedby="confirm-duel-note" onCancel={event => { if (busy) event.preventDefault(); else setConfirmation(null); }} onClick={event => { if (event.target === event.currentTarget && !busy) { const rect = event.currentTarget.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) setConfirmation(null); } }}>
       <form onSubmit={submit}>
         <header><small>GW{confirmation?.gw ?? round?.gw ?? 9}</small><h2 id="confirm-duel-title">确认发起决斗</h2></header>
-        <div className={styles.confirmPlayers}>
+        <div className={styles.confirmPlayers} style={{ '--confirmation-heart-rows': healthRows } as CSSProperties}>
           <div className={styles.confirmPlayer}>
             <small>挑战者</small><strong>{player?.name}</strong>
-            <span className={styles.confirmHealth}>血量 {player?.hp ?? 0}<i className="blood-drop" aria-hidden="true" /></span>
+            <ConfirmHealth hp={player?.hp ?? 0} />
           </div>
           <span className={styles.confirmVersus}>VS</span>
           <div className={styles.confirmPlayer}>
             <small>被挑战者</small><strong>{confirmation?.targetName}</strong>
-            <span className={styles.confirmHealth}>血量 {confirmation ? health.get(confirmation.targetId) ?? 0 : 0}<i className="blood-drop" aria-hidden="true" /></span>
+            <ConfirmHealth hp={targetHealth} />
           </div>
         </div>
         <p id="confirm-duel-note">每轮只能提交一次，提交后不能修改。</p>

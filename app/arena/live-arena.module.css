@@ -50,7 +50,9 @@
 .confirmPlayer > small { color: var(--arena-muted); font-size: .75rem; }
 .confirmPlayer > strong { max-width: 100%; overflow-wrap: anywhere; font-size: 1.1rem; }
 .confirmVersus { color: var(--arena-cyan); font: 700 .8rem var(--font-label); }
-.confirmHealth { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; color: #ff879a; font-size: .85rem; }
+.confirmHealth { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .45rem; color: #ff879a; font-size: .85rem; }
+.confirmDrops { display: grid; grid-template-columns: repeat(var(--hp-columns), .9rem); gap: .2rem; max-width: 100%; min-height: calc(var(--confirmation-heart-rows, 1) * 1rem - .2rem); align-content: start; }
+.confirmDrops :global(.blood-drop) { width: .9rem; height: .8rem; }
 .confirmHealth :global(.blood-drop) { flex-shrink: 0; margin: 0; }
 .confirmDialog p { color: var(--arena-muted); line-height: 1.7; font-size: .85rem; margin: 1rem 0 1.5rem; }
 .confirmDialog p.failureDetail { color: #ff9aa9; overflow-wrap: anywhere; }

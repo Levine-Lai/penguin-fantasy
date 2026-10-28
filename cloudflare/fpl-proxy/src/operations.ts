@@ -173,6 +173,7 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
         return response({ ok: true }, request, 200, { 'set-cookie': `${cookieName}=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=28800` });
       }
       await adminSession(env, request);
+      if (path === '/api/admin/session' && request.method === 'GET') return response({ authenticated: true }, request);
       if (path === '/api/admin/logout' && request.method === 'POST') return response({ ok: true }, request, 200, { 'set-cookie': `${cookieName}=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0` });
       if (path === '/api/admin/overview' && request.method === 'GET') {
         const selectedDay = /^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get('day') ?? '') ? url.searchParams.get('day')! : beijingDay();

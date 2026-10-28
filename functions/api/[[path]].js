@@ -1,6 +1,6 @@
 const upstreamOrigin = "https://penguin-cup-fpl-api.nbafantasy.workers.dev";
 const publicApiPath = /^(?:health|status|league|history|gw\/\d+)$/;
-const operationsPath = /^(?:community|visits|player\/session|duels(?:\/mine)?|admin\/(?:login|logout|overview|arena|player-code|announcements(?:\/[\w-]+)?|duels\/[\w-]+))$/;
+const operationsPath = /^(?:community|visits|player\/session|duels(?:\/mine)?|admin\/(?:login|logout|session|overview|arena|player-code|announcements(?:\/[\w-]+)?|duels\/[\w-]+))$/;
 const allowedOrigins = new Set(["https://penguin-fantasy.pages.dev", "https://levine-lai.github.io", "https://penguin-cup-2627.hazy-lemon-8599.chatgpt.site"]);
 
 function corsHeaders(request) {
@@ -44,6 +44,27 @@ export async function onRequest(context) {
   const upstreamUrl = new URL(`/api/${apiPath}${incomingUrl.search}`, upstreamOrigin);
 
   try {
+    // Finish the bounded JSON upload before the second edge hop. Forwarding the
+    // browser's live stream can leave the upstream reader waiting for its end.
+    let upload;
+    if (["POST", "DELETE"].includes(request.method) && request.body) {
+      const reader = request.body.getReader();
+      const chunks = []; let length = 0;
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          length += value.byteLength;
+          if (length > 12000) {
+            await reader.cancel();
+            return Response.json({ error: "内容过长" }, { status: 413, headers: { ...cors, "cache-control": "no-store, no-transform" } });
+          }
+          chunks.push(value);
+        }
+      } finally { reader.releaseLock(); }
+      upload = new Uint8Array(length); let offset = 0;
+      for (const chunk of chunks) { upload.set(chunk, offset); offset += chunk.byteLength; }
+    }
     const forwardingHeaders = new Headers({ accept: "application/json", "accept-encoding": "identity" });
     if (isOperations) {
       for (const name of ["content-type", "cookie", "authorization", "origin", "user-agent"]) {
@@ -55,7 +76,7 @@ export async function onRequest(context) {
     const upstreamResponse = await fetch(upstreamUrl, {
       method: request.method,
       headers: forwardingHeaders,
-      ...(["POST", "DELETE"].includes(request.method) ? { body: request.body } : {}),
+      ...(upload ? { body: upload } : {}),
     });
     const headers = new Headers(upstreamResponse.headers);
     // Materialize decoded JSON and remove upstream compression metadata. Passing

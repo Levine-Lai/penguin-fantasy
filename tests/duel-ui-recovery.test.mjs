@@ -116,3 +116,29 @@ test('a missing public result feed still reports an error after the official DDL
   try { h.render(); await h.flush(); assert.ok(h.nodes('p').some(node => node.props.role === 'alert')); }
   finally { h.restore(); }
 });
+
+test('admin login completes without waiting for the dashboard and reconciles a lost acknowledgement once', async () => {
+  let busy = false, loggedIn = false, password = 'test', refreshes = 0; const paths = [];
+  const deps = { busy, authRevision: { current: 0 }, setBusy: v => { busy = v; }, setError() {}, setNotice() {}, setPassword: v => { password = v; }, setLoggedIn: v => { loggedIn = v; }, password, day: '2026-10-28', page: 0,
+    operationsFetch: async path => { paths.push(path); if (path === '/admin/login') throw new DOMException('signal timed out', 'TimeoutError'); return { authenticated: true }; },
+    refreshDashboard: () => { refreshes++; return new Promise(() => {}); } };
+  const login = new Function(...Object.keys(deps), callback('login') + ';return extracted;')(...Object.values(deps));
+  await login({ preventDefault() {} });
+  assert.equal(busy, false); assert.equal(loggedIn, true); assert.equal(password, ''); assert.equal(refreshes, 1);
+  assert.deepEqual(paths, ['/admin/login', '/admin/session']);
+});
+
+test('an explicit wrong-password rejection is never hidden by session recovery', async () => {
+  let error = '', loggedIn = false; const paths = [];
+  const deps = { busy: false, authRevision: { current: 0 }, setBusy() {}, setError: v => { error = v; }, setNotice() {}, setPassword() {}, setLoggedIn: v => { loggedIn = v; }, password: 'test', day: '2026-10-28', page: 0,
+    operationsFetch: async path => { paths.push(path); throw Object.assign(new Error('管理员密码不正确'), { status: 401 }); }, refreshDashboard: () => assert.fail('Must not open dashboard') };
+  const login = new Function(...Object.keys(deps), callback('login') + ';return extracted;')(...Object.values(deps));
+  await login({ preventDefault() {} }); assert.equal(loggedIn, false); assert.equal(error, '管理员密码不正确'); assert.deepEqual(paths, ['/admin/login']);
+});
+
+test('a stale dashboard response cannot log the administrator back in after logout', async () => {
+  let release, updates = 0; const authRevision = { current: 0 };
+  const deps = { authRevision, useCallback: fn => fn, operationsFetch: () => new Promise(resolve => { release = resolve; }), today: () => '2026-10-28', setData: () => { updates++; }, setLoggedIn: () => { updates++; } };
+  const load = new Function(...Object.keys(deps), callback('load') + ';return extracted;')(...Object.values(deps));
+  const pending = load(); authRevision.current++; release({ members: [] }); await pending; assert.equal(updates, 0);
+});

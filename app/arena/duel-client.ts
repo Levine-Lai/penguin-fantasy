@@ -14,6 +14,8 @@ export function createDuelClient(entryId: number) {
   let reading: Promise<PlayerSession> | null = null;
   let revision = 0;
   let accepted: PlayerSession | null = null;
+  let lastKnown: PlayerSession | null = null;
+  let checkedAt = 0;
   const renew = () => {
     if (!renewal) renewal = operationsFetch<{ token: string }>('/player/session', {
       method: 'POST', body: JSON.stringify({ entryId }),
@@ -32,7 +34,8 @@ export function createDuelClient(entryId: number) {
         mine = await operationsFetch<Mine>('/duels/mine', { headers: { authorization: `Bearer ${token}` } });
       }
       if (startedAtRevision < revision && accepted) return { ...accepted, token };
-      return { entryId, token, mine };
+      lastKnown = { entryId, token, mine }; checkedAt = Date.now();
+      return lastKnown;
     })().finally(() => { reading = null; });
     return reading;
   };
@@ -43,7 +46,9 @@ export function createDuelClient(entryId: number) {
   return {
     read,
     async submit(challenge: Challenge): Promise<PlayerSession> {
-      let own = await read();
+      // The form already obtained this signed status. Reuse a recent one rather
+      // than putting another network read in front of the atomic server insert.
+      let own = lastKnown && Date.now() - checkedAt < 60000 ? { ...lastKnown, token } : await read();
       validate(own, challenge);
       if (own.mine.submitted) return own;
       const post = () => operationsFetch('/duels', { method: 'POST', headers: { authorization: `Bearer ${token}` }, body: JSON.stringify({ targetId: challenge.targetId, gw: challenge.gw }) });
@@ -68,6 +73,7 @@ export function createDuelClient(entryId: number) {
       }
       // A confirmed POST remains successful even if the following GET is unavailable.
       accepted = { entryId, token, mine: { ...own.mine, submitted: true, remaining: Math.max(0, own.mine.remaining - 1), challenge: { targetId: challenge.targetId, targetName: challenge.targetName } } };
+      lastKnown = accepted; checkedAt = Date.now();
       revision += 1;
       return accepted;
     },

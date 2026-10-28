@@ -38,3 +38,26 @@ test('proxy preserves no-body semantics for HEAD responses', async () => {
     assert.equal(response.body, null); assert.match(response.headers.get('cache-control'), /no-transform/);
   } finally { globalThis.fetch = original; }
 });
+
+test('proxy forwards a completed JSON byte buffer and preserves the login cookie', async () => {
+  const original = globalThis.fetch; let calls = 0;
+  try {
+    globalThis.fetch = async (url, init) => {
+      calls++; assert.ok(init.body instanceof Uint8Array);
+      assert.deepEqual(JSON.parse(new TextDecoder().decode(init.body)), { password: '仅测试的口令' });
+      return Response.json({ ok: true }, { headers: { 'set-cookie': '__Host-penguin_admin=test; HttpOnly; Secure; SameSite=Strict; Path=/' } });
+    };
+    const response = await onRequest({ request: new Request('https://penguin-fantasy.pages.dev/api/admin/login', { method: 'POST', headers: { origin: 'https://penguin-fantasy.pages.dev', 'content-type': 'application/json' }, body: JSON.stringify({ password: '仅测试的口令' }) }), params: { path: ['admin', 'login'] }, env: { OPS_PROXY_SECRET: 'test' } });
+    assert.equal(response.status, 200); assert.equal(calls, 1); assert.match(response.headers.get('set-cookie'), /HttpOnly; Secure/);
+  } finally { globalThis.fetch = original; }
+});
+
+test('proxy bounds chunked uploads even when content-length is missing', async () => {
+  const original = globalThis.fetch; let canceled = false;
+  try {
+    globalThis.fetch = async () => assert.fail('Oversized upload must not reach the worker');
+    const body = new ReadableStream({ start(c) { c.enqueue(new Uint8Array(12001)); }, cancel() { canceled = true; } });
+    const response = await onRequest({ request: new Request('https://penguin-fantasy.pages.dev/api/admin/login', { method: 'POST', body, duplex: 'half' }), params: { path: ['admin', 'login'] }, env: { OPS_PROXY_SECRET: 'test' } });
+    assert.equal(response.status, 413); assert.equal(canceled, true);
+  } finally { globalThis.fetch = original; }
+});

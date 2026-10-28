@@ -80,3 +80,5 @@ marker in one D1 transaction. Existing settled rounds retain their selections.
 持续真人测试可设置 `arena_test_open` 为 `{ "gw": 9, "open": true }`，不设一小时或 24 小时到期。该开关优先于临时窗口，关闭时删除 `arena_test_open` 与 `arena_test_window`；正式 DDL、参与互斥和挑战次数仍由同一条原子 SQL 校验。API 代理对 JSON 使用 identity 上游和 no-transform 下游，避免部分浏览器/网络的压缩响应超时；只读请求最多重试一次，写入请求不因网络错误重发。
 
 报名区优先展示排行榜已加载的联赛名单，公共 `/community` 不作为玩家搜索或已确认提交的阻塞依赖。鉴权 `/duels/mine` 同时返回本人的报名限制及 `arena` 窗口；前端收到签名会话状态后才允许提交，后台原子校验保持不变。
+
+后台使用 `/admin/session` 检查 HttpOnly 会话，密码登录确认后独立读取管理数据；列表请求失败不会被误报为仍在登录，退出后旧请求不能恢复后台界面。代理先限量收齐 POST/DELETE JSON 再转发，保持 12000 字节上限及 Set-Cookie。确认决斗按真实血量展示爱心，每行最多六颗；最近一分钟已验证的玩家状态可用于发起请求，剩余次数与参与限制仍由服务端原子 SQL 复核。

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { operationsFetch, operationsOrigin, chinaTime, duelSelectionLabels, type ArenaConfig, type Announcement, type DuelRecord } from '../operations-client';
 import styles from './admin.module.css';
@@ -29,19 +29,37 @@ export default function AdminConsole() {
   const [day, setDay] = useState(today);
   const [page, setPage] = useState(0);
   const [showRemoved, setShowRemoved] = useState(false);
+  const authRevision = useRef(0);
 
   const load = useCallback(async (selectedDay?: string, selectedPage = 0) => {
+    const revision = authRevision.current;
     const response = await operationsFetch<Overview>(`/admin/overview?day=${selectedDay ?? today()}&page=${selectedPage}`);
+    if (revision !== authRevision.current) return;
     setData(response); setLoggedIn(true);
   }, []);
+  const refreshDashboard = useCallback((revision: number, selectedDay?: string, selectedPage = 0) => {
+    setNotice('正在读取管理数据…');
+    void load(selectedDay, selectedPage).then(() => {
+      if (revision === authRevision.current) setNotice('');
+    }).catch(reason => {
+      if (revision !== authRevision.current) return;
+      setNotice('');
+      if (reason.status === 401) { authRevision.current++; setLoggedIn(false); setData(null); setError('登录已过期，请重新登录。'); }
+      else setError('已登录，管理数据读取失败，请点击刷新数据重试。');
+    });
+  }, [load]);
   useEffect(() => {
     if (window.location.origin !== operationsOrigin && window.location.hostname !== 'localhost') {
       window.location.replace(`${operationsOrigin}/admin/`); return;
     }
     let active = true;
-    void Promise.resolve().then(() => load()).catch(reason => { if (active && reason.status !== 401) setError(reason.message); }).finally(() => { if (active) setChecking(false); });
+    const revision = authRevision.current;
+    void operationsFetch('/admin/session', { signal: AbortSignal.timeout(6000) }).then(() => {
+      if (!active || revision !== authRevision.current) return;
+      setLoggedIn(true); refreshDashboard(revision);
+    }).catch(reason => { if (active && revision === authRevision.current && reason.status !== 401) setError('登录状态读取失败，可重新登录。'); }).finally(() => { if (active) setChecking(false); });
     return () => { active = false; };
-  }, [load]);
+  }, [refreshDashboard]);
   const run = async (operation: () => Promise<unknown>, success: string, refresh = true) => {
     setBusy(true); setError(''); setNotice('');
     try {
@@ -51,12 +69,36 @@ export default function AdminConsole() {
         catch { setError(success ? '操作已完成，列表暂未刷新，请稍后刷新数据。' : '登录已完成，列表读取失败，请重试。'); }
       }
     }
-    catch (reason) { const failure = reason as Error & { status?: number }; setError(failure.message); if (failure.status === 401) setLoggedIn(false); }
+    catch (reason) { const failure = reason as Error & { status?: number }; setError(failure.message); if (failure.status === 401) { authRevision.current++; setLoggedIn(false); setData(null); } }
     finally { setBusy(false); }
   };
-  const login = (event: FormEvent) => {
+  const login = async (event: FormEvent) => {
     event.preventDefault();
-    void run(async () => { await operationsFetch('/admin/login', { method: 'POST', body: JSON.stringify({ password }) }); setPassword(''); }, '');
+    if (busy) return;
+    const revision = ++authRevision.current;
+    setBusy(true); setError(''); setNotice('');
+    try {
+      try { await operationsFetch('/admin/login', { method: 'POST', body: JSON.stringify({ password }) }); }
+      catch (reason) {
+        // A lost acknowledgement may still have installed the HttpOnly cookie.
+        // Check it once, without automatically repeating the password POST.
+        if ((reason as { status?: number }).status) throw reason;
+        try { await operationsFetch('/admin/session', { signal: AbortSignal.timeout(6000) }); }
+        catch { throw reason; }
+      }
+      if (revision !== authRevision.current) return;
+      setPassword(''); setLoggedIn(true); refreshDashboard(revision, day, page);
+    } catch (reason) { if (revision === authRevision.current) setError((reason as Error).message); }
+    finally { if (revision === authRevision.current) setBusy(false); }
+  };
+  const logout = () => {
+    if (busy) return;
+    const revision = ++authRevision.current;
+    setBusy(true); setNotice('');
+    void operationsFetch('/admin/logout', { method: 'POST', body: '{}' }).then(() => {
+      if (revision === authRevision.current) { setLoggedIn(false); setData(null); }
+    }).catch(() => { if (revision === authRevision.current) setError('退出失败，请重试'); })
+      .finally(() => { if (revision === authRevision.current) setBusy(false); });
   };
   const remove = (type: 'duels' | 'announcements', id: string, label: string) => {
     if (!window.confirm(`确认${type === 'duels' ? '移除' : '撤下'}「${label}」？`)) return;
@@ -77,11 +119,11 @@ export default function AdminConsole() {
       {error ? <p role="alert" className={styles.error}>{error}</p> : null}<button disabled={busy}>{busy ? '正在登录…' : '登录'}</button></form>
   </section></main>;
   return <main className={styles.shell}>
-    <header className={styles.header}><div><small>PENGUIN CUP · ADMIN</small><h1>联赛管理</h1></div><div className={styles.actions}><a href="/arena/" target="_blank" rel="noreferrer">正式决斗页 ↗</a><Link href="/">战榜</Link><button disabled={busy} onClick={() => void operationsFetch('/admin/logout', { method: 'POST', body: '{}' }).then(() => { setLoggedIn(false); setData(null); }).catch(() => setError('退出失败，请重试'))}>退出</button></div></header>
+    <header className={styles.header}><div><small>PENGUIN CUP · ADMIN</small><h1>联赛管理</h1></div><div className={styles.actions}><a href="/arena/" target="_blank" rel="noreferrer">正式决斗页 ↗</a><Link href="/">战榜</Link><button disabled={busy} onClick={logout}>退出</button></div></header>
     <nav className={styles.tabs} aria-label="后台模块">{tabs.map(([id, label]) => <button aria-current={tab === id ? 'page' : undefined} key={id} onClick={() => { setTab(id); }}>{label}</button>)}</nav>
     <div className={styles.toolbar}><label>统计日期（北京时间）<input type="date" value={day} onChange={event => { setDay(event.target.value); setPage(0); }} /></label><button disabled={busy || !day} onClick={() => { setPage(0); void run(() => load(day, 0), '', false); }}>刷新数据</button></div>
     {error ? <p role="alert" className={styles.error}>{error}</p> : null}{notice ? <p role="status" className={styles.notice}>{notice}</p> : null}
-    {tab === 'duels' ? <>
+    {data && tab === 'duels' ? <>
       <section className={styles.panel}><h2>报名时间</h2>
         <p>GW{data?.arena.gw} · {data?.arena.open ? '已开放' : '未开放'} · 已报名 {activeDuels.length} 组<br /><small>开放 {chinaTime(data?.arena.opensAt)} · DDL {chinaTime(data?.arena.deadline)}</small></p>
         <p className={styles.muted}>每轮 DDL 前 12 小时自动开放，DDL 截止。报名不限组数，按提交顺序选出 5 组；同队长不计并顺延，未入选不扣次数。双方本轮只能参与一组；GW9–GW20 共 5 次主动挑战权，平局返还。</p></section>
@@ -89,15 +131,15 @@ export default function AdminConsole() {
         <div className={styles.tableWrap}><table><thead><tr><th>比赛周</th><th>提交时间（北京时间）</th><th>发起者 → 对手</th><th>结果</th><th>状态</th><th>操作</th></tr></thead><tbody>{data?.duels.filter(item => showRemoved || !item.deleted_at).map(item => <tr key={item.id}><td>GW{item.gw}</td><td>{chinaTime(item.created_at)}</td><td>{item.challengerName}<small>ID {item.challenger_id}</small> → {item.targetName}<small>ID {item.target_id}</small></td><td>{item.settled_at ? `${item.challenger_score} : ${item.target_score}` : item.selection_status && !['pending', 'selected'].includes(item.selection_status) ? '不计本轮' : '进行中'}</td><td>{item.deleted_at ? '已移除' : item.settled_at ? '已结算' : duelSelectionLabels[item.selection_status ?? 'pending']}</td><td>{item.deleted_at ? item.delete_reason || '—' : <button disabled={busy} className={styles.danger} onClick={() => remove('duels', item.id, `${item.challengerName} → ${item.targetName}`)}>移除</button>}</td></tr>)}</tbody></table></div>
         {!data?.duels.some(item => showRemoved || !item.deleted_at) ? <p className={styles.empty}>尚无正式提交的决斗。</p> : null}</section>
     </> : null}
-    {tab === 'announcements' ? <>
+    {data && tab === 'announcements' ? <>
       <section className={styles.panel}><h2>发布公告</h2><form className={styles.form} onSubmit={event => { event.preventDefault(); const form = event.currentTarget; const input = new FormData(form); void run(async () => { await operationsFetch('/admin/announcements', { method: 'POST', body: JSON.stringify({ title: input.get('title'), body: input.get('body'), day: input.get('day') }) }); form.reset(); }, '公告已发布，所选日期访问的玩家可见'); }}>
         <label>展示日期（北京时间）<input name="day" type="date" defaultValue={today()} required /></label><label>标题<input name="title" maxLength={60} required /></label><label>公告内容<textarea name="body" maxLength={2000} rows={5} required /></label><button disabled={busy}>发布</button></form></section>
       <section className={styles.panel}><h2>已发布公告</h2>{data?.announcements.map(item => <article className={styles.record} key={item.id}><div><small>{item.display_day} {item.deleted_at ? '· 已撤下' : ''}</small><h3>{item.title}</h3><p className={styles.pre}>{item.body}</p></div>{!item.deleted_at ? <button disabled={busy} className={styles.danger} onClick={() => remove('announcements', item.id, item.title)}>撤下</button> : null}</article>)}{!data?.announcements.length ? <p className={styles.empty}>暂无公告。</p> : null}</section>
     </> : null}
-    {tab === 'players' ? <>
+    {data && tab === 'players' ? <>
       <section className={styles.panel}><h2>当天登录玩家 · {data?.players.length ?? 0} 人</h2><div className={styles.tableWrap}><table><thead><tr><th>玩家</th><th>首次登录</th><th>最近登录</th></tr></thead><tbody>{data?.players.map(player => <tr key={player.entry_id}><td>{name(player.entry_id)}<small>FPL ID {player.entry_id}</small></td><td>{chinaTime(player.firstLogin)}</td><td>{chinaTime(player.lastLogin)}</td></tr>)}</tbody></table></div>{!data?.players.length ? <p className={styles.empty}>当天暂无登录记录。</p> : null}</section>
       <section className={styles.panel}><h2>登录记录</h2><div className={styles.tableWrap}><table><thead><tr><th>登录时间</th><th>玩家</th><th>设备</th></tr></thead><tbody>{data?.activity.map(item => <tr key={item.id}><td>{chinaTime(item.created_at)}</td><td>{name(item.entry_id)}<small>FPL ID {item.entry_id}</small></td><td>{item.device}</td></tr>)}</tbody></table></div><div className={styles.actions}><button disabled={busy || page === 0} onClick={() => { const next = page - 1; setPage(next); void run(() => load(day, next), '', false); }}>上一页</button><span>第 {page + 1} 页</span><button disabled={busy || (data?.activity.length ?? 0) < 50} onClick={() => { const next = page + 1; setPage(next); void run(() => load(day, next), '', false); }}>下一页</button></div></section>
     </> : null}
-    {tab === 'audit' ? <section className={styles.panel}><h2>最近操作</h2><div className={styles.tableWrap}><table><thead><tr><th>时间</th><th>操作</th><th>对象</th><th>说明</th></tr></thead><tbody>{data?.logs.map(log => <tr key={log.id}><td>{chinaTime(log.created_at)}</td><td>{actionLabels[log.action] ?? log.action}</td><td>{log.target}</td><td>{log.detail || '—'}</td></tr>)}</tbody></table></div></section> : null}
+    {data && tab === 'audit' ? <section className={styles.panel}><h2>最近操作</h2><div className={styles.tableWrap}><table><thead><tr><th>时间</th><th>操作</th><th>对象</th><th>说明</th></tr></thead><tbody>{data?.logs.map(log => <tr key={log.id}><td>{chinaTime(log.created_at)}</td><td>{actionLabels[log.action] ?? log.action}</td><td>{log.target}</td><td>{log.detail || '—'}</td></tr>)}</tbody></table></div></section> : null}
   </main>;
 }

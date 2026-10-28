@@ -139,3 +139,18 @@ test('an old in-flight status response cannot erase a subsequently confirmed sub
     assert.equal((await staleRead).mine.submitted, true);
   } finally { mock.restore(); }
 });
+
+test('a recent signed status avoids a second blocking read before the server-validated challenge', async () => {
+  let reads = 0, posts = 0;
+  const mock = mockApi(path => {
+    if (path.endsWith('/session')) return { token: 'token' };
+    if (path.endsWith('/mine')) { reads++; return mine(); }
+    posts++; return { ok: true };
+  });
+  try {
+    const client = createDuelClient(1); await client.read();
+    const result = await client.submit(challenge);
+    assert.equal(result.mine.submitted, true); assert.equal(reads, 1); assert.equal(posts, 1);
+    await client.submit(challenge); assert.equal(posts, 1);
+  } finally { mock.restore(); }
+});

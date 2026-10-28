@@ -583,3 +583,12 @@ test('signed personal status includes the authoritative registration window with
   assert.ok(own.arena.deadline); assert.equal('count' in own.arena, false); assert.equal('duels' in own, false);
   assert.equal((await request('/duels/mine')).status, 401);
 });
+
+test('lightweight admin session checks require the HttpOnly administrator cookie', async () => {
+  const { request, adminHeaders, env } = await setup();
+  assert.equal((await request('/admin/session')).status, 401);
+  const response = await request('/admin/session', 'GET', undefined, adminHeaders);
+  assert.equal(response.status, 200); assert.deepEqual(await response.json(), { authenticated: true });
+  const player = await signSession(env.SESSION_SECRET, { role: 'player', entryId: 1, exp: Date.now() + 60000 });
+  assert.equal((await request('/admin/session', 'GET', undefined, { cookie: `__Host-penguin_admin=${player}` })).status, 401);
+});
