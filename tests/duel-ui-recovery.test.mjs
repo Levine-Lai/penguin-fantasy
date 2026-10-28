@@ -5,7 +5,7 @@ import ts from 'typescript';
 import { UncertainSubmission } from '../app/arena/duel-client.ts';
 
 // Run actual component event/effect callbacks with deterministic hooks and timers.
-function arenaHarness(factory) {
+function arenaHarness(factory, communityLoader) {
   const source = readFileSync(new URL('../app/arena/live-arena.tsx', import.meta.url), 'utf8');
   const js = ts.transpileModule(source, { compilerOptions: { jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   const previous = { window: globalThis.window, document: globalThis.document };
@@ -24,10 +24,10 @@ function arenaHarness(factory) {
   globalThis.window = { addEventListener: add, removeEventListener: remove, setInterval: () => 1, clearInterval() {}, setTimeout(fn, ms) { timers.set(++timerId, { fn, ms }); return timerId; }, clearTimeout: id => timers.delete(id) };
   globalThis.document = { body: { style: { overflow: '' } }, visibilityState: 'visible', addEventListener: add, removeEventListener: remove };
   const community = { arena: { gw: 9, open: true, deadline: '2099-01-01T00:00:00Z' }, members: [{ entryId: 1, teamName: 'A' }, { entryId: 2, teamName: 'B' }], duels: [], results: [] };
-  const operations = { chinaTime: x => x, loadCommunity: async () => { for (const handler of handlers.get('penguin-community-updated') ?? []) handler({ detail: community }); return community; } };
+  const operations = { chinaTime: x => x, loadCommunity: communityLoader ?? (async () => { for (const handler of handlers.get('penguin-community-updated') ?? []) handler({ detail: community }); return community; }) };
   const jsx = (type, props) => ({ type, props }), compiled = { exports: {} };
   new Function('require', 'module', 'exports', js)(name => name === 'react' ? react : name === 'react/jsx-runtime' ? { jsx, jsxs: jsx } : name.includes('operations-client') ? operations : name.includes('duel-client') ? { createDuelClient: factory, UncertainSubmission } : { default: new Proxy({}, { get: (_, key) => String(key) }) }, compiled, compiled.exports);
-  const render = () => { cursor = 0; effects = []; tree = compiled.exports.default({ player: { entryId: 1, name: 'A', hp: 3 }, players: [{ entryId: 1, hp: 3 }, { entryId: 2, hp: 4 }] }); effects.forEach(fn => fn()); };
+  const render = () => { cursor = 0; effects = []; tree = compiled.exports.default({ player: { entryId: 1, name: 'A', hp: 3 }, players: [{ entryId: 1, name: 'A', hp: 3 }, { entryId: 2, name: 'B', hp: 4 }] }); effects.forEach(fn => fn()); };
   const nodes = type => { const found = []; function walk(node) { if (!node || typeof node !== 'object') return; if (Array.isArray(node)) return node.forEach(walk); if (node.type === type) found.push(node); walk(node.props?.children); } walk(tree); return found; };
   return { render, nodes, timers, async flush() { for (let i = 0; i < 4; i++) { await new Promise(resolve => setImmediate(resolve)); render(); } }, restore() { Object.assign(globalThis, previous); } };
 }
@@ -70,4 +70,49 @@ test('admin delete keeps its saved result and local removal when overview refres
   assert.equal(saved, true); assert.ok(data.duels[0].deleted_at);
   assert.equal(data.duels[0].delete_reason, 'reason');
   assert.match(notice, /已移除/); assert.match(error, /操作已完成/);
+});
+
+test('roster search and signed registration do not wait for a stalled community feed', { timeout: 2000 }, async () => {
+  let release, submitted = false, writes = 0;
+  const arena = { gw: 9, open: true, deadline: '2099-01-01T00:00:00Z' };
+  const own = id => ({ entryId: id, token: 'test', mine: { entryId: id, arena, gw: 9, remaining: submitted ? 4 : 5, submitted, challenge: submitted ? { targetId: 2, targetName: 'B' } : null } });
+  const ready = new Promise(resolve => { release = resolve; });
+  const h = arenaHarness(id => ({ read: async () => { await ready; return own(id); }, submit: async () => { writes++; submitted = true; return own(id); } }), () => new Promise(() => {}));
+  try {
+    h.render(); await h.flush();
+    const search = () => h.nodes('input').find(node => node.props.type === 'search');
+    const confirm = () => h.nodes('button').find(node => node.props.className === 'challengeButton');
+    assert.equal(h.nodes('input').filter(node => node.props.type === 'radio').length, 1);
+    assert.equal(h.nodes('fieldset')[0].props.disabled, false);
+    assert.equal(confirm().props.disabled, true);
+    search().props.onChange({ target: { value: 'missing' } }); h.render();
+    assert.ok(h.nodes('p').some(node => node.props.children === '未找到玩家'));
+    search().props.onChange({ target: { value: '2' } }); h.render();
+    h.nodes('input').find(node => node.props.type === 'radio').props.onChange({ target: { value: '2' } }); h.render();
+    assert.equal(confirm().props.disabled, true);
+    release(); await h.flush();
+    assert.equal(confirm().props.disabled, false);
+    h.nodes('form')[0].props.onSubmit({ preventDefault() {} }); h.render();
+    let timer;
+    await Promise.race([h.nodes('form')[1].props.onSubmit({ preventDefault() {} }), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Saved signup waited for the public feed')), 250); })]).finally(() => clearTimeout(timer));
+    await h.flush(); assert.equal(writes, 1);
+    assert.ok(h.nodes('h3').some(node => node.props.children === '决斗情况'));
+    assert.equal(h.nodes('button').find(node => node.props.type === 'submit')?.props.disabled, false);
+  } finally { h.restore(); }
+});
+
+test('a failed signed status never authorizes signup even when the roster is available', async () => {
+  const h = arenaHarness(() => ({ read: async () => { throw new Error('请求超时，请稍后重试'); }, submit: async () => assert.fail('Cannot submit without signed status') }), () => new Promise(() => {}));
+  try {
+    h.render(); await h.flush();
+    assert.equal(h.nodes('input').filter(node => node.props.type === 'radio').length, 1);
+    assert.equal(h.nodes('button').find(node => node.props.className === 'challengeButton').props.disabled, true);
+    assert.ok(h.nodes('p').some(node => node.props.role === 'alert'));
+  } finally { h.restore(); }
+});
+
+test('a missing public result feed still reports an error after the official DDL', async () => {
+  const h = arenaHarness(id => ({ read: async () => ({ entryId: id, token: 'test', mine: { entryId: id, arena: { gw: 9, open: false, deadline: '2000-01-01T00:00:00Z' }, gw: 9, remaining: 5, submitted: false, challenge: null } }) }), async () => { throw new Error('请求超时，请稍后重试'); });
+  try { h.render(); await h.flush(); assert.ok(h.nodes('p').some(node => node.props.role === 'alert')); }
+  finally { h.restore(); }
 });

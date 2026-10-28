@@ -573,3 +573,13 @@ test('manual test registration stays open without an hourly expiry and retains t
   await set({ gw: 9, open: false });
   assert.equal(await submitDuel(db, 9, 3, 4, 'manual-closed', { deadline: ddl }), false);
 });
+
+test('signed personal status includes the authoritative registration window without a public-feed dependency', async () => {
+  const { request } = await setup();
+  const { token } = await (await request('/player/session', 'POST', { entryId: 1 })).json();
+  const response = await request('/duels/mine', 'GET', undefined, { authorization: `Bearer ${token}` });
+  const own = await response.json();
+  assert.equal(response.status, 200); assert.equal(own.arena.gw, own.gw); assert.equal(own.arena.open, true);
+  assert.ok(own.arena.deadline); assert.equal('count' in own.arena, false); assert.equal('duels' in own, false);
+  assert.equal((await request('/duels/mine')).status, 401);
+});

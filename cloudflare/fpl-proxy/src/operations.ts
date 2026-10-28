@@ -266,7 +266,7 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
       const used = rows.results.filter(row => row.challenger_id === entryId && usesChallenge(row)).length;
       const submitted = rows.results.find(row => row.gw === config.gw && row.challenger_id === entryId);
       const target = submitted ? (await roster(env)).find(member => member.entryId === submitted.target_id) : null;
-      return response({ entryId, remaining: Math.max(0, 5 - used), gw: config.gw, selectionStatus: submitted?.selection_status ?? null,
+      return response({ entryId, arena: config, remaining: Math.max(0, 5 - used), gw: config.gw, selectionStatus: submitted?.selection_status ?? null,
         submitted: Boolean(submitted), challenge: submitted ? { targetId: submitted.target_id, targetName: target?.teamName ?? `ID ${submitted.target_id}` } : null }, request);
     }
     if (path === '/api/duels' && request.method === 'POST') {

@@ -40,12 +40,14 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   }, [modalOpen]);
   const submitting = useRef(false);
   const health = new Map(players.map(candidate => [candidate.entryId, candidate.hp]));
+  const members = community?.members.length ? community.members : players.map(candidate => ({ entryId: candidate.entryId, teamName: candidate.name }));
   const identity = player?.entryId ?? null;
   const client = useMemo(() => identity ? createDuelClient(identity) : null, [identity]);
   const currentIdentity = useRef(identity);
   useEffect(() => { currentIdentity.current = identity; }, [identity]);
   const currentSession = session?.entryId === identity ? session : null;
   const mine = currentSession?.mine ?? null;
+  const round = mine?.arena ?? community?.arena;
   const refreshMine = useCallback(async () => {
     if (!client) return;
     const own = await client.read();
@@ -59,10 +61,14 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
     return own;
   }, [client]);
   const reload = useCallback(async () => {
-    // Apply successful reads independently; a failed community GET must not erase a confirmed submission.
-    const results = await Promise.allSettled([loadCommunity(), refreshMine()]);
-    const failed = results.find(result => result.status === 'rejected');
-    if (failed?.status === 'rejected') throw failed.reason;
+    // Registration depends on the signed personal status, not the public feed.
+    // Start both reads, but never hold a ready player or a saved POST behind it.
+    let publicFailure: unknown;
+    const publicRead = loadCommunity().then(data => { setCommunity(data); return data; }).catch(reason => { publicFailure = reason; return undefined; });
+    const own = await refreshMine();
+    const ownArena = own?.mine.arena;
+    if (ownArena && (!ownArena.deadline || Date.now() < Date.parse(ownArena.deadline))) return;
+    if (!await publicRead) throw publicFailure;
   }, [refreshMine]);
   useEffect(() => {
     let active = true;
@@ -84,16 +90,16 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
     const timer = window.setInterval(() => setClock(Date.now()), 30000);
     return () => window.clearInterval(timer);
   }, []);
-  const deadline = community?.arena.deadline;
+  const deadline = round?.deadline;
   useEffect(() => {
-    const transitions = [community?.arena.opensAt, community?.arena.closesAt, community?.arena.nextOpensAt, deadline,
+    const transitions = [round?.opensAt, round?.closesAt, round?.nextOpensAt, deadline,
       deadline ? new Date(Date.parse(deadline) + 100 * 60000).toISOString() : undefined];
     const next = transitions.filter((value): value is string => Boolean(value)).map(Date.parse).filter(time => time > Date.now()).sort((a, b) => a - b)[0];
     const delay = next - Date.now();
     if (!Number.isFinite(delay) || delay <= 0 || delay > 2147483000) return;
     const timer = window.setTimeout(() => { setClock(Date.now()); void reload().catch(() => {}); }, delay + 1000);
     return () => window.clearTimeout(timer);
-  }, [clock, deadline, community?.arena.opensAt, community?.arena.closesAt, community?.arena.nextOpensAt, reload]);
+  }, [clock, deadline, round?.opensAt, round?.closesAt, round?.nextOpensAt, reload]);
   useEffect(() => {
     let checkedAt = Date.now();
     const updated = (event: Event) => {
@@ -122,37 +128,37 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   }, [confirmation]);
   const askConfirmation = (event: FormEvent) => {
     event.preventDefault();
-    if (!community || !mine || !client || busy || uncertain || mine.submitted) return;
-    const target = community.members.find(member => member.entryId === Number(targetId));
+    if (!round || !mine || !client || busy || uncertain || mine.submitted || closed || mine.gw !== round.gw) return;
+    const target = members.find(member => member.entryId === Number(targetId));
     if (!target || !identity) return;
-    setConfirmation({ entryId: identity, targetId: target.entryId, targetName: target.teamName, gw: community.arena.gw });
+    setConfirmation({ entryId: identity, targetId: target.entryId, targetName: target.teamName, gw: round.gw });
   };
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!confirmation || confirmation.entryId !== identity || confirmation.gw !== community?.arena.gw || !mine || mine.submitted || submitting.current || !client || uncertain) return;
+    if (!confirmation || confirmation.entryId !== identity || confirmation.gw !== round?.gw || !mine || mine.submitted || submitting.current || !client || uncertain) return;
     submitting.current = true;
     const submittedAs = identity;
     setBusy(true); setError(''); setMessage('');
     try {
       const accepted = await client.submit(confirmation);
       if (submittedAs === currentIdentity.current) { setSession(accepted); setTargetId(''); setMessage('报名已提交，不可修改。'); }
-      await reload().catch(() => {});
+      void reload().catch(() => {});
     } catch (reason) {
       if (submittedAs === currentIdentity.current) {
         pendingRecovery.current = reason instanceof UncertainSubmission ? { entryId: confirmation.entryId, gw: confirmation.gw } : null;
         setConfirmation(null); setUncertain(reason instanceof UncertainSubmission); reportError(reason);
       }
-      if (!(reason instanceof UncertainSubmission)) await reload().catch(() => {});
+      if (!(reason instanceof UncertainSubmission)) void reload().catch(() => {});
     } finally { submitting.current = false; setBusy(false); setConfirmation(null); }
   };
-  const round = community?.arena;
   const revealed = Boolean(round?.deadline && clock >= Date.parse(round.deadline));
   const closed = !round?.open || revealed || Boolean(round.closesAt && clock >= Date.parse(round.closesAt));
   const locked = busy || uncertain || closed || !mine || mine.gw !== round?.gw || mine.submitted || mine.remaining <= 0;
+  const selectionLocked = !player || busy || uncertain || Boolean(mine?.submitted);
   const query = search.trim().toLocaleLowerCase();
-  const candidates = community?.members.filter(member => member.entryId !== identity && (
+  const candidates = members.filter(member => member.entryId !== identity && (
     !query || member.teamName.toLocaleLowerCase().includes(query) || String(member.entryId).includes(query)
-  )) ?? [];
+  ));
   const assets = { '--arena-frame-image': `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.webp")`, '--pixel-heart-image': `url("${siteBasePath}/assets/leaderboard/pixel-heart.svg")` } as CSSProperties;
   return <div className={frame.preview}>
     <section className={`${frame.arena} ${styles.panel}`} style={assets} aria-label="正式决斗">
@@ -179,15 +185,15 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
         <form className={styles.form} onSubmit={askConfirmation}>
           {mine?.submitted ? <div className={styles.submitted} role="status"><h3>决斗情况</h3><small>GW{mine.gw} · 已提交挑战</small><span>挑战对象</span><strong className={mine.challenge && isFeatured(mine.challenge.targetName) ? styles.featured : undefined}>{mine.challenge?.targetName ?? '正在读取…'}</strong>{mine.challenge ? <small>FPL ID {mine.challenge.targetId}</small> : null}<p>提交后不可修改</p></div> : <>
             <label className={frame.candidateSearch} htmlFor="duel-search"><span>搜索挑战对象</span><input id="duel-search" type="search" placeholder="玩家名称 / FPL ID" value={search} onChange={event => { setSearch(event.target.value); setTargetId(''); }} disabled={!player || busy} autoComplete="off" /></label>
-            <fieldset className={styles.fieldset} disabled={locked}><legend className={styles.srOnly}>选择挑战对象</legend><div className={`${frame.candidateList} ${styles.candidates}`}>
+            <fieldset className={styles.fieldset} disabled={selectionLocked}><legend className={styles.srOnly}>选择挑战对象</legend><div className={`${frame.candidateList} ${styles.candidates}`}>
               {candidates.map(member => <label key={member.entryId} className={targetId === String(member.entryId) ? frame.selectedCandidate : ''}>
                 <input type="radio" name="duel-target" value={member.entryId} checked={targetId === String(member.entryId)} onChange={event => setTargetId(event.target.value)} />
                 <span><strong className={isFeatured(member.teamName) ? styles.featured : undefined}>{member.teamName}</strong><small className={styles.candidateMeta}>FPL ID {member.entryId}<span className={styles.candidateHealth} aria-label={`血量 ${health.get(member.entryId) ?? 0}`}>{health.get(member.entryId) ?? 0}<i className="blood-drop" aria-hidden="true" /></span></small></span>
               </label>)}
-              {!candidates.length ? <p className={frame.candidateEmpty}>{community ? '未找到玩家' : '正在读取玩家…'}</p> : null}
+              {!candidates.length ? <p className={frame.candidateEmpty}>{members.length ? '未找到玩家' : '玩家名单暂不可用，请刷新后重试'}</p> : null}
             </div></fieldset>
             <button className={frame.challengeButton} disabled={locked || !targetId}><strong>{busy ? '正在提交…' : '确认发起决斗'}</strong></button>
-            {closed && community ? <p className={styles.muted}>{round?.opensAt && clock < Date.parse(round.opensAt) ? `报名开放：${chinaTime(round.opensAt)}` : '报名未开放或已截止'}</p> : null}
+            {closed && round ? <p className={styles.muted}>{round.opensAt && clock < Date.parse(round.opensAt) ? `报名开放：${chinaTime(round.opensAt)}` : '报名未开放或已截止'}</p> : null}
           </>}
         </form>
       </div>}

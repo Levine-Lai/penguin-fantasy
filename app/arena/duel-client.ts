@@ -1,6 +1,6 @@
-import { operationsFetch, type DuelSelection } from '../operations-client.ts';
+import { operationsFetch, type ArenaConfig, type DuelSelection } from '../operations-client.ts';
 
-export type Mine = { entryId: number; remaining: number; selectionStatus?: DuelSelection | null; gw: number; submitted: boolean; challenge: { targetId: number; targetName: string } | null };
+export type Mine = { entryId: number; arena?: ArenaConfig; remaining: number; selectionStatus?: DuelSelection | null; gw: number; submitted: boolean; challenge: { targetId: number; targetName: string } | null };
 export type PlayerSession = { entryId: number; token: string; mine: Mine };
 export type Challenge = { gw: number; targetId: number; targetName: string };
 
