@@ -25,7 +25,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   const reportError = useCallback((reason: unknown) => {
     if (!(reason instanceof UncertainSubmission)) pendingRecovery.current = null;
     const detail = reason instanceof Error ? reason.message : '请求失败，请稍后再试';
-    const message = /fetch|network|load failed/i.test(detail) ? '网络连接失败，请检查网络后重试' : /timeout|aborted/i.test(detail) ? '请求超时，请稍后再试' : detail;
+    const message = /fetch|network|load failed/i.test(detail) ? '网络连接失败，请检查网络后重试' : /timed?\s*out|timeout|aborted/i.test(detail) ? '请求超时，请稍后再试' : detail;
     setError(message); setFailure(message);
   }, []);
   const [clock, setClock] = useState(() => Date.now());

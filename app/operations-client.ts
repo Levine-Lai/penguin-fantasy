@@ -18,10 +18,27 @@ export type PublishedDuel = Omit<DuelRecord, 'challengerName' | 'targetName'>;
 export async function operationsFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.body) headers.set('content-type', 'application/json');
-  const result = await fetch(`${operationsOrigin}/api${path}`, { ...init, headers, credentials: 'include', signal: init.signal ?? AbortSignal.timeout(15000) });
-  const data = await result.json();
-  if (!result.ok) { const error = new Error(data.error ?? '请求失败'); Object.assign(error, { status: result.status }); throw error; }
-  return data as T;
+  const attempts = (init.method ?? 'GET').toUpperCase() === 'GET' && !init.signal ? 2 : 1;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      const result = await fetch(`${operationsOrigin}/api${path}`, { ...init, headers, credentials: 'include', signal: init.signal ?? AbortSignal.timeout(20000) });
+      if (!result.ok) {
+        const data = await result.json().catch(() => ({}));
+        const error = new Error(data.error ?? '服务暂时不可用，请稍后重试');
+        Object.assign(error, { status: result.status }); throw error;
+      }
+      return await result.json() as T;
+    } catch (reason) {
+      const error = reason as Error & { status?: number };
+      const timedOut = error.name === 'TimeoutError' || /timed?\s*out|timeout|aborted/i.test(error.message ?? '');
+      if (attempt + 1 < attempts && (timedOut || error instanceof TypeError || (error.status ?? 0) >= 500)) {
+        await new Promise(resolve => setTimeout(resolve, 350)); continue;
+      }
+      if (timedOut && !init.signal?.aborted) throw Object.assign(new Error('请求超时，请稍后重试'), { name: 'TimeoutError' });
+      throw reason;
+    }
+  }
+  throw new Error('请求失败，请稍后重试');
 }
 let communityRequest: Promise<Community> | null = null;
 export function loadCommunity(): Promise<Community> {

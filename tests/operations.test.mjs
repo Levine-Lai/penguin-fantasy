@@ -554,3 +554,22 @@ test('temporary registration cannot authorize a different round, future, overlon
   await db.prepare("DELETE FROM settings WHERE key='arena_test_window'").run();
   assert.equal(await submitDuel(db, 9, 1, 2, 'revoked-test', { deadline: ddl }), false);
 });
+
+test('manual test registration stays open without an hourly expiry and retains the official DDL guard', async () => {
+  const { db, env, cache } = await setup();
+  const now = Date.now(); const ddl = new Date(now + 72 * 3600000).toISOString();
+  cache.set('fpl:bootstrap', { value: { events: [{ id: 9, deadline_time: ddl }] } });
+  const set = value => db.prepare("INSERT INTO settings(key,value) VALUES ('arena_test_open',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").bind(JSON.stringify(value)).run();
+  await set({ gw: 9, open: true });
+  assert.equal((await arenaWindow(env, now + 48 * 3600000)).open, true);
+  assert.equal((await arenaWindow(env)).closesAt, undefined);
+  assert.equal(await submitDuel(db, 9, 1, 2, 'manual-open', { deadline: ddl }), true);
+  assert.equal(await submitDuel(db, 9, 1, 3, 'manual-duplicate', { deadline: ddl }), false);
+  assert.equal(await submitDuel(db, 9, 3, 4, 'manual-after-ddl', { deadline: new Date(now - 1000).toISOString() }), false);
+  assert.equal((await arenaWindow(env, Date.parse(ddl))).open, false);
+  await set({ gw: 10, open: true });
+  assert.equal((await arenaWindow(env)).open, false);
+  assert.equal(await submitDuel(db, 9, 3, 4, 'wrong-manual-round', { deadline: ddl }), false);
+  await set({ gw: 9, open: false });
+  assert.equal(await submitDuel(db, 9, 3, 4, 'manual-closed', { deadline: ddl }), false);
+});

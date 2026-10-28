@@ -44,7 +44,7 @@ export async function onRequest(context) {
   const upstreamUrl = new URL(`/api/${apiPath}${incomingUrl.search}`, upstreamOrigin);
 
   try {
-    const forwardingHeaders = new Headers({ accept: "application/json" });
+    const forwardingHeaders = new Headers({ accept: "application/json", "accept-encoding": "identity" });
     if (isOperations) {
       for (const name of ["content-type", "cookie", "authorization", "origin", "user-agent"]) {
         const value = request.headers.get(name); if (value) forwardingHeaders.set(name, value);
@@ -58,10 +58,15 @@ export async function onRequest(context) {
       ...(["POST", "DELETE"].includes(request.method) ? { body: request.body } : {}),
     });
     const headers = new Headers(upstreamResponse.headers);
+    // Materialize decoded JSON and remove upstream compression metadata. Passing
+    // compressed streams through both edge hops stalls some browser/network paths.
+    const payload = await upstreamResponse.arrayBuffer();
+    headers.delete("content-encoding");
+    headers.delete("content-length");
     for (const [name, value] of Object.entries(cors)) headers.set(name, value);
-    if (isOperations) headers.set("cache-control", "no-store");
+    headers.set("cache-control", isOperations ? "no-store, no-transform" : `${headers.get("cache-control") ?? "no-cache"}, no-transform`);
     headers.set("x-penguin-api-proxy", "cloudflare-pages");
-    return new Response(upstreamResponse.body, {
+    return new Response(request.method === "HEAD" || [204, 205, 304].includes(upstreamResponse.status) ? null : payload, {
       status: upstreamResponse.status,
       statusText: upstreamResponse.statusText,
       headers,

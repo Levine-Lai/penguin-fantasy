@@ -8,6 +8,13 @@ export async function arenaWindow(env: OpsEnv, now = Date.now()): Promise<ArenaW
     .sort((a, b) => Date.parse(a.deadline_time) - Date.parse(b.deadline_time));
   const next = events.find(e => now < Date.parse(e.deadline_time));
   const previous = events.filter(e => now >= Date.parse(e.deadline_time)).at(-1);
+  const manualSetting = await env.OPS_DB?.prepare("SELECT value FROM settings WHERE key='arena_test_open'").first<{ value: string }>();
+  if (manualSetting && next) {
+    try {
+      const manual = JSON.parse(manualSetting.value) as { gw: number; open: boolean };
+      if (manual.open === true && manual.gw === next.id) return { gw: next.id, deadline: next.deadline_time, open: true };
+    } catch { /* Invalid overrides cannot open a round. */ }
+  }
   // An operator can grant a bounded test window without changing the official DDL.
   const setting = await env.OPS_DB?.prepare("SELECT value FROM settings WHERE key='arena_test_window'").first<{ value: string }>();
   if (setting && next) {
