@@ -171,22 +171,25 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   const assets = { '--arena-frame-image': `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.webp")`, '--pixel-heart-image': `url("${siteBasePath}/assets/leaderboard/pixel-heart.svg")` } as CSSProperties;
   const targetHealth = confirmation ? health.get(confirmation.targetId) ?? 0 : 0;
   const healthRows = Math.max(1, Math.ceil(Math.max(player?.hp ?? 0, targetHealth) / 6));
+  const publicDuels = community?.duels.filter(duel => duel.gw === round?.gw) ?? [];
+  const selectionReady = community?.arena.gw === round?.gw && community?.arena.selectionReady;
   return <div className={frame.preview}>
     <section className={`${frame.arena} ${styles.panel}`} style={assets} aria-label="正式决斗">
       <header className={`${frame.arenaHeader} ${styles.header}`}>
         <div><small>GW{round?.gw ?? 9}</small><h2>{revealed ? '本轮决斗' : '发起决斗'}</h2></div>
         {deadline ? <p className={styles.deadline}>DDL {chinaTime(deadline)}</p> : null}
       </header>
+      {mine ? <p className={styles.remaining}>剩余主动挑战 <strong>{mine.remaining}</strong> / 5 次</p> : null}
       {error ? <p className={styles.error} role="alert">{error}</p> : null}
       {message ? <p className={styles.message} role="status">{message}</p> : null}
       {revealed ? <div className={styles.duels}>
         {mine?.submitted && mine.gw === round?.gw && mine.challenge ? <p className={styles.muted}>挑战 {mine.challenge.targetName} · {duelSelectionLabels[mine.selectionStatus ?? 'pending']}</p> : null}
-        {community?.duels.map(duel => <article className={frame.duelCard} key={duel.id}>
+        {publicDuels.map(duel => <article className={frame.duelCard} key={duel.id}>
           <header className={frame.duelCardHeader}><span>GW{duel.gw}</span><span>{chinaTime(duel.created_at)}</span></header>
           <div className={frame.combatants}><div className={frame.combatant}><small>挑战者</small><strong>{duel.challengerName}</strong></div><div className={frame.versus}>VS</div><div className={frame.combatant}><small>被挑战者</small><strong>{duel.targetName}</strong></div></div>
           <div className={frame.outcome}><strong>{duel.settled_at ? duel.challenger_score : '进行中'}</strong><strong>{duel.settled_at ? duel.target_score : '进行中'}</strong></div>
         </article>)}
-        {!community?.duels.length ? <p className={styles.muted}>{round?.selectionReady ? '本轮暂无对阵。' : '正在确认队长与入选对阵。'}</p> : null}
+        {!publicDuels.length ? <p className={styles.muted}>{selectionReady ? '本轮暂无对阵。' : '正在确认队长与入选对阵。'}</p> : null}
       </div> : <div className={styles.registration}>
         <aside className={styles.profile} aria-label="我的决斗信息">
           <small>挑战者</small>

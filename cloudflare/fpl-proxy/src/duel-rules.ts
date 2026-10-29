@@ -35,10 +35,10 @@ export async function arenaWindow(env: OpsEnv, now = Date.now()): Promise<ArenaW
     open: now >= Date.parse(opensAt) && now < Date.parse(event.deadline_time) };
 }
 
-// Pending/selected non-draw challenges reserve a season right; skipped registrations never do.
-export const usedChallengeSql = "selection_status IN ('pending','selected') AND (settled_at IS NULL OR challenger_score != target_score)";
+// A selected duel consumes a right even on equal scores. Skipped registrations never do.
+export const usedChallengeSql = "selection_status IN ('pending','selected')";
 export function usesChallenge(row: { selection_status: string; settled_at: string | null; challenger_score: number | null; target_score: number | null }): boolean {
-  return ['pending', 'selected'].includes(row.selection_status) && (row.settled_at === null || row.challenger_score !== row.target_score);
+  return ['pending', 'selected'].includes(row.selection_status);
 }
 
 export async function selectRound(env: OpsEnv, gw: number, now = Date.now()): Promise<boolean> {

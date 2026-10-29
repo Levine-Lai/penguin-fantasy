@@ -1,6 +1,8 @@
 .panel { width: 100%; margin: 0; }
 .header { grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; }
 .deadline, .muted { color: var(--arena-muted); font-size: .8rem; line-height: 1.6; }
+.remaining { margin: 0 0 1rem; color: var(--arena-muted); font-size: .85rem; }
+.remaining strong { color: var(--arena-cyan); font: 700 1.1rem var(--font-label); margin-inline: .25rem; }
 .registration { display: grid; grid-template-columns: minmax(12rem, .6fr) minmax(0, 1.4fr); gap: 1rem; align-items: start; }
 .profile { min-width: 0; padding: 1rem; border: 1px solid var(--arena-rule); background: linear-gradient(155deg, rgba(5,36,47,.82), rgba(1,14,21,.96)); }
 .profile > small { color: var(--arena-cyan); font-size: .75rem; }

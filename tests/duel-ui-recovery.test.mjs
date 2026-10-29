@@ -61,7 +61,7 @@ function callback(name) {
 
 test('admin delete keeps its saved result and local removal when overview refresh fails', async () => {
   let data = { duels: [{ id: 'duel', deleted_at: null }], announcements: [] }, notice = '', error = '', saved = false;
-  const deps = { setBusy() {}, setError: v => { error = v; }, setNotice: v => { notice = v; }, load: async () => { throw new Error('GET failed'); }, day: '2026-10-22', page: 0, setLoggedIn() {} };
+  const deps = { setBusy() {}, setError: v => { error = v; }, setNotice: v => { notice = v; }, load: async () => { throw new Error('GET failed'); }, day: '2026-10-22', page: 0, duelPage: 0, showRemoved: false, setLoggedIn() {} };
   const run = new Function(...Object.keys(deps), callback('run') + ';return extracted;')(...Object.values(deps));
   const pending = [];
   const removeDeps = { window: { confirm: () => true, prompt: () => 'reason' }, operationsFetch: async () => { saved = true; }, setData: updater => { data = updater(data); }, run: (...args) => { const result = run(...args); pending.push(result); return result; } };
@@ -109,6 +109,26 @@ test('a failed signed status never authorizes signup even when the roster is ava
     assert.equal(h.nodes('button').find(node => node.props.className === 'challengeButton').props.disabled, true);
     assert.ok(h.nodes('p').some(node => node.props.role === 'alert'));
   } finally { h.restore(); }
+});
+
+test('signed players see the completed empty round and their remaining rights from separate authoritative sources', async () => {
+  const arena = { gw: 9, open: false, deadline: '2000-01-01T00:00:00Z' };
+  const h = arenaHarness(id => ({ read: async () => ({ entryId: id, token: 'test', mine: { entryId: id, arena, gw: 9, remaining: 4, submitted: false, challenge: null } }) }),
+    async () => ({ arena: { ...arena, selectionReady: true }, members: [], duels: [], results: [] }));
+  try {
+    h.render(); await h.flush();
+    assert.ok(h.nodes('p').some(node => node.props.children === '本轮暂无对阵。'));
+    assert.ok(!h.nodes('p').some(node => node.props.children === '正在确认队长与入选对阵。'));
+    const remaining = h.nodes('p').find(node => node.props.className === 'remaining');
+    assert.equal(remaining.props.children[1].props.children, 4);
+  } finally { h.restore(); }
+});
+
+test('a public feed for another round cannot display opponents or complete selection for the signed round', async () => {
+  const h = arenaHarness(id => ({ read: async () => ({ entryId: id, token: 'test', mine: { entryId: id, arena: { gw: 9, open: false, deadline: '2000-01-01T00:00:00Z' }, gw: 9, remaining: 5, submitted: false, challenge: null } }) }),
+    async () => ({ arena: { gw: 10, selectionReady: true }, members: [], duels: [{ gw: 10, id: 'another-round' }], results: [] }));
+  try { h.render(); await h.flush(); assert.equal(h.nodes('article').length, 0); assert.ok(h.nodes('p').some(node => node.props.children === '正在确认队长与入选对阵。')); }
+  finally { h.restore(); }
 });
 
 test('a missing public result feed still reports an error after the official DDL', async () => {

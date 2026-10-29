@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-28T06:07:51.951Z",
+  "generatedAt": "2026-10-29T03:01:13.017Z",
   "league": {
     "ready": true,
     "leagueId": 511690,
@@ -105,12 +105,12 @@
         "teamName": "她在我耳边吹气"
       },
       {
-        "entryId": 117128,
-        "teamName": "Dongma"
-      },
-      {
         "entryId": 15944,
         "teamName": "ParisAintGerman"
+      },
+      {
+        "entryId": 117128,
+        "teamName": "Dongma"
       },
       {
         "entryId": 13130,
@@ -345,12 +345,12 @@
         "teamName": "奏响最绝望的乐章"
       },
       {
-        "entryId": 80003,
-        "teamName": "fpl中搁浅的哲学家"
-      },
-      {
         "entryId": 112171,
         "teamName": "Orange's Team"
+      },
+      {
+        "entryId": 80003,
+        "teamName": "fpl中搁浅的哲学家"
       },
       {
         "entryId": 53516,
@@ -13460,22 +13460,6 @@
             "captainPickRate": 30.6
           },
           {
-            "entryId": 117128,
-            "teamName": "Dongma",
-            "captainId": 411,
-            "captainName": "Haaland",
-            "viceCaptainId": 165,
-            "viceCaptainName": "João Pedro",
-            "scoringCaptainId": 411,
-            "scoringCaptainName": "Haaland",
-            "captainPoints": 8,
-            "originalCaptainPoints": 8,
-            "captainStatus": "finished",
-            "originalCaptainStatus": "finished",
-            "usedViceCaptain": false,
-            "captainPickRate": 44.1
-          },
-          {
             "entryId": 15944,
             "teamName": "ParisAintGerman",
             "captainId": 154,
@@ -13492,8 +13476,8 @@
             "captainPickRate": 14.4
           },
           {
-            "entryId": 13130,
-            "teamName": "光之围棋俱乐部",
+            "entryId": 117128,
+            "teamName": "Dongma",
             "captainId": 411,
             "captainName": "Haaland",
             "viceCaptainId": 165,
@@ -13508,12 +13492,12 @@
             "captainPickRate": 44.1
           },
           {
-            "entryId": 6994,
-            "teamName": "这是团赛专用的大号",
+            "entryId": 13130,
+            "teamName": "光之围棋俱乐部",
             "captainId": 411,
             "captainName": "Haaland",
-            "viceCaptainId": 154,
-            "viceCaptainName": "Palmer",
+            "viceCaptainId": 165,
+            "viceCaptainName": "João Pedro",
             "scoringCaptainId": 411,
             "scoringCaptainName": "Haaland",
             "captainPoints": 8,
@@ -13540,12 +13524,12 @@
             "captainPickRate": 30.6
           },
           {
-            "entryId": 18391,
-            "teamName": "Loki7_7",
+            "entryId": 6994,
+            "teamName": "这是团赛专用的大号",
             "captainId": 411,
             "captainName": "Haaland",
-            "viceCaptainId": 165,
-            "viceCaptainName": "João Pedro",
+            "viceCaptainId": 154,
+            "viceCaptainName": "Palmer",
             "scoringCaptainId": 411,
             "scoringCaptainName": "Haaland",
             "captainPoints": 8,
@@ -13570,6 +13554,22 @@
             "originalCaptainStatus": "finished",
             "usedViceCaptain": false,
             "captainPickRate": 14.4
+          },
+          {
+            "entryId": 18391,
+            "teamName": "Loki7_7",
+            "captainId": 411,
+            "captainName": "Haaland",
+            "viceCaptainId": 165,
+            "viceCaptainName": "João Pedro",
+            "scoringCaptainId": 411,
+            "scoringCaptainName": "Haaland",
+            "captainPoints": 8,
+            "originalCaptainPoints": 8,
+            "captainStatus": "finished",
+            "originalCaptainStatus": "finished",
+            "usedViceCaptain": false,
+            "captainPickRate": 44.1
           },
           {
             "entryId": 57236,
@@ -13620,12 +13620,12 @@
             "captainPickRate": 44.1
           },
           {
-            "entryId": 10013,
-            "teamName": "Summerfan",
+            "entryId": 673111,
+            "teamName": "MUJY",
             "captainId": 411,
             "captainName": "Haaland",
-            "viceCaptainId": 165,
-            "viceCaptainName": "João Pedro",
+            "viceCaptainId": 40,
+            "viceCaptainName": "Rogers",
             "scoringCaptainId": 411,
             "scoringCaptainName": "Haaland",
             "captainPoints": 8,
@@ -13636,12 +13636,12 @@
             "captainPickRate": 44.1
           },
           {
-            "entryId": 673111,
-            "teamName": "MUJY",
+            "entryId": 10013,
+            "teamName": "Summerfan",
             "captainId": 411,
             "captainName": "Haaland",
-            "viceCaptainId": 40,
-            "viceCaptainName": "Rogers",
+            "viceCaptainId": 165,
+            "viceCaptainName": "João Pedro",
             "scoringCaptainId": 411,
             "scoringCaptainName": "Haaland",
             "captainPoints": 8,
@@ -14420,22 +14420,6 @@
             "captainPickRate": 44.1
           },
           {
-            "entryId": 80003,
-            "teamName": "fpl中搁浅的哲学家",
-            "captainId": 165,
-            "captainName": "João Pedro",
-            "viceCaptainId": 411,
-            "viceCaptainName": "Haaland",
-            "scoringCaptainId": 411,
-            "scoringCaptainName": "Haaland",
-            "captainPoints": 8,
-            "originalCaptainPoints": 0,
-            "captainStatus": "finished",
-            "originalCaptainStatus": "finished",
-            "usedViceCaptain": true,
-            "captainPickRate": 30.6
-          },
-          {
             "entryId": 112171,
             "teamName": "Orange's Team",
             "captainId": 165,
@@ -14445,6 +14429,22 @@
             "scoringCaptainId": 154,
             "scoringCaptainName": "Palmer",
             "captainPoints": -1,
+            "originalCaptainPoints": 0,
+            "captainStatus": "finished",
+            "originalCaptainStatus": "finished",
+            "usedViceCaptain": true,
+            "captainPickRate": 30.6
+          },
+          {
+            "entryId": 80003,
+            "teamName": "fpl中搁浅的哲学家",
+            "captainId": 165,
+            "captainName": "João Pedro",
+            "viceCaptainId": 411,
+            "viceCaptainName": "Haaland",
+            "scoringCaptainId": 411,
+            "scoringCaptainName": "Haaland",
+            "captainPoints": 8,
             "originalCaptainPoints": 0,
             "captainStatus": "finished",
             "originalCaptainStatus": "finished",
@@ -14836,9 +14836,9 @@
             "captainPickRate": 30.6
           }
         ],
-        "updatedAt": "2026-10-27T23:30:44.032Z",
+        "updatedAt": "2026-10-28T23:30:44.377Z",
         "duelResults": [],
-        "publicationRevision": 4
+        "publicationRevision": 5
       }
     ],
     "deadlines": [

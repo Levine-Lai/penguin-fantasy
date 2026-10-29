@@ -26,6 +26,34 @@ async function setup() {
   return { db, env, cache, request, adminHeaders };
 }
 
+test('admin duel pagination exposes history beyond 300 rows and keeps the round count independent of pages', async () => {
+  const { db, request, adminHeaders } = await setup();
+  const ids = [];
+  for (let index = 0; index < 302; index++) {
+    const id = crypto.randomUUID(); ids.push(id);
+    await db.prepare('INSERT INTO duels(id,gw,challenger_id,target_id,created_at) VALUES (?,?,?,?,?)')
+      .bind(id, 9, 1, 2, '2026-10-01T00:00:00Z').run();
+  }
+  const seen = [];
+  for (let page = 0; page < 7; page++) {
+    const data = await (await request(`/admin/overview?duelPage=${page}`, 'GET', undefined, adminHeaders)).json();
+    assert.deepEqual(data.duelPagination, { page, pageSize: 50, total: 302 });
+    assert.equal(data.arena.count, 302);
+    seen.push(...data.duels.map(row => row.id));
+  }
+  assert.equal(new Set(seen).size, 302);
+  assert.deepEqual(seen, ids.toReversed());
+  assert.equal((await request(`/admin/duels/${ids[0]}`, 'DELETE', { reason: 'old row remains manageable' }, adminHeaders)).status, 200);
+  const active = await (await request('/admin/overview?duelPage=999', 'GET', undefined, adminHeaders)).json();
+  assert.deepEqual(active.duelPagination, { page: 6, pageSize: 50, total: 301 });
+  assert.equal(active.arena.count, 301); assert.equal(active.duels.length, 1);
+  const removed = await (await request('/admin/overview?duelPage=6&includeRemoved=true', 'GET', undefined, adminHeaders)).json();
+  assert.equal(removed.duelPagination.total, 302); assert.equal(removed.arena.count, 301);
+  assert.ok(removed.duels.some(row => row.id === ids[0] && row.deleted_at));
+  const fractional = await (await request('/admin/overview?page=0.5&duelPage=0.5', 'GET', undefined, adminHeaders)).json();
+  assert.equal(fractional.page, 0); assert.equal(fractional.duelPagination.page, 0);
+});
+
 test('signed sessions reject tampering, wrong secrets and expiry', async () => {
   const token = await signSession('secret', { role: 'admin', exp: 1000 });
   assert.equal((await readSession('secret', token, 500)).role, 'admin');
@@ -55,14 +83,16 @@ test('atomic registrations allow more than five groups and exclude duplicate par
   assert.equal((await db.prepare('SELECT COUNT(*) AS count FROM duels').first()).count, 6);
 });
 
-test('five season challenges are enforced while draws and deleted challenges refund a right', async () => {
+test('five season challenges count draws while deleted challenges refund a right', async () => {
   const db = database();
   for (let gw = 9; gw <= 13; gw++) assert.equal(await submitDuel(db, gw, 1, 2), true);
   assert.equal(await submitDuel(db, 14, 1, 3), false);
   await db.prepare("UPDATE duels SET settled_at='done',challenger_score=5,target_score=5 WHERE gw=9").run();
+  assert.equal(await submitDuel(db, 14, 1, 3), false);
+  await db.prepare("UPDATE duels SET deleted_at='removed' WHERE gw=10").run();
   assert.equal(await submitDuel(db, 14, 1, 3), true);
   assert.equal(await submitDuel(db, 15, 1, 4), false);
-  await db.prepare("UPDATE duels SET deleted_at='removed' WHERE gw=10").run();
+  await db.prepare("UPDATE duels SET deleted_at='removed' WHERE gw=11").run();
   assert.equal(await submitDuel(db, 15, 1, 4), true);
 });
 
@@ -202,7 +232,7 @@ test('settlement waits for final snapshots, is idempotent, and deletion reverses
   assert.equal((await (await request('/community')).json()).results.length, 0);
 });
 
-test('score corrections replace deltas, refund draws, and are audited only once', async () => {
+test('score corrections replace deltas without refunding equal-score duels and are audited only once', async () => {
   const { db, env, cache, request, adminHeaders } = await setup();
   cache.get('fpl:bootstrap').value.events[0].deadline_time = new Date(Date.now() - 10000).toISOString();
   await submitDuel(db, 9, 1, 2);
@@ -219,9 +249,10 @@ test('score corrections replace deltas, refund draws, and are audited only once'
   snapshot.duelResults = await settleDuels(env, snapshot);
   cache.set('snapshot:history', [snapshot]);
   const { token } = await (await request('/player/session', 'POST', { entryId: 1 })).json();
-  assert.equal((await (await request('/duels/mine', 'GET', undefined, { authorization: `Bearer ${token}` })).json()).remaining, 5);
+  assert.equal((await (await request('/duels/mine', 'GET', undefined, { authorization: `Bearer ${token}` })).json()).remaining, 4);
   const feed = await (await request('/community')).json();
   assert.equal(feed.results[0].challenger_delta, 0);
+  assert.equal(feed.results[0].target_delta, 0);
   row = await db.prepare('SELECT * FROM duels').first();
   await request(`/admin/duels/${row.id}`, 'DELETE', { reason: 'removed' }, adminHeaders);
   snapshot.teams[0].captainPoints = 20;
@@ -322,7 +353,7 @@ test('finished matches remain in progress until official data_checked is true', 
   } finally { restore(); }
 });
 
-test('failed canonical publication rolls back settlement, draw refund and corrections', async () => {
+test('failed canonical publication rolls back settlement and corrections without changing reserved rights', async () => {
   const { db, env, request, restore } = await publicationScenario();
   try {
     const { token } = await (await request('/player/session', 'POST', { entryId: 1 })).json();
@@ -337,11 +368,11 @@ test('failed canonical publication rolls back settlement, draw refund and correc
     assert.deepEqual((await (await request('/community')).json()).results, []);
     db.sqlite.exec('DROP TRIGGER fail_publish');
     await commitRound(env, snapshot, 0);
-    assert.equal((await mine()).remaining, before.remaining + 1);
+    assert.equal((await mine()).remaining, before.remaining);
     assert.equal((await publishedRound(env, 10)).duelResults[0].challenger_delta, 0);
     db.sqlite.exec("CREATE TRIGGER fail_publish BEFORE INSERT ON published_rounds BEGIN SELECT RAISE(ABORT,'publication interrupted'); END;");
     await assert.rejects(commitRound(env, { ...snapshot, teams: [{ entryId: 1, captainPoints: 10 }, { entryId: 2, captainPoints: 8 }] }, 1), /publication interrupted/);
-    assert.equal((await mine()).remaining, before.remaining + 1);
+    assert.equal((await mine()).remaining, before.remaining);
     assert.equal((await db.prepare('SELECT * FROM duels WHERE gw=10').first()).challenger_score, 8);
     assert.equal((await db.prepare("SELECT COUNT(*) AS count FROM audit_log WHERE action='correct_duel'").first()).count, 0);
     assert.equal(await publicationRevision(env, 10), 1);

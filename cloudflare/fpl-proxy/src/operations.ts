@@ -179,16 +179,24 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
         const selectedDay = /^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get('day') ?? '') ? url.searchParams.get('day')! : beijingDay();
         const start = new Date(`${selectedDay}T00:00:00+08:00`).toISOString();
         const end = new Date(Date.parse(start) + 86400000).toISOString();
-        const page = Math.max(0, Math.min(10000, Number(url.searchParams.get('page')) || 0));
+        const pageIndex = (value: string | null) => Math.max(0, Math.min(10000, Math.floor(Number(value) || 0)));
+        const page = pageIndex(url.searchParams.get('page'));
+        const includeRemoved = url.searchParams.get('includeRemoved') === 'true';
+        const duelWhere = includeRemoved ? '' : 'WHERE deleted_at IS NULL';
+        const duelPageSize = 50;
+        const duelTotal = (await db.prepare(`SELECT COUNT(*) AS count FROM duels ${duelWhere}`).first<{ count: number }>())?.count ?? 0;
+        const duelPage = Math.min(pageIndex(url.searchParams.get('duelPage')), Math.max(0, Math.ceil(duelTotal / duelPageSize) - 1));
         const [members, config, duelRows, announcements, activity, players, logs] = await Promise.all([
           roster(env), arenaWindow(env),
-          db.prepare('SELECT * FROM duels ORDER BY created_at DESC LIMIT 300').all<Duel>(),
+          db.prepare(`SELECT * FROM duels ${duelWhere} ORDER BY created_at DESC,rowid DESC LIMIT ? OFFSET ?`).bind(duelPageSize, duelPage * duelPageSize).all<Duel>(),
           db.prepare('SELECT * FROM announcements ORDER BY created_at DESC LIMIT 100').all(),
           db.prepare('SELECT * FROM player_logins WHERE created_at>=? AND created_at<? ORDER BY created_at DESC LIMIT 50 OFFSET ?').bind(start, end, page * 50).all(),
           db.prepare('SELECT entry_id, MIN(created_at) AS firstLogin, MAX(created_at) AS lastLogin FROM player_logins WHERE created_at>=? AND created_at<? GROUP BY entry_id ORDER BY lastLogin DESC').bind(start, end).all(),
           db.prepare('SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 50').all(),
         ]);
-        return response({ day: selectedDay, page, arena: { ...config, deadline: await deadline(env, config.gw) },
+        const activeCount = (await db.prepare('SELECT COUNT(*) AS count FROM duels WHERE gw=? AND deleted_at IS NULL').bind(config.gw).first<{ count: number }>())?.count ?? 0;
+        return response({ day: selectedDay, page, arena: { ...config, deadline: await deadline(env, config.gw), count: activeCount },
+          duelPagination: { page: duelPage, pageSize: duelPageSize, total: duelTotal },
           members, duels: namedDuels(duelRows.results, members), announcements: announcements.results,
           activity: activity.results, players: players.results, logs: logs.results }, request);
       }
