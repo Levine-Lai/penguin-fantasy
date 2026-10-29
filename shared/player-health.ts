@@ -1,5 +1,5 @@
 export type HealthRound = {
-  gw: number; finished?: boolean;
+  gw: number; finished?: boolean; officialFinalized?: boolean;
   teams: Array<{ entryId: number; captainPoints: number; captainName?: string | null; captainPickRate?: number | null }>;
   duelResults?: Array<{ id: string; challenger_id: number; target_id: number; challenger_delta: number | null; target_delta: number | null; settled_at: string | null }>;
 };
@@ -9,7 +9,7 @@ export type HealthRound = {
 export function playerHealth(history: HealthRound[], entryId: number, removed: ReadonlySet<string> = new Set()) {
   let hp = 1;
   for (const round of [...history].sort((a, b) => a.gw - b.gw)) {
-    if (round.gw >= 9 && !round.finished) continue;
+    if (round.gw >= 9 && (!round.finished || !round.officialFinalized)) continue;
     const team = round.teams.find(item => item.entryId === entryId);
     if (!team || team.captainName === null) continue;
     const regular = round.gw <= 8

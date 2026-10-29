@@ -336,7 +336,7 @@ export async function settleDuels(env: OpsEnv, snapshotOverride?: Snapshot): Pro
     if (snapshotOverride && snapshotOverride.gw !== gw) continue;
     const revision = await publicationRevision(env, gw);
     const snapshot = snapshotOverride ?? await publishedRound(env, gw);
-    if (!snapshot?.finished) continue;
+    if (!snapshot?.finished || !snapshot.officialFinalized) continue;
     if (!await selectRound(env, gw)) continue;
     const committed = await commitRound(env, snapshot, revision);
     results.push(...committed.duelResults ?? []);

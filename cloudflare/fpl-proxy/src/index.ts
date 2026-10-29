@@ -219,8 +219,8 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
         .sort((left, right) => left.id - right.id);
       for (const passedEvent of passedEvents) {
         try {
-          const existingSnapshot = await env.FPL_CACHE.get<{ captainResolutionVersion?: number; finished?: boolean }>(`snapshot:gw:${passedEvent.id}`, "json");
-          if (existingSnapshot?.captainResolutionVersion === CAPTAIN_RESOLUTION_VERSION && existingSnapshot.finished && !duelRounds.has(passedEvent.id)) continue;
+          const existingSnapshot = await env.FPL_CACHE.get<{ captainResolutionVersion?: number; finished?: boolean; officialFinalized?: boolean }>(`snapshot:gw:${passedEvent.id}`, "json");
+          if (existingSnapshot?.captainResolutionVersion === CAPTAIN_RESOLUTION_VERSION && existingSnapshot.finished && (passedEvent.id < 9 || existingSnapshot.officialFinalized === true) && !duelRounds.has(passedEvent.id)) continue;
           const backfillPicks = await getPicksDocument(env, passedEvent.id);
           if (isPicksCompleteForRoster(backfillPicks, roster)) {
             await publishDailySnapshot(env, passedEvent.id, now);

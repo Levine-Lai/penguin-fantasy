@@ -353,17 +353,37 @@ test('unfinished matches remain pending at the daily publication', async () => {
   } finally { restore(); }
 });
 
-test('the first daily update after the last match settles without waiting for data_checked', async () => {
-  const { env, db, restore } = await publicationScenario({ finalized: false });
+test('an early-morning finish waits through 07:30 and an evening confirmation settles at the next 07:30', async () => {
+  const { env, db, cache, restore } = await publicationScenario({ finalized: false });
   try {
+    // Day one: all matches are finished but FPL has not confirmed the scores.
+    await publishDailySnapshot(env);
+    let snapshot = await publishedRound(env, 10);
+    assert.equal(snapshot.finished, true); assert.equal(snapshot.officialFinalized, false);
+    assert.deepEqual(snapshot.duelResults, []);
+    assert.equal((await db.prepare('SELECT * FROM duels WHERE gw=10').first()).settled_at, null);
+    // FPL confirms in the evening. The five-minute picks job must not settle.
+    const fetchBefore = globalThis.fetch;
+    globalThis.fetch = async input => {
+      const response = await fetchBefore(input);
+      if (new URL(String(input)).pathname.endsWith('/bootstrap-static/')) {
+        const data = await response.json();
+        data.events.forEach(event => { event.finished = true; event.data_checked = true; });
+        return Response.json(data);
+      }
+      return response;
+    };
     const jobs = [];
     await worker.scheduled({ cron: '*/5 * * * *', scheduledTime: Date.now() }, env, { waitUntil: job => jobs.push(job) });
     await Promise.all(jobs);
-    assert.equal((await db.prepare('SELECT * FROM duels WHERE gw=9').first()).settled_at, null);
-    await publishDailySnapshot(env);
-    const snapshot = await publishedRound(env, 10);
-    assert.equal(snapshot.officialFinalized, false); assert.equal(snapshot.finished, true);
-    assert.ok(snapshot.duelResults[0].settled_at);
+    assert.equal((await db.prepare('SELECT * FROM duels WHERE gw=10').first()).settled_at, null);
+    // Day two's daily job reads fresh official flags and commits once.
+    const daily = [];
+    await worker.scheduled({ cron: '30 23 * * *', scheduledTime: Date.now()+86400000 }, env, { waitUntil: job => daily.push(job) });
+    await Promise.all(daily);
+    snapshot = await publishedRound(env, 10);
+    assert.equal(snapshot.officialFinalized, true); assert.ok(snapshot.duelResults[0].settled_at);
+    assert.equal(cache.get('sync:status').gw, 10);
   } finally { restore(); }
 });
 
@@ -379,12 +399,26 @@ test('a new round waiting for picks never blocks the previous round daily settle
   } finally { restore(); }
 });
 
+test('a finished historical round without duels is rechecked until official scores confirm its regular health', async () => {
+  const {env,db,cache,restore} = await publicationScenario();
+  await db.prepare('DELETE FROM duels WHERE gw=9').run();
+  cache.set('snapshot:gw:9',{gw:9,finished:true,officialFinalized:false,captainResolutionVersion:2,teams:[]});
+  try {
+    await publishDailySnapshot(env);
+    assert.equal((await publishedRound(env,9)).officialFinalized,true);
+    assert.deepEqual((await publishedRound(env,9)).duelResults,[]);
+  } finally {restore();}
+});
+
 test('a one-life double loss settles, eliminates, cancels future registrations, and rejects both sides of a challenge', async () => {
   const { env, db, cache, request } = await setup();
   cache.get('fpl:bootstrap').value.events[0].deadline_time = new Date(Date.now()-10000).toISOString();
   await submitDuel(db, 9, 1, 2); await submitDuel(db, 10, 3, 1);
-  const snapshot = {gw:9,finished:true,officialFinalized:false,teams:[{entryId:1,captainPoints:2},{entryId:2,captainPoints:8},{entryId:3,captainPoints:8}]};
-  await commitRound(env,snapshot,0);
+  const snapshot = {gw:9,finished:true,officialFinalized:true,teams:[{entryId:1,captainPoints:2},{entryId:2,captainPoints:8},{entryId:3,captainPoints:8}]};
+  await commitRound(env,{...snapshot,officialFinalized:false},0);
+  assert.equal((await db.prepare('SELECT * FROM duels WHERE gw=9').first()).settled_at,null);
+  assert.equal((await db.prepare('SELECT * FROM duels WHERE gw=10').first()).deleted_at,null);
+  await commitRound(env,snapshot,1);
   const lost = await db.prepare('SELECT * FROM duels WHERE gw=9').first();
   assert.ok(lost.settled_at); assert.equal(lost.challenger_delta,-1);
   const future = await db.prepare('SELECT * FROM duels WHERE gw=10').first();

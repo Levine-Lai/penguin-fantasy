@@ -37,7 +37,7 @@ export async function commitRound(env: OpsEnv, snapshot: Snapshot, expectedRevis
   const revisionGuard = 'COALESCE((SELECT revision FROM published_rounds WHERE gw=?),0)=?';
   const now = new Date().toISOString();
   for (const row of rows.results) {
-    if (snapshot.gw < 9 || snapshot.gw > 20 || !snapshot.finished) continue;
+    if (snapshot.gw < 9 || snapshot.gw > 20 || !snapshot.finished || !snapshot.officialFinalized) continue;
     const left = scores.get(row.challenger_id), right = scores.get(row.target_id);
     if (left === undefined || right === undefined) continue;
     const delta = Math.sign(left - right);
@@ -53,7 +53,7 @@ export async function commitRound(env: OpsEnv, snapshot: Snapshot, expectedRevis
       .bind(settled.settled_at, left, right, delta, -delta, row.id, snapshot.gw, expectedRevision));
   }
   const published = { ...snapshot, duelResults: results, publicationRevision: expectedRevision + 1 };
-  if (snapshot.finished && snapshot.gw >= 9) {
+  if (snapshot.finished && snapshot.officialFinalized && snapshot.gw >= 9) {
     const removedRows = (await db.prepare('SELECT id FROM duels WHERE deleted_at IS NOT NULL').all<{ id: string }>()).results;
     const removed = new Set(removedRows.map(row => row.id));
     const history = (await publishedHistory(env)).filter(round => round.gw < snapshot.gw);

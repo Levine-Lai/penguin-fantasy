@@ -28,6 +28,7 @@ type ApiTeam = LeagueTeam & {
 };
 type GwSnapshot = {
   finished?: boolean;
+  officialFinalized?: boolean;
   duelResults?: PublishedDuel[];
   ready: boolean;
   gw: number;
@@ -677,7 +678,7 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
       const history = gwSnapshots.flatMap<CaptainHistoryEntry>((snapshot) => {
         const result = snapshot.teams.find((entry) => entry.entryId === team.entryId);
         if (!result?.captainName) return [];
-        const life = (snapshot.gw >= 9 && !snapshot.finished) || (lifeState.eliminatedGw !== null && snapshot.gw > lifeState.eliminatedGw) || (result.captainStatus && result.captainStatus !== "finished" && result.captainPoints <= 3)
+        const life = (snapshot.gw >= 9 && (!snapshot.finished || !snapshot.officialFinalized)) || (lifeState.eliminatedGw !== null && snapshot.gw > lifeState.eliminatedGw) || (result.captainStatus && result.captainStatus !== "finished" && result.captainPoints <= 3)
           ? 0
           : lifeEarnedInStage(stageForGw(snapshot.gw), result.captainPoints, result.captainPickRate);
         const duel = (snapshot.duelResults?.filter(row => !community?.removedDuelIds?.includes(row.id)) ?? community?.results)?.find(duel => duel.gw === snapshot.gw && (duel.challenger_id === team.entryId || duel.target_id === team.entryId));
