@@ -137,14 +137,14 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   }, [confirmation]);
   const askConfirmation = (event: FormEvent) => {
     event.preventDefault();
-    if (!round || !mine || !client || busy || uncertain || mine.submitted || closed || mine.gw !== round.gw) return;
+    if (eliminated || !round || !mine || !client || busy || uncertain || mine.submitted || closed || mine.gw !== round.gw) return;
     const target = members.find(member => member.entryId === Number(targetId));
     if (!target || !identity) return;
     setConfirmation({ entryId: identity, targetId: target.entryId, targetName: target.teamName, gw: round.gw });
   };
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!confirmation || confirmation.entryId !== identity || confirmation.gw !== round?.gw || !mine || mine.submitted || submitting.current || !client || uncertain) return;
+    if (eliminated || !confirmation || confirmation.entryId !== identity || confirmation.gw !== round?.gw || !mine || mine.submitted || submitting.current || !client || uncertain) return;
     submitting.current = true;
     const submittedAs = identity;
     setBusy(true); setError(''); setMessage('');
@@ -162,10 +162,11 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   };
   const revealed = Boolean(round?.deadline && clock >= Date.parse(round.deadline));
   const closed = !round?.open || revealed || Boolean(round.closesAt && clock >= Date.parse(round.closesAt));
-  const locked = busy || uncertain || closed || !mine || mine.gw !== round?.gw || mine.submitted || mine.remaining <= 0;
-  const selectionLocked = !player || busy || uncertain || Boolean(mine?.submitted);
+  const eliminated = mine?.eliminated || player?.hp === 0;
+  const locked = eliminated || busy || uncertain || closed || !mine || mine.gw !== round?.gw || mine.submitted || mine.remaining <= 0;
+  const selectionLocked = eliminated || !player || busy || uncertain || Boolean(mine?.submitted);
   const query = search.trim().toLocaleLowerCase();
-  const candidates = members.filter(member => member.entryId !== identity && (
+  const candidates = members.filter(member => member.entryId !== identity && health.get(member.entryId) !== 0 && (
     !query || member.teamName.toLocaleLowerCase().includes(query) || String(member.entryId).includes(query)
   ));
   const assets = { '--arena-frame-image': `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.webp")`, '--pixel-heart-image': `url("${siteBasePath}/assets/leaderboard/pixel-heart.svg")` } as CSSProperties;
@@ -180,6 +181,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
         {deadline ? <p className={styles.deadline}>DDL {chinaTime(deadline)}</p> : null}
       </header>
       {mine ? <p className={styles.remaining}>剩余主动挑战 <strong>{mine.remaining}</strong> / 5 次</p> : null}
+      {eliminated ? <p className={styles.muted}>已淘汰，不能再参与挑战。</p> : null}
       {error ? <p className={styles.error} role="alert">{error}</p> : null}
       {message ? <p className={styles.message} role="status">{message}</p> : null}
       {revealed ? <div className={styles.duels}>
@@ -187,7 +189,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
         {publicDuels.map(duel => <article className={frame.duelCard} key={duel.id}>
           <header className={frame.duelCardHeader}><span>GW{duel.gw}</span><span>{chinaTime(duel.created_at)}</span></header>
           <div className={frame.combatants}><div className={frame.combatant}><small>挑战者</small><strong>{duel.challengerName}</strong></div><div className={frame.versus}>VS</div><div className={frame.combatant}><small>被挑战者</small><strong>{duel.targetName}</strong></div></div>
-          <div className={frame.outcome}><strong>{duel.settled_at ? duel.challenger_score : '进行中'}</strong><strong>{duel.settled_at ? duel.target_score : '进行中'}</strong></div>
+          <div className={frame.outcome}><strong>{duel.settled_at ? duel.challenger_score : '待结算'}</strong><strong>{duel.settled_at ? duel.target_score : '待结算'}</strong></div>
         </article>)}
         {!publicDuels.length ? <p className={styles.muted}>{selectionReady ? '本轮暂无对阵。' : '正在确认队长与入选对阵。'}</p> : null}
       </div> : <div className={styles.registration}>

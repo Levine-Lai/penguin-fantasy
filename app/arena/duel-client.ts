@@ -1,6 +1,6 @@
 import { operationsFetch, type ArenaConfig, type DuelSelection } from '../operations-client.ts';
 
-export type Mine = { entryId: number; arena?: ArenaConfig; remaining: number; selectionStatus?: DuelSelection | null; gw: number; submitted: boolean; challenge: { targetId: number; targetName: string } | null };
+export type Mine = { entryId: number; arena?: ArenaConfig; hp?: number; eliminated?: boolean; eliminatedGw?: number | null; remaining: number; selectionStatus?: DuelSelection | null; gw: number; submitted: boolean; challenge: { targetId: number; targetName: string } | null };
 export type PlayerSession = { entryId: number; token: string; mine: Mine };
 export type Challenge = { gw: number; targetId: number; targetName: string };
 
@@ -40,6 +40,7 @@ export function createDuelClient(entryId: number) {
     return reading;
   };
   const validate = (session: PlayerSession, challenge: Challenge) => {
+    if (session.mine.eliminated) throw new Error('你已淘汰，不能再参与挑战');
     if (session.mine.gw !== challenge.gw) throw new Error('比赛周已变化，请重新选择');
     if (!session.mine.submitted && session.mine.remaining <= 0) throw new Error('你的五次主动挑战权已用完');
   };

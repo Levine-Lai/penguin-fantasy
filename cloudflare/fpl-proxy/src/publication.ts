@@ -1,5 +1,6 @@
 import { selectRound } from './duel-rules.ts';
 import type { Duel, OpsEnv, OpsStatement, Snapshot } from './operations.ts';
+import { playerHealth } from '../../../shared/player-health.ts';
 
 export class PublicationConflict extends Error {
   constructor(gw: number) { super(`GW${gw} publication changed while scores were being fetched`); }
@@ -36,7 +37,7 @@ export async function commitRound(env: OpsEnv, snapshot: Snapshot, expectedRevis
   const revisionGuard = 'COALESCE((SELECT revision FROM published_rounds WHERE gw=?),0)=?';
   const now = new Date().toISOString();
   for (const row of rows.results) {
-    if (snapshot.gw < 9 || snapshot.gw > 20 || !snapshot.finished || !snapshot.officialFinalized) continue;
+    if (snapshot.gw < 9 || snapshot.gw > 20 || !snapshot.finished) continue;
     const left = scores.get(row.challenger_id), right = scores.get(row.target_id);
     if (left === undefined || right === undefined) continue;
     const delta = Math.sign(left - right);
@@ -52,6 +53,25 @@ export async function commitRound(env: OpsEnv, snapshot: Snapshot, expectedRevis
       .bind(settled.settled_at, left, right, delta, -delta, row.id, snapshot.gw, expectedRevision));
   }
   const published = { ...snapshot, duelResults: results, publicationRevision: expectedRevision + 1 };
+  if (snapshot.finished && snapshot.gw >= 9) {
+    const removedRows = (await db.prepare('SELECT id FROM duels WHERE deleted_at IS NOT NULL').all<{ id: string }>()).results;
+    const removed = new Set(removedRows.map(row => row.id));
+    const history = (await publishedHistory(env)).filter(round => round.gw < snapshot.gw);
+    const eliminated = snapshot.teams.filter(team => playerHealth([...history, published], team.entryId, removed).eliminated).map(team => team.entryId);
+    // A newer round may have accepted a registration before this round settled.
+    // Void it with the same publication, releasing its reserved challenge right.
+    if (eliminated.length) {
+      statements.push(db.prepare(`INSERT INTO audit_log(id,action,target,detail,created_at)
+        SELECT lower(hex(randomblob(16))),'remove_duels',id,'参与玩家已淘汰，取消后续对阵',?
+        FROM duels WHERE gw>? AND deleted_at IS NULL AND settled_at IS NULL
+        AND (challenger_id IN (SELECT value FROM json_each(?)) OR target_id IN (SELECT value FROM json_each(?))) AND ${revisionGuard}`)
+        .bind(now, snapshot.gw, JSON.stringify(eliminated), JSON.stringify(eliminated), snapshot.gw, expectedRevision));
+      statements.push(db.prepare(`UPDATE duels SET deleted_at=?,delete_reason='参与玩家已淘汰，取消后续对阵'
+        WHERE gw>? AND deleted_at IS NULL AND settled_at IS NULL
+        AND (challenger_id IN (SELECT value FROM json_each(?)) OR target_id IN (SELECT value FROM json_each(?))) AND ${revisionGuard}`)
+        .bind(now, snapshot.gw, JSON.stringify(eliminated), JSON.stringify(eliminated), snapshot.gw, expectedRevision));
+    }
+  }
   statements.push(db.prepare(`INSERT INTO published_rounds(gw,revision,snapshot,published_at)
     SELECT ?,?,?,? WHERE ${revisionGuard}
     ON CONFLICT(gw) DO UPDATE SET revision=excluded.revision,snapshot=excluded.snapshot,published_at=excluded.published_at`)

@@ -1,5 +1,6 @@
 import { arenaWindow, selectRound, usedChallengeSql, usesChallenge } from './duel-rules.ts';
 import { commitRound, publicationRevision, publishedHistory, publishedRound } from './publication.ts';
+import { playerHealth } from '../../../shared/player-health.ts';
 
 export interface OpsStatement {
   bind(...values: unknown[]): OpsStatement;
@@ -21,7 +22,7 @@ export interface OpsEnv {
 type Member = { entryId: number; teamName: string };
 type Session = { role: 'admin' | 'player'; exp: number; entryId?: number; codeHash?: string };
 export type Duel = { id: string; gw: number; challenger_id: number; target_id: number; created_at: string; selection_status: 'pending' | 'selected' | 'same_captain' | 'overflow' | 'missing_captain'; deleted_at: string | null; settled_at: string | null; challenger_score: number | null; target_score: number | null; challenger_delta: number | null; target_delta: number | null };
-export type Snapshot = { gw: number; finished?: boolean; officialFinalized?: boolean; duelResults?: Duel[]; publicationRevision?: number; teams: Array<{ entryId: number; captainPoints: number; scoringCaptainName?: string; captainName?: string | null }> };
+export type Snapshot = { gw: number; finished?: boolean; officialFinalized?: boolean; duelResults?: Duel[]; publicationRevision?: number; teams: Array<{ entryId: number; captainPoints: number; captainPickRate?: number | null; scoringCaptainName?: string; captainName?: string | null }> };
 
 const canonicalOrigin = 'https://penguin-fantasy.pages.dev';
 const origins = new Set([canonicalOrigin, 'https://levine-lai.github.io', 'https://penguin-cup-2627.hazy-lemon-8599.chatgpt.site']);
@@ -128,7 +129,14 @@ function namedDuels(rows: Duel[], members: Member[]) {
   const names = new Map(members.map(member => [member.entryId, member.teamName]));
   return rows.map(row => ({ ...row, challengerName: names.get(row.challenger_id) ?? `ID ${row.challenger_id}`, targetName: names.get(row.target_id) ?? `ID ${row.target_id}` }));
 }
-export async function submitDuel(db: OpsDatabase, gw: number, challengerId: number, targetId: number, id = crypto.randomUUID(), gate?: { deadline: string }): Promise<boolean> {
+async function healthState(env: OpsEnv) {
+  const revision = (await env.OPS_DB!.prepare('SELECT COALESCE(SUM(revision),0) AS revision FROM published_rounds').first<{ revision: number }>())!.revision;
+  const removed = (await env.OPS_DB!.prepare('SELECT id FROM duels WHERE deleted_at IS NOT NULL').all<{ id: string }>()).results;
+  const history = await publishedHistory(env);
+  const removedIds = new Set(removed.map(row => row.id));
+  return { revision, removed: removed.length, player: (id: number) => playerHealth(history, id, removedIds) };
+}
+export async function submitDuel(db: OpsDatabase, gw: number, challengerId: number, targetId: number, id = crypto.randomUUID(), gate?: { deadline: string; health?: { revision: number; removed: number } }): Promise<boolean> {
   const result = await db.prepare(`INSERT INTO duels(id,gw,challenger_id,target_id,created_at)
     SELECT ?,?,?,?,? WHERE ? != ?
     AND NOT EXISTS(SELECT 1 FROM duels WHERE gw=? AND deleted_at IS NULL AND
@@ -145,9 +153,11 @@ export async function submitDuel(db: OpsDatabase, gw: number, challengerId: numb
       AND julianday(json_extract(value,'$.closesAt')) <= julianday(json_extract(value,'$.opensAt'),'+1 day')
       AND julianday('now') >= julianday(json_extract(value,'$.opensAt'))
       AND julianday('now') < julianday(json_extract(value,'$.closesAt'))
-    )) AND julianday('now') < julianday(?)` : ''}`)
+    )) AND julianday('now') < julianday(?)` : ''}
+    ${gate?.health ? `AND (SELECT COALESCE(SUM(revision),0) FROM published_rounds)=?
+      AND (SELECT COUNT(*) FROM duels WHERE deleted_at IS NOT NULL)=?` : ''}`)
     .bind(id, gw, challengerId, targetId, new Date().toISOString(), challengerId, targetId, gw,
-      challengerId, targetId, challengerId, targetId, challengerId, ...(gate ? [gate.deadline, gw, gw, gate.deadline] : [])).run();
+      challengerId, targetId, challengerId, targetId, challengerId, ...(gate ? [gate.deadline, gw, gw, gate.deadline] : []), ...(gate?.health ? [gate.health.revision, gate.health.removed] : [])).run();
   return result.meta.changes === 1;
 }
 export async function handleOperations(request: Request, env: OpsEnv): Promise<Response | null> {
@@ -233,7 +243,7 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
       const [members, duelRows, announcementRows, deleted, history] = await Promise.all([
         roster(env), db.prepare('SELECT * FROM duels WHERE gw=? AND deleted_at IS NULL ORDER BY created_at').bind(config.gw).all<Duel>(),
         db.prepare('SELECT id,title,body,display_day FROM announcements WHERE display_day=? AND deleted_at IS NULL ORDER BY created_at DESC').bind(beijingDay()).all(),
-        db.prepare('SELECT id FROM duels WHERE deleted_at IS NOT NULL AND settled_at IS NOT NULL').all<{ id: string }>(),
+        db.prepare('SELECT id FROM duels WHERE deleted_at IS NOT NULL').all<{ id: string }>(),
         publishedHistory(env),
       ]);
       const removedDuelIds = deleted.results.map(row => row.id);
@@ -271,11 +281,12 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
     }
     if (path === '/api/duels/mine' && request.method === 'GET') {
       const entryId = await playerSession(env, request); const config = await arenaWindow(env);
+      const life = (await healthState(env)).player(entryId);
       const rows = await db.prepare('SELECT * FROM duels WHERE deleted_at IS NULL AND (challenger_id=? OR target_id=?) ORDER BY created_at DESC').bind(entryId, entryId).all<Duel>();
       const used = rows.results.filter(row => row.challenger_id === entryId && usesChallenge(row)).length;
       const submitted = rows.results.find(row => row.gw === config.gw && row.challenger_id === entryId);
       const target = submitted ? (await roster(env)).find(member => member.entryId === submitted.target_id) : null;
-      return response({ entryId, arena: config, remaining: Math.max(0, 5 - used), gw: config.gw, selectionStatus: submitted?.selection_status ?? null,
+      return response({ entryId, arena: config, ...life, remaining: Math.max(0, 5 - used), gw: config.gw, selectionStatus: submitted?.selection_status ?? null,
         submitted: Boolean(submitted), challenge: submitted ? { targetId: submitted.target_id, targetName: target?.teamName ?? `ID ${submitted.target_id}` } : null }, request);
     }
     if (path === '/api/duels' && request.method === 'POST') {
@@ -289,8 +300,11 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
       if (Number(input.gw) !== config.gw) throw new ApiError(409, '比赛周已变化，请重新加载');
       const members = await roster(env);
       if (!members.some(member => member.entryId === targetId) || targetId === entryId) throw new ApiError(400, '挑战目标无效');
+      const health = await healthState(env);
+      if (health.player(entryId).eliminated) throw new ApiError(409, '你已淘汰，不能再参与挑战');
+      if (health.player(targetId).eliminated) throw new ApiError(409, '该玩家已淘汰，请选择其他挑战对象');
       const id = crypto.randomUUID();
-      if (!await submitDuel(db, config.gw, entryId, targetId, id, { deadline: ddl })) {
+      if (!await submitDuel(db, config.gw, entryId, targetId, id, { deadline: ddl, health })) {
         const currentConfig = await arenaWindow(env);
         if (currentConfig.gw !== config.gw) throw new ApiError(409, '比赛周已变化，请重新加载');
         if (Date.now() >= Date.parse(ddl)) throw new ApiError(409, '本轮报名已截止');
@@ -322,7 +336,7 @@ export async function settleDuels(env: OpsEnv, snapshotOverride?: Snapshot): Pro
     if (snapshotOverride && snapshotOverride.gw !== gw) continue;
     const revision = await publicationRevision(env, gw);
     const snapshot = snapshotOverride ?? await publishedRound(env, gw);
-    if (!snapshot?.finished || !snapshot.officialFinalized) continue;
+    if (!snapshot?.finished) continue;
     if (!await selectRound(env, gw)) continue;
     const committed = await commitRound(env, snapshot, revision);
     results.push(...committed.duelResults ?? []);

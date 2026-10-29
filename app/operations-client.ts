@@ -11,7 +11,7 @@ export type DuelRecord = {
 export type Community = {
   arena: ArenaConfig; announcements: Announcement[]; duels: DuelRecord[];
   members: Array<{ entryId: number; teamName: string }>;
-  results: Array<{ gw: number; challenger_id: number; target_id: number; challenger_delta: number; target_delta: number }>;
+  results: PublishedDuel[];
   removedDuelIds?: string[];
 };
 export type PublishedDuel = Omit<DuelRecord, 'challengerName' | 'targetName'>;

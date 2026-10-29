@@ -170,7 +170,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /lifeEarnedInStage\(stageForGw\(snapshot\.gw\), result\.captainPoints, result\.captainPickRate\)/);
   assert.match(page, /if \(!stage \|\| stage\.id === 5\) return 0;/);
   assert.match(page, /if \(points >= 10\) return 1;[\s\S]{0,40}if \(points <= 3\) return -1;/);
-  assert.match(page, /hp: Math\.max\(0, 1 \+ history\.reduce/);
+  assert.match(page, /hp: lifeState\.hp/);
   assert.match(page, /history-chapter-summary/);
   assert.match(page, /本章节尚无队长选择记录/);
   assert.match(page, /gwFrom: 9,[\s\S]{0,40}gwTo: 20,/);

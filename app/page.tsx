@@ -5,6 +5,7 @@ import { currentTrialBootstrapScript, fallbackGwDeadlines, type GwDeadline } fro
 import { currentStageAt, type StageId } from "./current-stage";
 import staticFplData from "./static-fpl-data.json";
 import LiveArena from './arena/live-arena';
+import { playerHealth } from '../shared/player-health';
 import { loadCommunity, recordPlayerLogin, type Community, type PublishedDuel } from './operations-client';
 
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
@@ -26,6 +27,7 @@ type ApiTeam = LeagueTeam & {
   captainPickRate: number | null;
 };
 type GwSnapshot = {
+  finished?: boolean;
   duelResults?: PublishedDuel[];
   ready: boolean;
   gw: number;
@@ -463,6 +465,7 @@ function RankedPlayerCells({ player }: { player: RankedPlayer }) {
       <strong className="stat-score"><span className={gpcStatus === "not_started" ? "score-pending" : undefined}>{gpcStatus === "not_started" ? "未开赛" : gpc}</span></strong>
       <strong className="stat-score stat-captain-total"><span>{captainTotal}</span></strong>
       <div className="hp-cell" aria-label={`${hp} 点血量`}>
+        {hp === 0 ? <span>已淘汰</span> : null}
         <span className="pixel-health" aria-hidden="true">
           {Array.from({ length: hp }, (_, index) => <i className="blood-drop" key={index}></i>)}
         </span>
@@ -670,10 +673,11 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
 
   const ranking = useMemo<RankedPlayer[]>(() => {
     const rows = leagueTeams.map((team) => {
+      const lifeState = playerHealth(gwSnapshots.map(snapshot => ({ ...snapshot, duelResults: snapshot.duelResults ?? community?.results?.filter(row => row.gw === snapshot.gw) })), team.entryId, new Set(community?.removedDuelIds));
       const history = gwSnapshots.flatMap<CaptainHistoryEntry>((snapshot) => {
         const result = snapshot.teams.find((entry) => entry.entryId === team.entryId);
         if (!result?.captainName) return [];
-        const life = result.captainStatus && result.captainStatus !== "finished" && result.captainPoints <= 3
+        const life = (snapshot.gw >= 9 && !snapshot.finished) || (lifeState.eliminatedGw !== null && snapshot.gw > lifeState.eliminatedGw) || (result.captainStatus && result.captainStatus !== "finished" && result.captainPoints <= 3)
           ? 0
           : lifeEarnedInStage(stageForGw(snapshot.gw), result.captainPoints, result.captainPickRate);
         const duel = (snapshot.duelResults?.filter(row => !community?.removedDuelIds?.includes(row.id)) ?? community?.results)?.find(duel => duel.gw === snapshot.gw && (duel.challenger_id === team.entryId || duel.target_id === team.entryId));
@@ -697,7 +701,7 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
         gpcStatus: latest?.status,
         captainTotal: history.reduce((total, item) => total + item.points, 0),
         captainRateTotal: history.reduce((total, item) => total + item.rate, 0),
-        hp: Math.max(0, 1 + history.reduce((total, item) => total + item.life + (item.duelLife ?? 0), 0)),
+        hp: lifeState.hp,
         history,
       };
     });

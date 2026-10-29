@@ -209,6 +209,30 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
       throw new Error("No relevant FPL event found");
     }
 
+    if (requestedGw === undefined) {
+      // Completed second-stage rounds with valid duels must still observe score corrections at 07:30.
+      const duelRounds = new Set(env.OPS_DB
+        ? (await env.OPS_DB.prepare('SELECT DISTINCT gw FROM duels WHERE deleted_at IS NULL AND gw BETWEEN 9 AND 20').all<{ gw: number }>()).results.map(row => row.gw)
+        : []);
+      const passedEvents = bootstrap.events
+        .filter((item) => item.id !== event.id && now >= Date.parse(item.deadline_time))
+        .sort((left, right) => left.id - right.id);
+      for (const passedEvent of passedEvents) {
+        try {
+          const existingSnapshot = await env.FPL_CACHE.get<{ captainResolutionVersion?: number; finished?: boolean }>(`snapshot:gw:${passedEvent.id}`, "json");
+          if (existingSnapshot?.captainResolutionVersion === CAPTAIN_RESOLUTION_VERSION && existingSnapshot.finished && !duelRounds.has(passedEvent.id)) continue;
+          const backfillPicks = await getPicksDocument(env, passedEvent.id);
+          if (isPicksCompleteForRoster(backfillPicks, roster)) {
+            await publishDailySnapshot(env, passedEvent.id, now);
+          }
+        } catch (error) {
+          // A historical FPL outage must not prevent publication/settlement of ready rounds.
+          console.error('Historical snapshot refresh failed', passedEvent.id, error instanceof Error ? error.message : 'unknown');
+        }
+      }
+    }
+
+
     // Capture the expected committed version before fetching scores; overlapping stale work must fail closed.
     const expectedRevision = await publicationRevision(env, event.id);
 
@@ -312,28 +336,6 @@ async function publishDailySnapshot(env: Env, requestedGw?: number, now = Date.n
       await env.FPL_CACHE.put('snapshot:history', JSON.stringify([...history.filter(item => item.gw !== event.id), publishedSnapshot].sort((a, b) => a.gw - b.gw)));
     }
 
-    if (requestedGw === undefined) {
-      // Completed second-stage rounds with valid duels must still observe score corrections at 07:30.
-      const duelRounds = new Set(env.OPS_DB
-        ? (await env.OPS_DB.prepare('SELECT DISTINCT gw FROM duels WHERE deleted_at IS NULL AND gw BETWEEN 9 AND 20').all<{ gw: number }>()).results.map(row => row.gw)
-        : []);
-      const passedEvents = bootstrap.events
-        .filter((item) => item.id !== event.id && now >= Date.parse(item.deadline_time))
-        .sort((left, right) => left.id - right.id);
-      for (const passedEvent of passedEvents) {
-        try {
-          const existingSnapshot = await env.FPL_CACHE.get<{ captainResolutionVersion?: number; finished?: boolean }>(`snapshot:gw:${passedEvent.id}`, "json");
-          if (existingSnapshot?.captainResolutionVersion === CAPTAIN_RESOLUTION_VERSION && existingSnapshot.finished && !duelRounds.has(passedEvent.id)) continue;
-          const backfillPicks = await getPicksDocument(env, passedEvent.id);
-          if (isPicksCompleteForRoster(backfillPicks, roster)) {
-            await publishDailySnapshot(env, passedEvent.id, now);
-          }
-        } catch (error) {
-          // A historical FPL outage must not prevent publication/settlement of ready rounds.
-          console.error('Historical snapshot refresh failed', passedEvent.id, error instanceof Error ? error.message : 'unknown');
-        }
-      }
-    }
 
     await env.FPL_CACHE.put(
       "sync:status",

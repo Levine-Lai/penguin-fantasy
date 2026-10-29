@@ -294,7 +294,7 @@ test('atomic insert rechecks both ends of the twelve-hour window', async () => {
   }
 });
 
-async function publicationScenario({ finalized = true, failHistory = false } = {}) {
+async function publicationScenario({ finalized = true, failHistory = false, matchesFinished = true } = {}) {
   const state = await setup();
   const { cache, db } = state;
   const members = cache.get('league:roster');
@@ -302,7 +302,7 @@ async function publicationScenario({ finalized = true, failHistory = false } = {
   cache.set('fpl:bootstrap', { value: structuredClone(bootstrap), cachedAt: new Date().toISOString() });
   cache.get('fpl:bootstrap').value.events[1].data_checked = false; // A fresh check must override stale confirmation flags.
   cache.set('league:roster:cached', { value: members, cachedAt: new Date().toISOString() });
-  cache.set('snapshot:history', []);
+  cache.set('snapshot:history', [{ gw: 8, teams: members.map(m => ({ ...m, captainPoints: 10, captainPickRate: 50 })) }]);
   cache.set('snapshot:gw:9', { gw: 9, finished: true, officialFinalized: true, captainResolutionVersion: 2, teams: members.map(m => ({ ...m, captainPoints: 1 })) });
   for (const gw of [9, 10]) {
     cache.set(`picks:gw:${gw}`, { gw, checkedEntryIds: members.map(m => m.entryId), picksByEntry: Object.fromEntries(members.map(m => [m.entryId, { captainId: m.entryId % 2 ? 101 : 102, viceCaptainId: 102, multiplier: 2 }])), completedAt: new Date().toISOString() });
@@ -315,7 +315,7 @@ async function publicationScenario({ finalized = true, failHistory = false } = {
     if (url.pathname.endsWith('/bootstrap-static/')) return Response.json(bootstrap);
     if (failHistory && url.pathname.includes('/event/9/live/')) return new Response('historical outage', { status: 503 });
     if (url.pathname.endsWith('/live/')) return Response.json({ elements: [{ id: 101, stats: { total_points: 10, minutes: 90 } }, { id: 102, stats: { total_points: 8, minutes: 90 } }] });
-    if (url.pathname.endsWith('/fixtures/')) return Response.json([{ team_h: 1, team_a: 2, started: true, finished: true, finished_provisional: true }]);
+    if (url.pathname.endsWith('/fixtures/')) return Response.json([{ team_h: 1, team_a: 2, started: true, finished: matchesFinished, finished_provisional: matchesFinished }]);
     throw new Error(`Unexpected request ${url.pathname}`);
   };
   return { ...state, restore: () => { globalThis.fetch = original; } };
@@ -340,17 +340,79 @@ test('historical score failure does not block an officially finalized current-ro
   } finally { restore(); }
 });
 
-test('finished matches remain in progress until official data_checked is true', async () => {
-  const { db, env, request, restore } = await publicationScenario({ finalized: false });
+test('unfinished matches remain pending at the daily publication', async () => {
+  const { db, env, request, restore } = await publicationScenario({ finalized: false, matchesFinished: false });
   try {
     await publishDailySnapshot(env);
     const current = (await publishedHistory(env)).find(s => s.gw === 10);
-    assert.equal(current.finished, true); assert.equal(current.officialFinalized, false);
+    assert.equal(current.finished, false); assert.equal(current.officialFinalized, false);
     assert.deepEqual(current.duelResults, []);
     assert.equal((await db.prepare('SELECT * FROM duels WHERE gw=10').first()).settled_at, null);
     const feed = await (await request('/community')).json();
     assert.equal(feed.duels[0].settled_at, null); assert.equal(feed.duels[0].challenger_score, null);
   } finally { restore(); }
+});
+
+test('the first daily update after the last match settles without waiting for data_checked', async () => {
+  const { env, db, restore } = await publicationScenario({ finalized: false });
+  try {
+    const jobs = [];
+    await worker.scheduled({ cron: '*/5 * * * *', scheduledTime: Date.now() }, env, { waitUntil: job => jobs.push(job) });
+    await Promise.all(jobs);
+    assert.equal((await db.prepare('SELECT * FROM duels WHERE gw=9').first()).settled_at, null);
+    await publishDailySnapshot(env);
+    const snapshot = await publishedRound(env, 10);
+    assert.equal(snapshot.officialFinalized, false); assert.equal(snapshot.finished, true);
+    assert.ok(snapshot.duelResults[0].settled_at);
+  } finally { restore(); }
+});
+
+test('a new round waiting for picks never blocks the previous round daily settlement or changes the status GW', async () => {
+  const { env, db, cache, restore } = await publicationScenario();
+  cache.set('picks:gw:10', {gw:10,checkedEntryIds:[],picksByEntry:{}});
+  try {
+    await publishDailySnapshot(env);
+    assert.ok((await db.prepare('SELECT * FROM duels WHERE gw=9').first()).settled_at);
+    assert.equal(await publishedRound(env, 10), null);
+    assert.equal(cache.get('sync:status').gw, 10);
+    assert.equal(cache.get('sync:status').state, 'waiting_for_picks');
+  } finally { restore(); }
+});
+
+test('a one-life double loss settles, eliminates, cancels future registrations, and rejects both sides of a challenge', async () => {
+  const { env, db, cache, request } = await setup();
+  cache.get('fpl:bootstrap').value.events[0].deadline_time = new Date(Date.now()-10000).toISOString();
+  await submitDuel(db, 9, 1, 2); await submitDuel(db, 10, 3, 1);
+  const snapshot = {gw:9,finished:true,officialFinalized:false,teams:[{entryId:1,captainPoints:2},{entryId:2,captainPoints:8},{entryId:3,captainPoints:8}]};
+  await commitRound(env,snapshot,0);
+  const lost = await db.prepare('SELECT * FROM duels WHERE gw=9').first();
+  assert.ok(lost.settled_at); assert.equal(lost.challenger_delta,-1);
+  const future = await db.prepare('SELECT * FROM duels WHERE gw=10').first();
+  assert.ok(future.deleted_at); assert.match(future.delete_reason,/淘汰/);
+  cache.set('fpl:bootstrap',{value:{events:[{id:9,deadline_time:new Date(Date.now()-10000).toISOString()},{id:10,deadline_time:new Date(Date.now()+6*3600000).toISOString()}]}});
+  const tokenFor = async id => (await (await request('/player/session','POST',{entryId:id})).json()).token;
+  const deadToken = await tokenFor(1), aliveToken = await tokenFor(3);
+  const mine = await (await request('/duels/mine','GET',undefined,{authorization:`Bearer ${deadToken}`})).json();
+  assert.equal(mine.hp,0); assert.equal(mine.eliminated,true);
+  const fromDead = await request('/duels','POST',{gw:10,targetId:3},{authorization:`Bearer ${deadToken}`});
+  assert.equal(fromDead.status,409); assert.match((await fromDead.json()).error,/淘汰/);
+  const toDead = await request('/duels','POST',{gw:10,targetId:1},{authorization:`Bearer ${aliveToken}`});
+  assert.equal(toDead.status,409); assert.match((await toDead.json()).error,/淘汰/);
+  assert.equal((await request('/duels','POST',{gw:10,targetId:4},{authorization:`Bearer ${aliveToken}`})).status,201);
+});
+
+test('the atomic signup rejects a health revision that changes between qualification and the insert', async () => {
+  const {db,request} = await setup();
+  const {token} = await (await request('/player/session','POST',{entryId:1})).json();
+  const prepare = db.prepare;
+  db.prepare = sql => {
+    const wrap = stmt => ({bind(...args){return wrap(stmt.bind(...args));},first:()=>stmt.first(),all:()=>stmt.all(),async run(){
+      if(sql.startsWith('INSERT INTO duels(')) await prepare('INSERT INTO published_rounds(gw,revision,snapshot,published_at) VALUES (9,1,?,?)').bind(JSON.stringify({gw:9,teams:[]}),new Date().toISOString()).run();
+      return stmt.run();
+    }});return wrap(prepare(sql));
+  };
+  const response = await request('/duels','POST',{gw:9,targetId:2},{authorization:`Bearer ${token}`});
+  assert.equal(response.status,409); assert.equal((await prepare('SELECT COUNT(*) AS count FROM duels').first()).count,0);
 });
 
 test('failed canonical publication rolls back settlement and corrections without changing reserved rights', async () => {
@@ -364,7 +426,7 @@ test('failed canonical publication rolls back settlement and corrections without
     await assert.rejects(commitRound(env, snapshot, 0), /publication interrupted/);
     assert.equal((await db.prepare('SELECT * FROM duels WHERE gw=10').first()).settled_at, null);
     assert.equal((await mine()).remaining, before.remaining);
-    assert.deepEqual(await publishedHistory(env), []);
+    assert.equal((await publishedHistory(env)).some(round => round.gw === 10), false);
     assert.deepEqual((await (await request('/community')).json()).results, []);
     db.sqlite.exec('DROP TRIGGER fail_publish');
     await commitRound(env, snapshot, 0);
