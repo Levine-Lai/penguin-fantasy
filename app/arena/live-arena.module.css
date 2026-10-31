@@ -35,6 +35,10 @@
 .error { margin-bottom: 1rem; color: #ff9aa9; font-size: .85rem; }
 .duels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
 .duelCaptain { max-width: 100%; margin-top: .5rem; color: var(--arena-cyan); font: 700 clamp(.8rem, 3.2vw, 1rem)/1.4 var(--font-label); overflow-wrap: anywhere; }
+.duelHealth { margin-top: .6rem; min-width: 0; }
+.duelHealth .confirmHealth { font-size: .75rem; gap: .25rem; }
+.duelHealth .confirmDrops { grid-template-columns: repeat(var(--hp-columns), .65rem); gap: .15rem; min-height: calc(var(--duel-health-rows, 1) * .75rem - .15rem); }
+.duelHealth .confirmDrops :global(.blood-drop) { width: .65rem; height: .6rem; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .panel :focus-visible { outline: 2px solid var(--arena-cyan); outline-offset: 2px; }
 @media (max-width: 48rem) {

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-31T04:01:35.050Z",
+  "generatedAt": "2026-10-31T13:31:38.130Z",
   "league": {
     "ready": true,
     "leagueId": 511690,
@@ -117,12 +117,12 @@
         "teamName": "光之围棋俱乐部"
       },
       {
-        "entryId": 113485,
-        "teamName": "一人血书 求这刺聊点啥回归"
-      },
-      {
         "entryId": 6994,
         "teamName": "这是团赛专用的大号"
+      },
+      {
+        "entryId": 113485,
+        "teamName": "一人血书 求这刺聊点啥回归"
       },
       {
         "entryId": 18391,
@@ -145,12 +145,12 @@
         "teamName": "Steven's Team"
       },
       {
-        "entryId": 10013,
-        "teamName": "Summerfan"
-      },
-      {
         "entryId": 673111,
         "teamName": "MUJY"
+      },
+      {
+        "entryId": 10013,
+        "teamName": "Summerfan"
       },
       {
         "entryId": 93912,
@@ -345,12 +345,12 @@
         "teamName": "奏响最绝望的乐章"
       },
       {
-        "entryId": 112171,
-        "teamName": "Orange's Team"
-      },
-      {
         "entryId": 80003,
         "teamName": "fpl中搁浅的哲学家"
+      },
+      {
+        "entryId": 112171,
+        "teamName": "Orange's Team"
       },
       {
         "entryId": 53516,
