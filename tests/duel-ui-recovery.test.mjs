@@ -137,6 +137,26 @@ test('a missing public result feed still reports an error after the official DDL
   finally { h.restore(); }
 });
 
+test('an open page checks at DDL plus 90 minutes, retries a partial capture, and stops when valid pairings are ready', async () => {
+  const realNow=Date.now, now=realNow(); Date.now=()=>now;
+  let reads=0,ready=false;
+  const arena={gw:9,open:false,deadline:new Date(now-90*60000+5000).toISOString()};
+  const h=arenaHarness(id=>({read:async()=>({entryId:id,token:'test',mine:{entryId:id,arena,gw:9,remaining:5,submitted:false,challenge:null}})}),async()=>{
+    reads++; return {arena:{...arena,selectionReady:ready},members:[],results:[],duels:ready?[{id:'selected',gw:9,challengerName:'A',targetName:'B',settled_at:null}]:[]};
+  });
+  try {
+    h.render();await h.flush(); assert.equal(reads,1);
+    const capture=[...h.timers.values()].find(timer=>timer.ms===6000);
+    assert.ok(capture); await capture.fn();await h.flush();assert.equal(reads,2);
+    const retry=[...h.timers.values()].find(timer=>timer.ms===5*60000);assert.ok(retry);
+    globalThis.document.visibilityState='hidden';await retry.fn();await h.flush();assert.equal(reads,2);
+    globalThis.document.visibilityState='visible';ready=true;
+    await [...h.timers.values()].filter(timer=>timer.ms===5*60000).at(-1).fn();await h.flush();
+    assert.equal(reads,3);assert.equal(h.nodes('article').length,1);
+    await retry.fn();await h.flush();assert.equal(reads,3);
+  } finally {h.restore();Date.now=realNow;}
+});
+
 test('admin login completes without waiting for the dashboard and reconciles a lost acknowledgement once', async () => {
   let busy = false, loggedIn = false, password = 'test', refreshes = 0; const paths = [];
   const deps = { busy, authRevision: { current: 0 }, setBusy: v => { busy = v; }, setError() {}, setNotice() {}, setPassword: v => { password = v; }, setLoggedIn: v => { loggedIn = v; }, password, day: '2026-10-28', page: 0,

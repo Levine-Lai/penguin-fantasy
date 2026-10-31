@@ -62,6 +62,30 @@ test('signed sessions reject tampering, wrong secrets and expiry', async () => {
   assert.equal(await readSession('secret', token, 1000), null);
 });
 
+test('locked original captains and vice captains reach admin and valid public pairings only after the capture gate', async () => {
+  const {env,cache,db,request,adminHeaders} = await setup();
+  const bootstrap=cache.get('fpl:bootstrap');
+  bootstrap.value.elements=[{id:101,web_name:'Haaland'},{id:201,web_name:'Palmer'},{id:102,web_name:'Odegaard'},{id:202,web_name:'Saka'}];
+  cache.get('picks:gw:9').picksByEntry[1]={captainId:101,viceCaptainId:201};
+  cache.get('picks:gw:9').picksByEntry[2]={captainId:102,viceCaptainId:202};
+  await submitDuel(db,9,1,2);
+  let admin=await (await request('/admin/overview','GET',undefined,adminHeaders)).json();
+  assert.equal(admin.duels[0].challengerCaptain,null);
+  assert.deepEqual((await (await request('/community')).json()).duels,[]);
+  bootstrap.value.events[0].deadline_time=new Date(Date.now()-89*60000).toISOString();
+  admin=await (await request('/admin/overview','GET',undefined,adminHeaders)).json();
+  assert.equal(admin.duels[0].challengerCaptain,null);
+  bootstrap.value.events[0].deadline_time=new Date(Date.now()-91*60000).toISOString();
+  await selectRound(env,9);
+  admin=await (await request('/admin/overview','GET',undefined,adminHeaders)).json();
+  const publicFeed=await (await request('/community')).json();
+  assert.equal(publicFeed.duels.length,1); assert.equal(publicFeed.arena.selectionReady,true);
+  assert.deepEqual(publicFeed.duels[0].challengerCaptain,{captainId:101,captainName:'Haaland',viceCaptainId:201,viceCaptainName:'Palmer'});
+  assert.deepEqual(publicFeed.duels[0].targetCaptain,{captainId:102,captainName:'Odegaard',viceCaptainId:202,viceCaptainName:'Saka'});
+  assert.deepEqual(admin.duels[0].challengerCaptain,publicFeed.duels[0].challengerCaptain);
+  assert.equal(publicFeed.duels[0].settled_at,null); assert.equal(publicFeed.duels[0].challenger_score,null);
+});
+
 test('administrator endpoints reject anonymous users, wrong origins and wrong passwords', async () => {
   const { request } = await setup();
   assert.equal((await request('/admin/overview')).status, 401);

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T03:01:13.017Z",
+  "generatedAt": "2026-10-31T04:01:35.050Z",
   "league": {
     "ready": true,
     "leagueId": 511690,
@@ -105,12 +105,12 @@
         "teamName": "她在我耳边吹气"
       },
       {
-        "entryId": 15944,
-        "teamName": "ParisAintGerman"
-      },
-      {
         "entryId": 117128,
         "teamName": "Dongma"
+      },
+      {
+        "entryId": 15944,
+        "teamName": "ParisAintGerman"
       },
       {
         "entryId": 13130,
@@ -125,12 +125,12 @@
         "teamName": "这是团赛专用的大号"
       },
       {
-        "entryId": 30963,
-        "teamName": "香香软软的big b"
-      },
-      {
         "entryId": 18391,
         "teamName": "Loki7_7"
+      },
+      {
+        "entryId": 30963,
+        "teamName": "香香软软的big b"
       },
       {
         "entryId": 57236,
@@ -145,12 +145,12 @@
         "teamName": "Steven's Team"
       },
       {
-        "entryId": 673111,
-        "teamName": "MUJY"
-      },
-      {
         "entryId": 10013,
         "teamName": "Summerfan"
+      },
+      {
+        "entryId": 673111,
+        "teamName": "MUJY"
       },
       {
         "entryId": 93912,
@@ -13460,22 +13460,6 @@
             "captainPickRate": 30.6
           },
           {
-            "entryId": 15944,
-            "teamName": "ParisAintGerman",
-            "captainId": 154,
-            "captainName": "Palmer",
-            "viceCaptainId": 411,
-            "viceCaptainName": "Haaland",
-            "scoringCaptainId": 154,
-            "scoringCaptainName": "Palmer",
-            "captainPoints": -1,
-            "originalCaptainPoints": -1,
-            "captainStatus": "finished",
-            "originalCaptainStatus": "finished",
-            "usedViceCaptain": false,
-            "captainPickRate": 14.4
-          },
-          {
             "entryId": 117128,
             "teamName": "Dongma",
             "captainId": 411,
@@ -13490,6 +13474,22 @@
             "originalCaptainStatus": "finished",
             "usedViceCaptain": false,
             "captainPickRate": 44.1
+          },
+          {
+            "entryId": 15944,
+            "teamName": "ParisAintGerman",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "viceCaptainId": 411,
+            "viceCaptainName": "Haaland",
+            "scoringCaptainId": 154,
+            "scoringCaptainName": "Palmer",
+            "captainPoints": -1,
+            "originalCaptainPoints": -1,
+            "captainStatus": "finished",
+            "originalCaptainStatus": "finished",
+            "usedViceCaptain": false,
+            "captainPickRate": 14.4
           },
           {
             "entryId": 13130,
@@ -13540,22 +13540,6 @@
             "captainPickRate": 44.1
           },
           {
-            "entryId": 30963,
-            "teamName": "香香软软的big b",
-            "captainId": 154,
-            "captainName": "Palmer",
-            "viceCaptainId": 124,
-            "viceCaptainName": "Groß",
-            "scoringCaptainId": 154,
-            "scoringCaptainName": "Palmer",
-            "captainPoints": -1,
-            "originalCaptainPoints": -1,
-            "captainStatus": "finished",
-            "originalCaptainStatus": "finished",
-            "usedViceCaptain": false,
-            "captainPickRate": 14.4
-          },
-          {
             "entryId": 18391,
             "teamName": "Loki7_7",
             "captainId": 411,
@@ -13570,6 +13554,22 @@
             "originalCaptainStatus": "finished",
             "usedViceCaptain": false,
             "captainPickRate": 44.1
+          },
+          {
+            "entryId": 30963,
+            "teamName": "香香软软的big b",
+            "captainId": 154,
+            "captainName": "Palmer",
+            "viceCaptainId": 124,
+            "viceCaptainName": "Groß",
+            "scoringCaptainId": 154,
+            "scoringCaptainName": "Palmer",
+            "captainPoints": -1,
+            "originalCaptainPoints": -1,
+            "captainStatus": "finished",
+            "originalCaptainStatus": "finished",
+            "usedViceCaptain": false,
+            "captainPickRate": 14.4
           },
           {
             "entryId": 57236,
@@ -13620,12 +13620,12 @@
             "captainPickRate": 44.1
           },
           {
-            "entryId": 673111,
-            "teamName": "MUJY",
+            "entryId": 10013,
+            "teamName": "Summerfan",
             "captainId": 411,
             "captainName": "Haaland",
-            "viceCaptainId": 40,
-            "viceCaptainName": "Rogers",
+            "viceCaptainId": 165,
+            "viceCaptainName": "João Pedro",
             "scoringCaptainId": 411,
             "scoringCaptainName": "Haaland",
             "captainPoints": 8,
@@ -13636,12 +13636,12 @@
             "captainPickRate": 44.1
           },
           {
-            "entryId": 10013,
-            "teamName": "Summerfan",
+            "entryId": 673111,
+            "teamName": "MUJY",
             "captainId": 411,
             "captainName": "Haaland",
-            "viceCaptainId": 165,
-            "viceCaptainName": "João Pedro",
+            "viceCaptainId": 40,
+            "viceCaptainName": "Rogers",
             "scoringCaptainId": 411,
             "scoringCaptainName": "Haaland",
             "captainPoints": 8,
@@ -14836,9 +14836,9 @@
             "captainPickRate": 30.6
           }
         ],
-        "updatedAt": "2026-10-28T23:30:44.377Z",
+        "updatedAt": "2026-10-30T23:30:44.217Z",
         "duelResults": [],
-        "publicationRevision": 5
+        "publicationRevision": 7
       }
     ],
     "deadlines": [

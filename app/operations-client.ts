@@ -3,7 +3,9 @@ export const duelSelectionLabels: Record<DuelSelection, string> = { pending: 'чн
 export const operationsOrigin = 'https://penguin-fantasy.pages.dev';
 export type ArenaConfig = { gw: number; open: boolean; count?: number; deadline?: string; opensAt?: string; closesAt?: string; nextOpensAt?: string; selectionReady?: boolean };
 export type Announcement = { id: string; title: string; body: string; display_day: string; deleted_at?: string | null };
+export type CaptainChoice = { captainId: number; captainName: string; viceCaptainId: number | null; viceCaptainName: string | null };
 export type DuelRecord = {
+  challengerCaptain?: CaptainChoice | null; targetCaptain?: CaptainChoice | null;
   id: string; gw: number; challenger_id: number; target_id: number; challengerName: string; targetName: string;
   selection_status?: DuelSelection; created_at: string; deleted_at: string | null; delete_reason?: string; settled_at: string | null;
   challenger_score: number | null; target_score: number | null; challenger_delta: number | null; target_delta: number | null;

@@ -129,6 +129,23 @@ function namedDuels(rows: Duel[], members: Member[]) {
   const names = new Map(members.map(member => [member.entryId, member.teamName]));
   return rows.map(row => ({ ...row, challengerName: names.get(row.challenger_id) ?? `ID ${row.challenger_id}`, targetName: names.get(row.target_id) ?? `ID ${row.target_id}` }));
 }
+async function captainedDuels(env: OpsEnv, rows: Duel[], members: Member[]) {
+  const bootstrap = await env.FPL_CACHE.get<{ value: { events: Array<{ id: number; deadline_time: string }>; elements: Array<{ id: number; web_name: string }> } }>('fpl:bootstrap', 'json');
+  const names = new Map((bootstrap?.value.elements ?? []).map(player => [player.id, player.web_name]));
+  type Pick = { captainId: number; viceCaptainId?: number };
+  const rounds = new Map<number, Record<string, Pick | null>>(await Promise.all([...new Set(rows.map(row => row.gw))].map(async gw => {
+    const ddl = bootstrap?.value.events.find(event => event.id === gw)?.deadline_time;
+    const readable = ddl && Date.now() >= Date.parse(ddl) + 90 * 60000;
+    const picks = readable ? await env.FPL_CACHE.get<{ picksByEntry: Record<string, Pick | null> }>(`picks:gw:${gw}`, 'json') : null;
+    return [gw, picks?.picksByEntry ?? {}] as const;
+  })));
+  const choice = (gw: number, id: number) => {
+    const pick = rounds.get(gw)?.[id];
+    return pick ? { captainId: pick.captainId, captainName: names.get(pick.captainId) ?? `球员 ${pick.captainId}`,
+      viceCaptainId: pick.viceCaptainId ?? null, viceCaptainName: pick.viceCaptainId ? names.get(pick.viceCaptainId) ?? `球员 ${pick.viceCaptainId}` : null } : null;
+  };
+  return namedDuels(rows, members).map(row => ({ ...row, challengerCaptain: choice(row.gw, row.challenger_id), targetCaptain: choice(row.gw, row.target_id) }));
+}
 async function healthState(env: OpsEnv) {
   const revision = (await env.OPS_DB!.prepare('SELECT COALESCE(SUM(revision),0) AS revision FROM published_rounds').first<{ revision: number }>())!.revision;
   const removed = (await env.OPS_DB!.prepare('SELECT id FROM duels WHERE deleted_at IS NOT NULL').all<{ id: string }>()).results;
@@ -207,7 +224,7 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
         const activeCount = (await db.prepare('SELECT COUNT(*) AS count FROM duels WHERE gw=? AND deleted_at IS NULL').bind(config.gw).first<{ count: number }>())?.count ?? 0;
         return response({ day: selectedDay, page, arena: { ...config, deadline: await deadline(env, config.gw), count: activeCount },
           duelPagination: { page: duelPage, pageSize: duelPageSize, total: duelTotal },
-          members, duels: namedDuels(duelRows.results, members), announcements: announcements.results,
+          members, duels: await captainedDuels(env, duelRows.results, members), announcements: announcements.results,
           activity: activity.results, players: players.results, logs: logs.results }, request);
       }
       if (path === '/api/admin/arena' && request.method === 'POST') {
@@ -258,7 +275,7 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
       });
       const revealed = Boolean(ddl && Date.now() >= Date.parse(ddl));
       return response({ arena: { ...config, deadline: ddl, open: config.open && Boolean(ddl) && !revealed, ...(revealed ? { count: publicDuels.length, selectionReady } : {}) },
-        duels: revealed ? namedDuels(publicDuels, members) : [], results: published, removedDuelIds, announcements: announcementRows.results, members }, request);
+        duels: revealed ? await captainedDuels(env, publicDuels, members) : [], results: published, removedDuelIds, announcements: announcementRows.results, members }, request);
     }
     if (path === '/api/visits' && request.method === 'POST') {
       await limit(env, request, 'visits', 180, 60000);

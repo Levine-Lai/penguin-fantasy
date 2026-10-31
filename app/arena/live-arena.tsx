@@ -100,9 +100,32 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
     return () => window.clearInterval(timer);
   }, []);
   const deadline = round?.deadline;
+  const roundGw = round?.gw;
+  const drawReady = community?.arena.gw === roundGw && community?.arena.selectionReady;
   useEffect(() => {
-    const transitions = [round?.opensAt, round?.closesAt, round?.nextOpensAt, deadline,
-      deadline ? new Date(Date.parse(deadline) + 100 * 60000).toISOString() : undefined];
+    if (!deadline || !roundGw || drawReady) return;
+    const captureAt = Date.parse(deadline) + 90 * 60000;
+    if (!Number.isFinite(captureAt)) return;
+    let active = true;
+    let timer: number | undefined;
+    const check = async () => {
+      if (!active) return;
+      if (document.visibilityState === 'visible') {
+        try {
+          const data = await loadCommunity();
+          if (!active) return;
+          setCommunity(data);
+          if (data.arena.gw === roundGw && data.arena.selectionReady) return;
+        } catch { /* Preserve existing data; retry only this pending draw. */ }
+      }
+      if (active) timer = window.setTimeout(() => { void check(); }, 5 * 60000);
+    };
+    const delay = Math.max(1000, captureAt + 1000 - Date.now());
+    if (delay <= 2147483000) timer = window.setTimeout(() => { void check(); }, delay);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [deadline, roundGw, drawReady]);
+  useEffect(() => {
+    const transitions = [round?.opensAt, round?.closesAt, round?.nextOpensAt, deadline];
     const next = transitions.filter((value): value is string => Boolean(value)).map(Date.parse).filter(time => time > Date.now()).sort((a, b) => a - b)[0];
     const delay = next - Date.now();
     if (!Number.isFinite(delay) || delay <= 0 || delay > 2147483000) return;
@@ -188,7 +211,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
         {mine?.submitted && mine.gw === round?.gw && mine.challenge ? <p className={styles.muted}>挑战 {mine.challenge.targetName} · {duelSelectionLabels[mine.selectionStatus ?? 'pending']}</p> : null}
         {publicDuels.map(duel => <article className={frame.duelCard} key={duel.id}>
           <header className={frame.duelCardHeader}><span>GW{duel.gw}</span><span>{chinaTime(duel.created_at)}</span></header>
-          <div className={frame.combatants}><div className={frame.combatant}><small>挑战者</small><strong>{duel.challengerName}</strong></div><div className={frame.versus}>VS</div><div className={frame.combatant}><small>被挑战者</small><strong>{duel.targetName}</strong></div></div>
+          <div className={frame.combatants}><div className={frame.combatant}><small>挑战者</small><strong>{duel.challengerName}</strong>{duel.challengerCaptain ? <><b className={styles.duelCaptain}>C {duel.challengerCaptain.captainName}</b><small>V {duel.challengerCaptain.viceCaptainName ?? '—'}</small></> : null}</div><div className={frame.versus}>VS</div><div className={frame.combatant}><small>被挑战者</small><strong>{duel.targetName}</strong>{duel.targetCaptain ? <><b className={styles.duelCaptain}>C {duel.targetCaptain.captainName}</b><small>V {duel.targetCaptain.viceCaptainName ?? '—'}</small></> : null}</div></div>
           <div className={frame.outcome}><strong>{duel.settled_at ? duel.challenger_score : '待结算'}</strong><strong>{duel.settled_at ? duel.target_score : '待结算'}</strong></div>
         </article>)}
         {!publicDuels.length ? <p className={styles.muted}>{selectionReady ? '本轮暂无对阵。' : '正在确认队长与入选对阵。'}</p> : null}
