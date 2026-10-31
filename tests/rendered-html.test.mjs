@@ -125,7 +125,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /window\.localStorage\.removeItem\(playerIdentityKey/);
   assert.match(page, /className="my-ranking-strip"/);
   assert.match(page, /onClick=\{logoutPlayer\} aria-label="退出登录"/);
-  assert.doesNotMatch(page, />退出登录<\/button>/);
+  assert.match(page, /onClick=\{showMyStanding\} aria-label="查看我的成绩"/);
   assert.match(page, /current-player-row/);
   assert.match(page, /aria-modal="true"/);
   assert.doesNotMatch(page, /type="password"/);

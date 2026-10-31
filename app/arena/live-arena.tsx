@@ -35,7 +35,16 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   const [uncertain, setUncertain] = useState(false);
   const pendingRecovery = useRef<{ entryId: number; gw: number } | null>(null);
   const errorDialog = useRef<HTMLDialogElement>(null);
-  const reportError = useCallback((reason: unknown) => {
+  const failedReads = useRef(new Set<'public' | 'mine'>());
+  const loadFailureShown = useRef(false);
+  const recoverRead = useCallback((kind: 'public' | 'mine') => {
+    failedReads.current.delete(kind);
+    if (loadFailureShown.current && failedReads.current.size === 0) {
+      loadFailureShown.current = false; setError(''); setFailure('');
+    }
+  }, []);
+  const reportError = useCallback((reason: unknown, loadFailure = false) => {
+    loadFailureShown.current = loadFailure;
     if (!(reason instanceof UncertainSubmission)) pendingRecovery.current = null;
     const detail = reason instanceof Error ? reason.message : '请求失败，请稍后再试';
     const message = /fetch|network|load failed/i.test(detail) ? '网络连接失败，请检查网络后重试' : /timed?\s*out|timeout|aborted/i.test(detail) ? '请求超时，请稍后再试' : detail;
@@ -63,8 +72,11 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   const round = mine?.arena ?? community?.arena;
   const refreshMine = useCallback(async () => {
     if (!client) return;
-    const own = await client.read();
+    let own: PlayerSession;
+    try { own = await client.read(); }
+    catch (reason) { if (identity === currentIdentity.current) failedReads.current.add('mine'); throw reason; }
     if (own.entryId === currentIdentity.current) {
+      recoverRead('mine');
       setSession(own); setUncertain(false);
       if (own.mine.submitted && pendingRecovery.current?.entryId === own.entryId && pendingRecovery.current.gw === own.mine.gw) {
         pendingRecovery.current = null;
@@ -72,25 +84,26 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
       }
     }
     return own;
-  }, [client]);
+  }, [client, identity, recoverRead]);
   const reload = useCallback(async () => {
     // Registration depends on the signed personal status, not the public feed.
     // Start both reads, but never hold a ready player or a saved POST behind it.
     let publicFailure: unknown;
-    const publicRead = loadCommunity().then(data => { setCommunity(data); return data; }).catch(reason => { publicFailure = reason; return undefined; });
+    const publicRead = loadCommunity().then(data => { recoverRead('public'); setCommunity(data); return data; }).catch(reason => { failedReads.current.add('public'); publicFailure = reason; return undefined; });
     const own = await refreshMine();
     const ownArena = own?.mine.arena;
     if (ownArena && (!ownArena.deadline || Date.now() < Date.parse(ownArena.deadline))) return;
     if (!await publicRead) throw publicFailure;
-  }, [refreshMine]);
+  }, [refreshMine, recoverRead]);
   useEffect(() => {
     let active = true;
     void Promise.resolve().then(async () => {
       setTargetId(''); setSearch(''); setMessage(''); setError(''); setFailure(''); setConfirmation(null); setUncertain(false);
       pendingRecovery.current = null;
+      failedReads.current.clear(); loadFailureShown.current = false;
       if (!identity) { setSession(null); await reload(); return; }
       if (active) await reload();
-    }).catch(reason => { if (active) reportError(reason); });
+    }).catch(reason => { if (active) reportError(reason, true); });
     return () => { active = false; };
   }, [identity, reload, reportError]);
   useEffect(() => {
@@ -119,6 +132,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
           const data = await loadCommunity();
           if (!active) return;
           setCommunity(data);
+          recoverRead('public');
           if (data.arena.gw === roundGw && data.arena.selectionReady) return;
         } catch { /* Preserve existing data; retry only this pending draw. */ }
       }
@@ -127,7 +141,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
     const delay = Math.max(1000, captureAt + 1000 - Date.now());
     if (delay <= 2147483000) timer = window.setTimeout(() => { void check(); }, delay);
     return () => { active = false; window.clearTimeout(timer); };
-  }, [deadline, roundGw, drawReady]);
+  }, [deadline, roundGw, drawReady, recoverRead]);
   useEffect(() => {
     const transitions = [round?.opensAt, round?.closesAt, round?.nextOpensAt, deadline];
     const next = transitions.filter((value): value is string => Boolean(value)).map(Date.parse).filter(time => time > Date.now()).sort((a, b) => a - b)[0];
@@ -140,6 +154,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
     let checkedAt = Date.now();
     const updated = (event: Event) => {
       setCommunity((event as CustomEvent<Community>).detail);
+      recoverRead('public');
       void refreshMine().catch(() => {});
     };
     const visible = () => {
@@ -150,7 +165,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
     window.addEventListener('penguin-community-updated', updated);
     document.addEventListener('visibilitychange', visible);
     return () => { window.removeEventListener('penguin-community-updated', updated); document.removeEventListener('visibilitychange', visible); };
-  }, [refreshMine, reload]);
+  }, [refreshMine, reload, recoverRead]);
   useEffect(() => {
     if (!uncertain) return;
     const timer = window.setTimeout(() => { void refreshMine().catch(() => {}); }, 15000);

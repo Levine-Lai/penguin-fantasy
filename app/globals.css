@@ -4101,6 +4101,7 @@ main > * {
 }
 
 .my-ranking-strip {
+  scroll-margin-top: 8rem;
   margin: 0 var(--space-md) var(--space-sm);
   padding: var(--space-sm);
   border: var(--rule-strong) solid var(--color-rule-bright);
@@ -4122,6 +4123,15 @@ main > * {
   display: flex;
   align-items: baseline;
   gap: var(--space-sm);
+}
+.my-ranking-logout {
+  flex-shrink: 0;
+  padding: .4rem .7rem;
+  border: var(--rule-hair) solid var(--color-rule-2);
+  background: transparent;
+  color: var(--color-muted);
+  font: .75rem var(--font-label);
+  cursor: pointer;
 }
 
 .my-ranking-strip > header small {

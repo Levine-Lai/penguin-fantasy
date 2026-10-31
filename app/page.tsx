@@ -820,6 +820,20 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
     setMyStandingExpanded(false);
     setExpandedPlayer(null);
   };
+  const showMyStanding = () => {
+    setMyStandingExpanded(true);
+    document.getElementById('my-ranking')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  };
+  useEffect(() => {
+    const syncIdentity = (event: StorageEvent) => {
+      if (event.key !== null && event.key !== playerIdentityKey) return;
+      setPlayerEntryId(readRememberedPlayerId());
+      setMyStandingExpanded(false); setExpandedPlayer(null); setLoginStep('closed');
+      setLoginValue(''); setLoginError(''); setPendingEntryId(null);
+    };
+    window.addEventListener('storage', syncIdentity);
+    return () => window.removeEventListener('storage', syncIdentity);
+  }, []);
 
   const rankingPanelAssets = {
     "--ledger-complete-frame-image": `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.webp")`,
@@ -835,7 +849,7 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
 
   return (
     <main>
-      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a className="active" href={`${siteBasePath}/`}>战榜</a><a href={`${siteBasePath}/rules/`}>冰渊法典</a></nav>{myRanking ? <button className="player-login-button player-login-active" type="button" onClick={logoutPlayer} aria-label="退出登录"><small>已登录</small><strong>我的成绩</strong></button> : <button className="player-login-button" type="button" onClick={openLogin}><small>PLAYER</small><strong>登录</strong></button>}<div className="gameweek"><small>当前试炼</small><strong data-current-trial suppressHydrationWarning>{currentTrialLabel}</strong></div></div></header>
+      <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav" aria-label="主导航"><a className="active" href={`${siteBasePath}/`}>战榜</a><a href={`${siteBasePath}/rules/`}>冰渊法典</a></nav>{myRanking ? <button className="player-login-button player-login-active" type="button" onClick={showMyStanding} aria-label="查看我的成绩"><small>已登录</small><strong>我的成绩</strong></button> : <button className="player-login-button" type="button" onClick={openLogin}><small>PLAYER</small><strong>登录</strong></button>}<div className="gameweek"><small>当前试炼</small><strong data-current-trial suppressHydrationWarning>{currentTrialLabel}</strong></div></div></header>
       {!isArenaPreview ? <script dangerouslySetInnerHTML={{ __html: currentTrialBootstrapScript }} /> : null}
 
       <section className="league-hero"><div className="hero-inner"><div className="hero-copy"><span>THE FROZEN ABYSS · 2026–27</span><h1>冰渊王座<span>之战</span></h1><p className="hero-myth"><span>在世界尽头，有一片被遗忘的禁地——终焉冰海。这里没有四季，只有永恒的寒冬。传说远古巨龙陨落后，它的心脏化为了贯穿天地的巨大冰山，而它的鲜血流入深海，孕育出了无数深渊生灵。</span><span>冰山之上，是荣耀、力量与王权的象征；<br />深海之下，是黑暗、危险与未知的试炼。</span><span>千年以来，无数冒险者、骑士、法师、海妖与巨兽都曾踏入这片领域，只为寻找传说中的至高宝藏。据说，只有经历五重试炼、在冰山与深海之间活到最后的人，才能获得王座认可，成为新一代——</span><strong>冰渊之王</strong></p></div></div></section>
@@ -876,7 +890,7 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
         <article className="panel ranking-panel" id="ranking" style={rankingPanelAssets}>
           <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>
           {myRanking ? <section className="my-ranking-strip" id="my-ranking" aria-label="我的成绩">
-            <header><div><small>MY STANDING</small><strong>{myRanking.name}</strong></div></header>
+            <header><div><small>MY STANDING</small><strong>{myRanking.name}</strong></div><button type="button" className="my-ranking-logout" onClick={logoutPlayer} aria-label="退出登录">退出</button></header>
             <article className={`rank-row selectable current-player-row ${myStandingExpanded ? "selected" : ""}`} role="button" tabIndex={0} aria-expanded={myStandingExpanded} aria-controls="my-ranking-history" onClick={() => setMyStandingExpanded((expanded) => !expanded)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setMyStandingExpanded((expanded) => !expanded); } }}><RankedPlayerCells player={myRanking} /></article>
             <div id="my-ranking-history" className="ranking-disclosure" data-open={myStandingExpanded} aria-hidden={!myStandingExpanded} inert={!myStandingExpanded}>
               <div className="ranking-disclosure-clip"><div className="rank-history-wrap"><InlineCaptainHistory playerName={myRanking.name} history={myRanking.history} currentGwLabel={currentTrialLabel} stage={stage} /></div></div>

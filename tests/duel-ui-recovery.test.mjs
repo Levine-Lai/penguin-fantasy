@@ -137,6 +137,33 @@ test('a missing public result feed still reports an error after the official DDL
   finally { h.restore(); }
 });
 
+test('recovered public data closes its stale read failure popup and inline error', async () => {
+  let reads=0;
+  const arena={gw:9,open:false,deadline:new Date(Date.now()-100*60000).toISOString()};
+  const h=arenaHarness(id=>({read:async()=>({entryId:id,token:'fixture',mine:{entryId:id,gw:9,arena,remaining:5,submitted:false,challenge:null}})}),async()=>{
+    if(++reads===1)throw new Error('网络连接失败');
+    return {arena:{...arena,selectionReady:true},members:[],results:[],duels:[{id:'valid',gw:9,challengerName:'A',targetName:'B',settled_at:null}]};
+  });
+  try {
+    h.render();await h.flush();assert(h.nodes('p').some(node=>node.props.role==='alert'));
+    await [...h.timers.values()].find(timer=>timer.ms===1000).fn();await h.flush();
+    assert.equal(h.nodes('article').length,1);
+    assert(!h.nodes('p').some(node=>node.props.role==='alert'));
+    assert.equal(h.nodes('p').find(node=>node.props.id==='duel-error-detail').props.children,'');
+  }finally{h.restore();}
+});
+
+test('successful background reads do not hide a real challenge rejection', async () => {
+  const h=arenaHarness(id=>({read:async()=>({entryId:id,token:'fixture',mine:{entryId:id,gw:9,remaining:5,submitted:false,challenge:null}}),submit:async()=>{throw new Error('该玩家已在本轮对阵中');}}));
+  try {
+    h.render();await h.flush();
+    h.nodes('input').find(node=>node.props.type==='radio').props.onChange({target:{value:'2'}});h.render();
+    h.nodes('form')[0].props.onSubmit({preventDefault(){}});h.render();
+    await h.nodes('form')[1].props.onSubmit({preventDefault(){}});await h.flush();
+    assert.equal(h.nodes('p').find(node=>node.props.id==='duel-error-detail').props.children,'该玩家已在本轮对阵中');
+  }finally{h.restore();}
+});
+
 test('an open page checks at DDL plus 90 minutes, retries a partial capture, and stops when valid pairings are ready', async () => {
   const realNow=Date.now, now=realNow(); Date.now=()=>now;
   let reads=0,ready=false;
