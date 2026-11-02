@@ -222,15 +222,23 @@ test('daily captain scores update independently while duel settlement stays pend
   ];
   const h = arenaHarness(() => ({ read: async () => ({ entryId: 1, mine: { arena, gw: 9, remaining: 5 } }) }),
     async () => ({ arena, members: [], duels: [duel], results: [] }), players);
-  const scores = () => h.nodes('em').filter(node => node.props.className === 'captainScore').map(node => node.props.children);
+  const scores = () => h.nodes('em').filter(node => node.props.className?.split(' ').includes('captainScore')).map(node => node.props.children);
+  const scoreColors = () => h.nodes('em').map(node => node.props.className.split(' ')[1]);
   const outcomes = () => h.nodes('div').find(node => node.props.className?.split(' ').includes('outcome')).props.children;
   try {
     h.render(); await h.flush();
     assert.deepEqual(scores(), [2, '—']);
+    assert.deepEqual(scoreColors(), ['resultDraw', 'resultDraw']);
     assert.deepEqual(outcomes().map(node => node.props.children), ['未结算', '未结算']);
     players[1].history[0] = { gw: 9, points: 0, status: 'finished' };
     h.render();
     assert.deepEqual(scores(), [2, 0]);
+    assert.deepEqual(scoreColors(), ['resultGain', 'resultLoss']);
+    players[1].history[0].points = 2; h.render();
+    assert.deepEqual(scoreColors(), ['resultDraw', 'resultDraw']);
+    players[1].history[0].points = 4; h.render();
+    assert.deepEqual(scoreColors(), ['resultLoss', 'resultGain']);
+    players[1].history[0].points = 0;
     players[0].history[1] = { gw: 9, points: 8, status: 'finished', usedViceCaptain: true };
     h.render();
     assert.deepEqual(scores(), [8, 0]);
