@@ -1,8 +1,18 @@
 .panel { width: 100%; margin: 0; }
 .header { grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; }
 .deadline, .muted { color: var(--arena-muted); font-size: .8rem; line-height: 1.6; }
-.remaining { margin: 0 0 1rem; color: var(--arena-muted); font-size: .85rem; }
-.remaining strong { color: var(--arena-cyan); font: 700 1.1rem var(--font-label); margin-inline: .25rem; }
+.titleRow { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem 1.5rem; }
+.remaining { display: grid; gap: .4rem; color: var(--arena-muted); }
+.remaining > small { font-size: .7rem; }
+.energyMeter { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .25rem; width: 7.75rem; }
+.energyMeter i { display: block; height: .8rem; border: 1px solid #245063; transform: skewX(-12deg); }
+.energyFilled { background: linear-gradient(180deg, #b5f4ff, #28aac9 55%, #14617a); box-shadow: inset 0 0 .25rem #c1f8ff66, 0 0 .4rem #28aac922; }
+.energyEmpty { background: #061922; }
+.panel .captainScore { display: grid; place-items: center; width: 4.8rem; height: 2.8rem; margin-top: .65rem; padding: .4rem; border: 0; background: var(--score-slot-image) center / 100% 100% no-repeat; color: var(--arena-ink); font: 700 1.05rem/1 var(--font-label); font-style: normal; }
+.panel .resultGain { color: #72df9d; }
+.panel .resultLoss { color: #ff7f92; }
+.panel .resultDraw { color: #fff; }
+.panel .resultPending { color: var(--arena-muted); }
 .registration { display: grid; grid-template-columns: minmax(12rem, .6fr) minmax(0, 1.4fr); gap: 1rem; align-items: start; }
 .profile { min-width: 0; padding: 1rem; border: 1px solid var(--arena-rule); background: linear-gradient(155deg, rgba(5,36,47,.82), rgba(1,14,21,.96)); }
 .profile > small { color: var(--arena-cyan); font-size: .75rem; }

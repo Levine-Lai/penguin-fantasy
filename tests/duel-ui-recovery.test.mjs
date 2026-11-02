@@ -119,8 +119,10 @@ test('signed players see the completed empty round and their remaining rights fr
     h.render(); await h.flush();
     assert.ok(h.nodes('p').some(node => node.props.children === '本轮暂无对阵。'));
     assert.ok(!h.nodes('p').some(node => node.props.children === '正在确认队长与入选对阵。'));
-    const remaining = h.nodes('p').find(node => node.props.className === 'remaining');
-    assert.equal(remaining.props.children[1].props.children, 4);
+    const remaining = h.nodes('div').find(node => node.props.role === 'meter');
+    assert.equal(remaining.props['aria-valuenow'], 4);
+    assert.equal(remaining.props.children.length, 5);
+    assert.equal(remaining.props.children.filter(cell => cell.props.className === 'energyFilled').length, 4);
   } finally { h.restore(); }
 });
 
@@ -220,10 +222,12 @@ test('daily captain scores update independently while duel settlement stays pend
   ];
   const h = arenaHarness(() => ({ read: async () => ({ entryId: 1, mine: { arena, gw: 9, remaining: 5 } }) }),
     async () => ({ arena, members: [], duels: [duel], results: [] }), players);
-  const scores = () => h.nodes('div').find(node => node.props.className === 'outcome').props.children.map(node => node.props.children);
+  const scores = () => h.nodes('em').filter(node => node.props.className === 'captainScore').map(node => node.props.children);
+  const outcomes = () => h.nodes('div').find(node => node.props.className === 'outcome').props.children;
   try {
     h.render(); await h.flush();
-    assert.deepEqual(scores(), [2, '待结算']);
+    assert.deepEqual(scores(), [2, '—']);
+    assert.deepEqual(outcomes().map(node => node.props.children), ['未结算', '未结算']);
     players[1].history[0] = { gw: 9, points: 0, status: 'finished' };
     h.render();
     assert.deepEqual(scores(), [2, 0]);
@@ -231,7 +235,11 @@ test('daily captain scores update independently while duel settlement stays pend
     assert.equal(duel.challenger_score, null);
     assert.deepEqual(players.map(player => player.hp), [3, 1]);
     duel.settled_at = 'confirmed'; duel.challenger_score = 3; duel.target_score = 1;
+    duel.challenger_delta = 1; duel.target_delta = -1;
     h.render();
     assert.deepEqual(scores(), [3, 1]);
+    assert.deepEqual(outcomes().map(node => [node.props.children, node.props.className]), [['+1 血', 'resultGain'], ['-1 血', 'resultLoss']]);
+    duel.challenger_delta = 0; duel.target_delta = 0; h.render();
+    assert.deepEqual(outcomes().map(node => [node.props.children, node.props.className]), [['平局', 'resultDraw'], ['平局', 'resultDraw']]);
   } finally { h.restore(); }
 });
