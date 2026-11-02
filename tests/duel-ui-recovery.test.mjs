@@ -5,7 +5,7 @@ import ts from 'typescript';
 import { UncertainSubmission } from '../app/arena/duel-client.ts';
 
 // Run actual component event/effect callbacks with deterministic hooks and timers.
-function arenaHarness(factory, communityLoader) {
+function arenaHarness(factory, communityLoader, scorePlayers) {
   const source = readFileSync(new URL('../app/arena/live-arena.tsx', import.meta.url), 'utf8');
   const js = ts.transpileModule(source, { compilerOptions: { jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
   const previous = { window: globalThis.window, document: globalThis.document };
@@ -27,7 +27,7 @@ function arenaHarness(factory, communityLoader) {
   const operations = { chinaTime: x => x, loadCommunity: communityLoader ?? (async () => { for (const handler of handlers.get('penguin-community-updated') ?? []) handler({ detail: community }); return community; }) };
   const jsx = (type, props) => ({ type, props }), compiled = { exports: {} };
   new Function('require', 'module', 'exports', js)(name => name === 'react' ? react : name === 'react/jsx-runtime' ? { jsx, jsxs: jsx } : name.includes('operations-client') ? operations : name.includes('duel-client') ? { createDuelClient: factory, UncertainSubmission } : { default: new Proxy({}, { get: (_, key) => String(key) }) }, compiled, compiled.exports);
-  const render = () => { cursor = 0; effects = []; tree = compiled.exports.default({ player: { entryId: 1, name: 'A', hp: 3 }, players: [{ entryId: 1, name: 'A', hp: 3 }, { entryId: 2, name: 'B', hp: 4 }] }); effects.forEach(fn => fn()); };
+  const render = () => { cursor = 0; effects = []; tree = compiled.exports.default({ player: { entryId: 1, name: 'A', hp: 3 }, players: scorePlayers ?? [{ entryId: 1, name: 'A', hp: 3 }, { entryId: 2, name: 'B', hp: 4 }] }); effects.forEach(fn => fn()); };
   const nodes = type => { const found = []; function walk(node) { if (!node || typeof node !== 'object') return; if (Array.isArray(node)) return node.forEach(walk); if (node.type === type) found.push(node); walk(node.props?.children); } walk(tree); return found; };
   return { render, nodes, timers, async flush() { for (let i = 0; i < 4; i++) { await new Promise(resolve => setImmediate(resolve)); render(); } }, restore() { Object.assign(globalThis, previous); } };
 }
@@ -208,4 +208,30 @@ test('a stale dashboard response cannot log the administrator back in after logo
   const deps = { authRevision, useCallback: fn => fn, operationsFetch: () => new Promise(resolve => { release = resolve; }), today: () => '2026-10-28', setData: () => { updates++; }, setLoggedIn: () => { updates++; } };
   const load = new Function(...Object.keys(deps), callback('load') + ';return extracted;')(...Object.values(deps));
   const pending = load(); authRevision.current++; release({ members: [] }); await pending; assert.equal(updates, 0);
+});
+
+
+test('daily captain scores update independently while duel settlement stays pending', async () => {
+  const arena = { gw: 9, open: false, deadline: '2020-01-01T00:00:00Z', selectionReady: true };
+  const duel = { id: 'daily', gw: 9, challenger_id: 1, target_id: 2, challengerName: 'A', targetName: 'B', settled_at: null, challenger_score: null, target_score: null };
+  const players = [
+    { entryId: 1, name: 'A', hp: 3, history: [{ gw: 8, points: 12, status: 'finished' }, { gw: 9, points: 2, status: 'finished' }] },
+    { entryId: 2, name: 'B', hp: 1, history: [{ gw: 9, points: 0, status: 'not_started' }] },
+  ];
+  const h = arenaHarness(() => ({ read: async () => ({ entryId: 1, mine: { arena, gw: 9, remaining: 5 } }) }),
+    async () => ({ arena, members: [], duels: [duel], results: [] }), players);
+  const scores = () => h.nodes('div').find(node => node.props.className === 'outcome').props.children.map(node => node.props.children);
+  try {
+    h.render(); await h.flush();
+    assert.deepEqual(scores(), [2, '待结算']);
+    players[1].history[0] = { gw: 9, points: 0, status: 'finished' };
+    h.render();
+    assert.deepEqual(scores(), [2, 0]);
+    assert.equal(duel.settled_at, null);
+    assert.equal(duel.challenger_score, null);
+    assert.deepEqual(players.map(player => player.hp), [3, 1]);
+    duel.settled_at = 'confirmed'; duel.challenger_score = 3; duel.target_score = 1;
+    h.render();
+    assert.deepEqual(scores(), [3, 1]);
+  } finally { h.restore(); }
 });

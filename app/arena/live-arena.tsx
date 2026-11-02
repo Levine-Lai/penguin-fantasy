@@ -6,7 +6,16 @@ import { createDuelClient, UncertainSubmission, type PlayerSession } from './due
 import frame from '../test/arena.module.css';
 import styles from './live-arena.module.css';
 
-export type DuelPlayer = { entryId: number; name: string; rank: number | null; hp: number; captainTotal: number };
+type DuelCaptainRound = { gw: number; points: number; status?: 'not_started' | 'playing' | 'finished' };
+export type DuelPlayer = { entryId: number; name: string; rank: number | null; hp: number; captainTotal: number; history?: DuelCaptainRound[] };
+
+// Daily published captain scores are visible before the round is settled.
+// Never use these provisional scores to derive health or duel outcomes.
+export function duelCaptainScore(gw: number, settledScore: number | null, settledAt: string | null, history?: DuelCaptainRound[]): number | string {
+  if (settledAt) return settledScore ?? '待结算';
+  const captain = history?.find(round => round.gw === gw);
+  return captain?.status === 'finished' ? captain.points : '待结算';
+}
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 const isFeatured = (name: string) => name === '企鹅' || name === 'SSU - Sakai Moka';
 
@@ -231,7 +240,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
         {publicDuels.map(duel => <article className={frame.duelCard} key={duel.id} style={{ '--duel-health-rows': Math.max(1, Math.ceil(Math.max(health.get(duel.challenger_id) ?? 0, health.get(duel.target_id) ?? 0) / 6)) } as CSSProperties}>
           <header className={frame.duelCardHeader}><span>GW{duel.gw}</span><span>{chinaTime(duel.created_at)}</span></header>
           <div className={frame.combatants}><div className={frame.combatant}><small>挑战者</small><strong>{duel.challengerName}</strong><DuelHealth hp={health.get(duel.challenger_id)} />{duel.challengerCaptain ? <><b className={styles.duelCaptain}>C {duel.challengerCaptain.captainName}</b><small>V {duel.challengerCaptain.viceCaptainName ?? '—'}</small></> : null}</div><div className={frame.versus}>VS</div><div className={frame.combatant}><small>被挑战者</small><strong>{duel.targetName}</strong><DuelHealth hp={health.get(duel.target_id)} />{duel.targetCaptain ? <><b className={styles.duelCaptain}>C {duel.targetCaptain.captainName}</b><small>V {duel.targetCaptain.viceCaptainName ?? '—'}</small></> : null}</div></div>
-          <div className={frame.outcome}><strong>{duel.settled_at ? duel.challenger_score : '待结算'}</strong><strong>{duel.settled_at ? duel.target_score : '待结算'}</strong></div>
+          <div className={frame.outcome}><strong>{duelCaptainScore(duel.gw, duel.challenger_score, duel.settled_at, players.find(candidate => candidate.entryId === duel.challenger_id)?.history)}</strong><strong>{duelCaptainScore(duel.gw, duel.target_score, duel.settled_at, players.find(candidate => candidate.entryId === duel.target_id)?.history)}</strong></div>
         </article>)}
         {!publicDuels.length ? <p className={styles.muted}>{selectionReady ? '本轮暂无对阵。' : '正在确认队长与入选对阵。'}</p> : null}
       </div> : <div className={styles.registration}>
