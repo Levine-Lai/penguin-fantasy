@@ -854,37 +854,6 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
 
       <section className="league-hero"><div className="hero-inner"><div className="hero-copy"><span>THE FROZEN ABYSS · 2026–27</span><h1>冰渊王座<span>之战</span></h1><p className="hero-myth"><span>在世界尽头，有一片被遗忘的禁地——终焉冰海。这里没有四季，只有永恒的寒冬。传说远古巨龙陨落后，它的心脏化为了贯穿天地的巨大冰山，而它的鲜血流入深海，孕育出了无数深渊生灵。</span><span>冰山之上，是荣耀、力量与王权的象征；<br />深海之下，是黑暗、危险与未知的试炼。</span><span>千年以来，无数冒险者、骑士、法师、海妖与巨兽都曾踏入这片领域，只为寻找传说中的至高宝藏。据说，只有经历五重试炼、在冰山与深海之间活到最后的人，才能获得王座认可，成为新一代——</span><strong>冰渊之王</strong></p></div></div></section>
 
-      <section className="stage-switcher" aria-label="选择阶段">
-        {stages.map((item) => (
-          <div className={`stage-slot stage-slot-${item.id} ${activeStage === item.id ? "active" : ""}`} data-stage={item.id} key={item.id}>
-            <button className={item.id === currentStage ? "current-stage" : ""} onClick={() => selectStage(item.id)} aria-pressed={activeStage === item.id}>
-              <span className="stage-relic" aria-hidden="true">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={`${siteBasePath}/assets/stages/stage-${item.id}.webp`}
-                  alt=""
-                  width="1536"
-                  height="1536"
-                  loading="lazy"
-                  fetchPriority="low"
-                  decoding="async"
-                  draggable="false"
-                />
-              </span>
-              <strong className="stage-roman">{item.roman}</strong>
-              <span className="stage-name">{item.title}</span>
-              <small>{item.range}</small>
-              {item.id === currentStage ? <i>当前</i> : null}
-            </button>
-          </div>
-        ))}
-      </section>
-
-      <section className={`stage-lore stage-lore-${activeStage}`} aria-live="polite" key={`lore-${activeStage}`}>
-        <header><small>CHAPTER {stage.roman} · {stage.range}</small><h2>{stage.title}</h2></header>
-        <p>{stage.description}</p>
-      </section>
-
       {!isArenaPreview && activeStage === 2 ? <div className="arena-home"><LiveArena player={myRanking} players={ranking} /></div> : null}
       {isArenaPreview && activeStage === 2 ? arenaPreview : <section className="boards">
         <article className="panel ranking-panel" id="ranking" style={rankingPanelAssets}>
@@ -954,6 +923,37 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
           </div>
         </article>
       </section>}
+
+      <section className="stage-switcher" aria-label="选择阶段">
+        {stages.map((item) => (
+          <div className={`stage-slot stage-slot-${item.id} ${activeStage === item.id ? "active" : ""}`} data-stage={item.id} key={item.id}>
+            <button className={item.id === currentStage ? "current-stage" : ""} onClick={() => selectStage(item.id)} aria-pressed={activeStage === item.id}>
+              <span className="stage-relic" aria-hidden="true">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`${siteBasePath}/assets/stages/stage-${item.id}.webp`}
+                  alt=""
+                  width="1536"
+                  height="1536"
+                  loading="lazy"
+                  fetchPriority="low"
+                  decoding="async"
+                  draggable="false"
+                />
+              </span>
+              <strong className="stage-roman">{item.roman}</strong>
+              <span className="stage-name">{item.title}</span>
+              <small>{item.range}</small>
+              {item.id === currentStage ? <i>当前</i> : null}
+            </button>
+          </div>
+        ))}
+      </section>
+
+      <section className={`stage-lore stage-lore-${activeStage}`} aria-live="polite" key={`lore-${activeStage}`}>
+        <header><small>CHAPTER {stage.roman} · {stage.range}</small><h2>{stage.title}</h2></header>
+        <p>{stage.description}</p>
+      </section>
 
       {loginStep !== "closed" ? <div className="player-login-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeLogin(); }} onKeyDown={(event) => { if (event.key === "Escape") closeLogin(); }}>
         <section className="player-login-dialog" role="dialog" aria-modal="true" aria-labelledby="player-login-title">

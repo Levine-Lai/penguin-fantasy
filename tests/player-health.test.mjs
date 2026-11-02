@@ -18,3 +18,13 @@ test('a deleted duel or an earlier score correction re-derives elimination from 
   assert.equal(playerHealth(history, 1).eliminated, true);
   assert.deepEqual(playerHealth(history, 1, new Set(['loss'])), {hp:2,eliminated:false,eliminatedGw:null});
 });
+test('GW9–GW20 deducts one life at three or fewer points, only after round confirmation', () => {
+  for (const gw of [9, 20]) {
+    for (const points of [-1, 0, 2, 3, 4, 9, 10]) {
+      const expected = points <= 3 ? 1 : points >= 10 ? 3 : 2;
+      assert.equal(playerHealth([round(8, 10), round(gw, points)], 1).hp, expected);
+      assert.equal(playerHealth([round(8, 10), round(gw, points, { finished: false })], 1).hp, 2);
+      assert.equal(playerHealth([round(8, 10), round(gw, points, { officialFinalized: false })], 1).hp, 2);
+    }
+  }
+});

@@ -32,6 +32,7 @@ test("server-renders the Penguin Cup leaderboard", async () => {
   assert.match(html, /PENGUIN CUP/);
   assert.match(html, /冰渊王座/);
   assert.match(html, /冰海角斗场/);
+  assert.ok(html.indexOf("队长选择率") < html.indexOf('aria-label="选择阶段"'));
   assert.doesNotMatch(html, /刷新排行榜数据|刷新数据|数据已更新|更新失败/);
   assert.match(html, /data-current-trial[^>]*>GW \d+/);
   assert.match(html, /当周队长得分/);
