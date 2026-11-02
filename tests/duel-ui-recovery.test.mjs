@@ -223,7 +223,7 @@ test('daily captain scores update independently while duel settlement stays pend
   const h = arenaHarness(() => ({ read: async () => ({ entryId: 1, mine: { arena, gw: 9, remaining: 5 } }) }),
     async () => ({ arena, members: [], duels: [duel], results: [] }), players);
   const scores = () => h.nodes('em').filter(node => node.props.className === 'captainScore').map(node => node.props.children);
-  const outcomes = () => h.nodes('div').find(node => node.props.className === 'outcome').props.children;
+  const outcomes = () => h.nodes('div').find(node => node.props.className?.split(' ').includes('outcome')).props.children;
   try {
     h.render(); await h.flush();
     assert.deepEqual(scores(), [2, '—']);
@@ -231,6 +231,11 @@ test('daily captain scores update independently while duel settlement stays pend
     players[1].history[0] = { gw: 9, points: 0, status: 'finished' };
     h.render();
     assert.deepEqual(scores(), [2, 0]);
+    players[0].history[1] = { gw: 9, points: 8, status: 'finished', usedViceCaptain: true };
+    h.render();
+    assert.deepEqual(scores(), [8, 0]);
+    assert.equal(h.nodes('b').filter(node => node.props.className?.includes('duelCaptain'))[0].props.className.includes('activeCaptain'), false);
+    assert.equal(h.nodes('small').find(node => Array.isArray(node.props.children) && node.props.children[0] === 'V ').props.className, 'activeCaptain');
     assert.equal(duel.settled_at, null);
     assert.equal(duel.challenger_score, null);
     assert.deepEqual(players.map(player => player.hp), [3, 1]);
