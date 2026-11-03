@@ -4709,3 +4709,39 @@ main::before { transform: translateZ(0); }
 }
 
 .ranking-disclosure .rank-history-wrap { animation: none; }
+
+/* Readable, consistent type for the player-facing data UI. */
+.panel-title small, .ranking-head, .captain-rate-head, .captain-selector-detail,
+.history-gw, .history-captain small, .history-chapter-summary small,
+.player-login-dialog form > small, .player-login-error, .gameweek small,
+.top-nav a, .player-login-button strong, .rules-return-nav a {
+  font-size: var(--ui-text-sm);
+  line-height: 1.5;
+}
+.panel-title h2, .rules-grid h2 { font-size: var(--ui-text-lg); }
+.player-login-dialog h2, .rules-hero h1 { font-size: var(--ui-text-title); }
+.captain-rate-row, .captain-rate-name, .captain-selector-detail li,
+.rank-history, .rules-grid li, .player-login-dialog input { font-size: var(--ui-text-base); }
+.player-login-dialog input, .player-login-dialog button { border-radius: var(--radius-control); }
+.captain-rate-toggle { font-size: var(--ui-text-sm); }
+.captain-rate-head { box-shadow: none; }
+@media (max-width: 32rem) {
+  .captain-rate-row, .captain-rate-name { font-size: var(--ui-text-sm); }
+  .captain-rate-head, .captain-rate-row {
+    grid-template-columns: minmax(0, 1fr) 2.8rem 3rem 3.9rem;
+  }
+  .captain-rate-name { padding-inline: var(--space-2xs); padding-inline-end: var(--space-sm); }
+  .captain-rate-name, .captain-rate-head > span { overflow-wrap: anywhere; }
+}
+
+.player-id, .stat-score { font-size: var(--ui-text-base); }
+.score-pending { font-size: var(--ui-text-sm); white-space: normal; }
+@media (max-width: 32rem) { .player-id, .stat-score { font-size: var(--ui-text-sm); } }
+
+.player-login-overlay { grid-template-columns: minmax(0, 1fr); }
+.player-login-dialog, .player-login-dialog form, .player-login-dialog input { min-width: 0; max-width: 100%; }
+.player-login-dialog input { width: 100%; }
+@media (max-width: 48rem) {
+  .ranking-head > span:nth-child(3)::after,
+  .ranking-head > span:nth-child(4)::after { font-size: var(--ui-text-sm); }
+}

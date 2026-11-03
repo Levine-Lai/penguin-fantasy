@@ -203,7 +203,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.doesNotMatch(page, /className="right-stack"|selectedPlayer|玩家 ID<\/small>/);
   assert.match(page, /useState<number \| null>\(null\)/);
   assert.match(page, /aria-expanded=/);
-  assert.match(page, /冰山之上，强者争夺荣耀；深海之下，亡者寻找重生<\/p>/);
+  assert.doesNotMatch(page, /CAPTAIN PICKS|MY STANDING|PLAYER IDENTIFICATION|CONFIRM IDENTITY|冰山之上，强者争夺荣耀；深海之下，亡者寻找重生/);
   assert.match(page, /className="playoff-match"/);
   assert.match(page, /roman:\s*"I"/);
   assert.match(page, /roman:\s*"V"/);

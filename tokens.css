@@ -52,6 +52,16 @@
   --color-draw-a14: oklch(82% 0.092 86 / 0.14);
   --color-shadow: oklch(6% 0.012 235 / 0.48);
 
+  /* Shared UI roles; retain the established Frozen Abyss palette. */
+  --color-result-neutral: #fff;
+  --color-health: var(--color-error);
+  --color-scrim: oklch(6% 0.012 235 / 0.72);
+  --radius-control: 0.25rem;
+  --ui-text-sm: 0.875rem;
+  --ui-text-base: 1rem;
+  --ui-text-lg: 1.25rem;
+  --ui-text-title: clamp(1.5rem, 3vw, 2rem);
+
   /* Noto Serif SC is loaded by the application, so local and deployed pages share the same CJK metrics. */
   --font-display: "Noto Serif SC", "Source Han Serif SC", "思源宋体", ui-serif, serif;
   --font-body: "Source Han Serif SC", "思源宋体", "Noto Serif SC", ui-serif, serif;

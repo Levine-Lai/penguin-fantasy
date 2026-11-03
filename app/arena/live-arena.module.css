@@ -1,52 +1,52 @@
 .panel { width: 100%; margin: 0; }
 .header { grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; }
-.deadline, .muted { color: var(--arena-muted); font-size: .8rem; line-height: 1.6; }
+.deadline, .muted { color: var(--arena-muted); font-size: var(--ui-text-sm); line-height: 1.6; }
 .titleRow { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem 1.5rem; }
 .remaining { display: grid; gap: .4rem; color: var(--arena-muted); }
-.remaining > small { font-size: .7rem; }
+.remaining > small { font-size: var(--ui-text-sm); }
 .energyMeter { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .25rem; width: 7.75rem; }
-.energyMeter i { display: block; height: .8rem; border: 1px solid #245063; transform: skewX(-12deg); }
-.energyFilled { background: linear-gradient(180deg, #b5f4ff, #28aac9 55%, #14617a); box-shadow: inset 0 0 .25rem #c1f8ff66, 0 0 .4rem #28aac922; }
-.energyEmpty { background: #061922; }
-.panel .captainScore { display: grid; place-items: center; width: 4.8rem; height: 2.8rem; margin-top: .65rem; padding: .4rem; border: 0; background: var(--score-slot-image) center / 100% 100% no-repeat; color: #fff; font: 700 1.05rem/1 var(--font-label); font-style: normal; }
-.panel .resultGain { color: #72df9d; }
-.panel .resultLoss { color: #ff7f92; }
-.panel .resultDraw { color: #fff; }
+.energyMeter i { display: block; height: .8rem; border: 1px solid var(--color-rule); transform: skewX(-12deg); }
+.energyFilled { background: linear-gradient(180deg, var(--color-frost), var(--color-accent) 55%, var(--color-rule-bright)); box-shadow: none; }
+.energyEmpty { background: var(--color-paper-2); }
+.panel .captainScore { display: grid; place-items: center; width: 4.8rem; height: 2.8rem; margin-top: .65rem; padding: .4rem; border: 0; background: var(--score-slot-image) center / 100% 100% no-repeat; color: var(--color-result-neutral); font: 700 var(--ui-text-base)/1 var(--font-label); font-style: normal; }
+.panel .resultGain { color: var(--color-success); }
+.panel .resultLoss { color: var(--color-error); }
+.panel .resultDraw { color: var(--color-result-neutral); }
 .panel .resultPending { color: var(--arena-muted); }
 .registration { display: grid; grid-template-columns: minmax(12rem, .6fr) minmax(0, 1.4fr); gap: 1rem; align-items: start; }
-.profile { min-width: 0; padding: 1rem; border: 1px solid var(--arena-rule); background: linear-gradient(155deg, rgba(5,36,47,.82), rgba(1,14,21,.96)); }
-.profile > small { color: var(--arena-cyan); font-size: .75rem; }
-.profile h3 { margin: .7rem 0; color: var(--arena-ink); font-size: 1.55rem; overflow-wrap: anywhere; }
+.profile { min-width: 0; padding: 1rem; border: 1px solid var(--arena-rule); background: var(--color-paper-2-a84); }
+.profile > small { color: var(--arena-cyan); font-size: var(--ui-text-sm); }
+.profile h3 { margin: .7rem 0; color: var(--arena-ink); font-size: var(--ui-text-lg); overflow-wrap: anywhere; }
 .profile h3.featured, .candidates strong.featured, .submitted strong.featured { color: var(--color-gold); }
-.playerId { color: var(--arena-muted); font: .8rem var(--font-label); }
+.playerId { color: var(--arena-muted); font: var(--ui-text-sm) var(--font-label); }
 .life { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: .7rem; }
-.life > span:first-child { color: var(--arena-muted); font-size: .85rem; }
-.life > strong { color: var(--arena-cyan); font: 700 1.1rem var(--font-label); }
+.life > span:first-child { color: var(--arena-muted); font-size: var(--ui-text-sm); }
+.life > strong { color: var(--arena-cyan); font: 700 var(--ui-text-base) var(--font-label); }
 .drops { display: grid; grid-template-columns: repeat(6, 1rem); gap: .3rem; }
 .drops :global(.blood-drop) { width: 1rem; height: .9rem; flex: 0 0 1rem; }
 .candidateMeta { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; }
-.candidateHealth { display: inline-flex; align-items: center; gap: .3rem; color: #ff879a; }
+.candidateHealth { display: inline-flex; align-items: center; gap: .3rem; color: var(--color-health); }
 .candidateHealth i { margin: 0; }
 .form { min-width: 0; }
 .fieldset { border: 0; min-width: 0; padding: 0; margin: 0 0 1rem; }
 .fieldset:disabled { opacity: .55; }
-.candidates { max-height: 22rem; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: #187b91 #02121a; padding: 2px; }
+.candidates { max-height: 22rem; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: var(--color-rule-bright) var(--color-paper); padding: 2px; }
 .candidates label { grid-template-columns: auto minmax(0, 1fr); }
 .candidates label > span:last-child { justify-items: start; }
 .candidates strong { max-width: 100%; }
 .candidates small { margin-top: .4rem; }
 .submitted { display: grid; justify-items: center; gap: .6rem; padding: 1.2rem; text-align: center; border: 1px solid var(--arena-rule); }
-.submitted h3 { margin: 0; color: var(--arena-cyan); font-size: 1.1rem; }
-.submitted strong { max-width: 100%; overflow-wrap: anywhere; color: var(--arena-ink); font-size: 1.3rem; }
-.submitted small, .submitted > span { color: var(--arena-muted); font-size: .8rem; }
+.submitted h3 { margin: 0; color: var(--arena-cyan); font-size: var(--ui-text-base); }
+.submitted strong { max-width: 100%; overflow-wrap: anywhere; color: var(--arena-ink); font-size: var(--ui-text-lg); }
+.submitted small, .submitted > span { color: var(--arena-muted); font-size: var(--ui-text-sm); }
 .submitted > span { margin-top: .4rem; }
-.submitted p { color: var(--arena-muted); font-size: .85rem; }
-.message { margin-bottom: 1rem; color: var(--arena-cyan); font-size: .85rem; }
-.error { margin-bottom: 1rem; color: #ff9aa9; font-size: .85rem; }
+.submitted p { color: var(--arena-muted); font-size: var(--ui-text-sm); }
+.message { margin-bottom: 1rem; color: var(--arena-cyan); font-size: var(--ui-text-sm); }
+.error { margin-bottom: 1rem; color: var(--color-error); font-size: var(--ui-text-sm); }
 .duels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
-.duelCaptain { max-width: 100%; margin-top: .5rem; color: var(--arena-muted); font: 700 clamp(.8rem, 3.2vw, 1rem)/1.4 var(--font-label); overflow-wrap: anywhere; }
+.duelCaptain { max-width: 100%; margin-top: .5rem; color: var(--arena-muted); font: 700 var(--ui-text-base)/1.4 var(--font-label); overflow-wrap: anywhere; }
 .duelHealth { margin-top: .6rem; min-width: 0; }
-.duelHealth .confirmHealth { font-size: .75rem; gap: .25rem; }
+.duelHealth .confirmHealth { font-size: var(--ui-text-sm); gap: .25rem; }
 .duelHealth .confirmDrops { grid-template-columns: repeat(var(--hp-columns), .65rem); gap: .15rem; min-height: calc(var(--duel-health-rows, 1) * .75rem - .15rem); }
 .duelHealth .confirmDrops :global(.blood-drop) { width: .65rem; height: .6rem; }
 .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -55,34 +55,34 @@
   .registration, .duels { grid-template-columns: minmax(0, 1fr); }
   .header { grid-template-columns: minmax(0, 1fr); gap: .4rem; }
   .profile { padding: 1rem; }
-  .profile h3 { margin-block: .5rem; font-size: 1.25rem; }
+  .profile h3 { margin-block: .5rem; font-size: var(--ui-text-lg); }
 }
 @media (max-width: 30rem) { .candidates { grid-template-columns: minmax(0, 1fr); } }
-.confirmDialog { position: fixed; inset: 0; width: min(34rem, calc(100% - 1.5rem)); max-height: calc(100dvh - 2rem); margin: auto; padding: clamp(1rem, 3vw, 1.6rem); overflow-y: auto; border: 1.2rem solid var(--arena-rule); border-image: var(--arena-frame-image) 155 / 1.2rem stretch; color: var(--arena-ink); background: #02121a; background-clip: padding-box; box-shadow: 0 1.5rem 5rem #000a; }
-.confirmDialog::backdrop { background: #000b; backdrop-filter: blur(6px); }
-.confirmDialog h2 { margin: .5rem 0 1.5rem; font-size: clamp(1.3rem, 5vw, 1.9rem); }
+.confirmDialog { position: fixed; inset: 0; width: min(34rem, calc(100% - 1.5rem)); max-height: calc(100dvh - 2rem); margin: auto; padding: clamp(1rem, 3vw, 1.6rem); overflow-y: auto; border: 1.2rem solid var(--arena-rule); border-image: var(--arena-frame-image) 155 / 1.2rem stretch; color: var(--arena-ink); background: var(--color-paper); background-clip: padding-box; box-shadow: 0 1.5rem 5rem var(--color-shadow); }
+.confirmDialog::backdrop { background: var(--color-scrim); backdrop-filter: blur(6px); }
+.confirmDialog h2 { margin: .5rem 0 1.5rem; font-size: var(--ui-text-title); }
 .confirmDialog header small { color: var(--arena-cyan); }
 .confirmPlayers { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: .8rem; padding: 1.2rem 0; border-block: 1px solid var(--arena-rule); text-align: center; }
 .confirmPlayer { min-width: 0; display: grid; grid-template-rows: auto 1fr auto; align-self: stretch; align-items: center; justify-items: center; gap: .65rem; }
-.confirmPlayer > small { color: var(--arena-muted); font-size: .75rem; }
-.confirmPlayer > strong { max-width: 100%; overflow-wrap: anywhere; font-size: 1.1rem; }
-.confirmVersus { color: var(--arena-cyan); font: 700 .8rem var(--font-label); }
-.confirmHealth { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .45rem; color: #ff879a; font-size: .85rem; }
+.confirmPlayer > small { color: var(--arena-muted); font-size: var(--ui-text-sm); }
+.confirmPlayer > strong { max-width: 100%; overflow-wrap: anywhere; font-size: var(--ui-text-base); }
+.confirmVersus { color: var(--arena-cyan); font: 700 var(--ui-text-sm) var(--font-label); }
+.confirmHealth { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .45rem; color: var(--color-health); font-size: var(--ui-text-sm); }
 .confirmDrops { display: grid; grid-template-columns: repeat(var(--hp-columns), .9rem); gap: .2rem; max-width: 100%; min-height: calc(var(--confirmation-heart-rows, 1) * 1rem - .2rem); align-content: start; }
 .confirmDrops :global(.blood-drop) { width: .9rem; height: .8rem; }
 .confirmHealth :global(.blood-drop) { flex-shrink: 0; margin: 0; }
-.confirmDialog p { color: var(--arena-muted); line-height: 1.7; font-size: .85rem; margin: 1rem 0 1.5rem; }
-.confirmDialog p.failureDetail { color: #ff9aa9; overflow-wrap: anywhere; }
+.confirmDialog p { color: var(--arena-muted); line-height: 1.7; font-size: var(--ui-text-sm); margin: 1rem 0 1.5rem; }
+.confirmDialog p.failureDetail { color: var(--color-error); overflow-wrap: anywhere; }
 .confirmActions { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
-.confirmActions button { min-height: 2.8rem; border: 1px solid var(--arena-rule); background: #031c27; color: var(--arena-ink); cursor: pointer; }
-.confirmActions button[type=submit] { border-color: var(--arena-cyan); color: var(--arena-cyan); background: #06313c; }
+.confirmActions button { min-height: 2.8rem; border: 1px solid var(--arena-rule); background: var(--color-paper-2); color: var(--arena-ink); cursor: pointer; }
+.confirmActions button[type=submit] { border-color: var(--arena-cyan); color: var(--arena-cyan); background: var(--color-accent-a14); }
 .confirmActions button:disabled { opacity: .5; cursor: default; }
 .confirmDialog :focus-visible { outline: 2px solid var(--arena-cyan); outline-offset: 3px; }
 @media (max-width: 30rem) {
   .confirmDialog { padding: .9rem .6rem; border-width: .8rem; border-image-width: .8rem; }
   .confirmPlayers { gap: .4rem; padding-block: 1rem; }
   .confirmPlayer { gap: .5rem; }
-  .confirmPlayer > strong { font-size: 1rem; }
+  .confirmPlayer > strong { font-size: var(--ui-text-base); }
   .confirmActions { gap: .6rem; }
 }
 
@@ -102,3 +102,20 @@
 .duelOutcome > strong:last-child { grid-column: 3; border-left: 0; }
 .duelOutcome::before { content: ''; grid-column: 2; grid-row: 1; width: 1px; justify-self: center; background: var(--arena-rule); }
 @media (max-width: 48rem) { .panel { --duel-inline-padding: .45rem; } }
+
+/* Four readable UI sizes, shared by data and controls. */
+.panel { font-size: var(--ui-text-base); box-shadow: none; }
+.panel h2 { font-size: var(--ui-text-title); }
+.header > div > small, .duelCard > header span, .duelParticipant > small,
+.duelOutcome > strong, .panel label > span, .panel label small { font-size: var(--ui-text-sm); line-height: 1.5; letter-spacing: .02em; }
+.duelCard > header { flex-wrap: wrap; }
+.duelParticipant > strong { font-size: var(--ui-text-lg); }
+.duelCard { background: var(--color-paper-2-a84); }
+.duelVersus { font-size: var(--ui-text-sm); }
+.confirmDialog { font-size: var(--ui-text-base); }
+
+@media (max-width: 32rem) {
+  .titleRow { gap: .75rem; }
+  .energyMeter { width: 6rem; }
+  .duelParticipant > strong { font-size: var(--ui-text-base); }
+}
