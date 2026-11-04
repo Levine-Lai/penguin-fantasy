@@ -1,0 +1,54 @@
+/* History layout has one owner. Global theme classes retain their colors/assets. */
+.history:global(.rank-history) {
+  min-width: 0;
+  padding: .5rem;
+}
+.history :global(.history-row),
+.history :global(.history-row:nth-child(even)) {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr) 9.25rem;
+  align-items: center;
+  gap: .5rem;
+  min-height: 4rem;
+  height: auto;
+  padding: .5rem;
+  border: 1px solid var(--color-rule);
+  box-shadow: none;
+}
+.history :global(.history-gw),
+.history :global(.history-captain) {
+  min-width: 0;
+  width: auto;
+  text-align: center;
+}
+.history :global(.history-captain b),
+.history :global(.history-captain small) {
+  display: block;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.5;
+}
+.history :global(.history-result) {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
+@media (max-width: 32rem) {
+  .history :global(.history-row),
+  .history :global(.history-row:nth-child(even)) {
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: .5rem;
+    padding: .5rem .25rem;
+  }
+  .history :global(.history-gw) { font-size: var(--ui-text-sm); }
+  .history :global(.history-result) {
+    grid-column: 2;
+    justify-self: center;
+    width: 9.25rem;
+    max-width: 100%;
+  }
+  .history :global(.history-result-box) { min-height: 2.55rem; }
+  .history :global(.history-result-box b) { font-size: var(--ui-text-base); }
+  .history :global(.history-result-box em) { font-size: var(--ui-text-sm); }
+}

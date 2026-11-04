@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
+const captainHistory = await readFile(new URL("../app/components/captain-history.tsx", import.meta.url), "utf8");
+
 async function render(pathname = "/") {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
   workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}-${pathname}`);
@@ -166,15 +168,15 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(currentTrial, /fallbackGwDeadlines:[\s\S]*gw:\s*38/);
   assert.match(page, /data-current-trial suppressHydrationWarning/);
   assert.match(page, /currentTrialBootstrapScript/);
-  assert.match(page, /尚无队长选择记录/);
+  assert.match(captainHistory, /尚无队长选择记录/);
   assert.match(page, /InlineCaptainHistory playerName=\{name\} history=\{history\} currentGwLabel=\{currentTrialLabel\} stage=\{stage\}/);
-  assert.match(page, /history\.filter\(\(item\) => item\.gw >= stage\.gwFrom && item\.gw <= stage\.gwTo\)/);
+  assert.match(captainHistory, /history\.filter\(\(item\) => item\.gw >= stage\.gwFrom && item\.gw <= stage\.gwTo\)/);
   assert.match(page, /lifeEarnedInStage\(stageForGw\(snapshot\.gw\), result\.captainPoints, result\.captainPickRate\)/);
   assert.match(page, /if \(!stage \|\| stage\.id === 5\) return 0;/);
   assert.match(page, /if \(points >= 10\) return 1;[\s\S]{0,40}if \(points <= 3\) return -1;/);
   assert.match(page, /hp: lifeState\.hp/);
-  assert.match(page, /history-chapter-summary/);
-  assert.match(page, /本章节尚无队长选择记录/);
+  assert.match(captainHistory, /history-chapter-summary/);
+  assert.match(captainHistory, /本章节尚无队长选择记录/);
   assert.match(page, /gwFrom: 9,[\s\S]{0,40}gwTo: 20,/);
   assert.doesNotMatch(page, /<header><strong>队长选择记录<\/strong><small>见习者集结<\/small><\/header>/);
   assert.match(page, /const activeStage = selectedStage \?\? currentStage/);
@@ -199,7 +201,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.doesNotMatch(page, /A New Chapter Await/);
   assert.doesNotMatch(page, /积分与血量排行榜<\/h2><\/div><span>36<\/span>/);
   assert.match(page, /第 \{rankingPage \+ 1\} 页/);
-  assert.match(page, /function InlineCaptainHistory/);
+  assert.match(captainHistory, /function InlineCaptainHistory/);
   assert.match(page, /className="rank-history-wrap"/);
   assert.doesNotMatch(page, /className="right-stack"|selectedPlayer|玩家 ID<\/small>/);
   assert.match(page, /useState<number \| null>\(null\)/);

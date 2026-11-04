@@ -123,7 +123,7 @@
 /* The chooser follows the leaderboard's single-row ledger. */
 .registration { --selection-row-height: 4.5rem; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
 .registration .selectionRow, .selectionHead { display: grid; grid-template-columns: 4.75rem minmax(0, 1fr) 9rem; align-items: center; gap: .5rem; padding-inline: .75rem; text-align: center; }
-.registration .selectionRow { position: relative; min-height: var(--selection-row-height); height: var(--selection-row-height); margin: 0; padding-block: .4rem; border: 0; border-bottom: 1px solid var(--arena-rule); background: var(--color-paper-3-a46); box-shadow: none; cursor: pointer; }
+.registration .selectionRow { position: relative; min-height: var(--selection-row-height); height: var(--selection-row-height); margin: 0; padding-block: .4rem; border: 1px solid var(--arena-rule); background: var(--color-paper-3-a46); box-shadow: none; cursor: pointer; }
 .registration .selfRow, .registration .selfRow:hover { background: var(--color-paper-3-a46); cursor: default; }
 .selfRow > p { grid-column: 1 / -1; }
 .selectionHead { min-height: 3rem; border-block: 1px solid var(--arena-rule); color: var(--arena-muted); font-size: var(--ui-text-sm); }

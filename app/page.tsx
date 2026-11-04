@@ -4,6 +4,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useSyncExt
 import { currentTrialBootstrapScript, fallbackGwDeadlines, type GwDeadline } from "./current-trial";
 import { currentStageAt, type StageId } from "./current-stage";
 import staticFplData from "./static-fpl-data.json";
+import InlineCaptainHistory, { type CaptainHistoryEntry } from "./components/captain-history";
 import LiveArena from './arena/live-arena';
 import { playerHealth } from '../shared/player-health';
 import { loadCommunity, recordPlayerLogin, type Community, type PublishedDuel } from './operations-client';
@@ -13,7 +14,7 @@ const fplApiBase = "https://penguin-fantasy.pages.dev";
 
 type CaptainStatus = "not_started" | "playing" | "finished";
 type RankedPlayer = { entryId: number; name: string; rank: number | null; gpc: number; gpcStatus?: CaptainStatus; captainTotal: number; captainRateTotal: number; hp: number; history: CaptainHistoryEntry[] };
-type CaptainHistoryEntry = { gw: number; captain: string; rate: number; points: number; life: number; duelLife?: number; status?: CaptainStatus; usedViceCaptain?: boolean };
+
 type CaptainPopularity = { name: string; points: number; selections: number; rate: number; selectors: string[]; status?: CaptainStatus };
 type LeagueTeam = { entryId: number; teamName: string };
 type ApiTeam = LeagueTeam & {
@@ -339,10 +340,6 @@ function lifeEarnedInStage(stage: StageInfo | undefined, points: number, rate: n
   return 0;
 }
 
-function signedLife(value: number): string {
-  return value > 0 ? `+${value}` : String(value);
-}
-
 const refreshRetryDelay = 5 * 60_000;
 
 function beijingSnapshotDay(timestamp: number): number {
@@ -410,46 +407,6 @@ function ChallengePanel({ melee = false, gameweek = "GW12" }: { melee?: boolean;
   );
 }
 
-function InlineCaptainHistory({ playerName, history, currentGwLabel, stage }: { playerName: string; history: CaptainHistoryEntry[]; currentGwLabel: string; stage: StageInfo }) {
-  // Chapter panels stay independent: chapter II never shows chapter I records,
-  // while total life and captain totals keep ranking players across all chapters.
-  const chapterHistory = history.filter((item) => item.gw >= stage.gwFrom && item.gw <= stage.gwTo);
-  const chapterLife = chapterHistory.reduce((total, item) => total + item.life + (item.duelLife ?? 0), 0);
-
-  return (
-    <section className="rank-history" aria-label={`${playerName} 在${stage.title}的队长选择记录`}>
-      <header><strong>队长选择记录</strong><small>{currentGwLabel}</small></header>
-      <div>
-        {chapterHistory.length === 0 ? <p className="history-empty">本章节尚无队长选择记录</p> : chapterHistory.map((item) => (
-          <Fragment key={item.gw}><article className="history-row">
-            <strong className="history-gw">GW{item.gw}</strong>
-            <div className="history-captain"><b>{item.captain}{item.usedViceCaptain ? "（副）" : ""}</b><small className={item.rate < 10 ? "rare-pick" : ""}>选择率 {item.rate}%</small></div>
-            <div
-              className="history-result"
-              aria-label={item.status === "not_started" ? "未开赛，暂未增加血量" : `${item.points} 分，血量变化 ${signedLife(item.life)}`}
-            >
-              <span className="history-result-box history-points" aria-hidden="true">
-                <b className={item.status === "not_started" ? "score-pending" : undefined}>{item.status === "not_started" ? "未开赛" : item.points}</b>{item.status === "not_started" ? null : <em>分</em>}
-              </span>
-              <span className={`history-result-box history-life ${item.life > 0 ? "life-gain" : item.life < 0 ? "life-loss" : "life-neutral"} ${item.life === 2 ? "life-rare" : ""}`} aria-hidden="true">
-                <b>{signedLife(item.life)}</b><em>血</em>
-              </span>
-            </div>
-          </article>{item.duelLife !== undefined ? <article className="history-row"><strong className="history-gw">GW{item.gw}</strong><div className="history-captain"><b>决斗结算</b><small>{item.duelLife > 0 ? '胜利' : item.duelLife < 0 ? '失败' : '平局'}</small></div><div className="history-result"><span className={`history-result-box history-life ${item.duelLife > 0 ? "life-gain" : item.duelLife < 0 ? "life-loss" : "life-neutral"}`}><b>{signedLife(item.duelLife)}</b><em>血</em></span></div></article> : null}</Fragment>
-        ))}
-        <article className="history-row history-chapter-summary">
-          <strong className="history-gw">CH.{stage.roman}</strong>
-          <div className="history-captain"><b>{stage.title}</b><small>{stage.range} · 本章节血量变化</small></div>
-          <div className="history-result" aria-label={`本章节血量变化 ${signedLife(chapterLife)}`}>
-            <span className={`history-result-box history-life ${chapterLife > 0 ? "life-gain" : chapterLife < 0 ? "life-loss" : "life-neutral"} ${chapterLife >= 2 ? "life-rare" : ""}`} aria-hidden="true">
-              <b>{signedLife(chapterLife)}</b><em>血</em>
-            </span>
-          </div>
-        </article>
-      </div>
-    </section>
-  );
-}
 
 function RankedPlayerCells({ player }: { player: RankedPlayer }) {
   const { name, rank, gpc, gpcStatus, captainTotal, hp } = player;
