@@ -27,7 +27,15 @@ export async function arenaWindow(env: OpsEnv, now = Date.now()): Promise<ArenaW
       }
     } catch { /* Invalid settings leave the automatic schedule in control. */ }
   }
-  const event = next && now >= Date.parse(next.deadline_time) - 12 * 3600000 ? next : previous ?? next;
+  const nextWindowOpen = next && now >= Date.parse(next.deadline_time) - 12 * 3600000;
+  let previousSettled = false;
+  if (next && previous && !nextWindowOpen) {
+    const row = await env.OPS_DB?.prepare('SELECT snapshot FROM published_rounds WHERE gw=?').bind(previous.id).first<{ snapshot: string }>();
+    const snapshot = row ? JSON.parse(row.snapshot) as { finished?: boolean; officialFinalized?: boolean }
+      : await env.FPL_CACHE.get<{ finished?: boolean; officialFinalized?: boolean }>(`snapshot:gw:${previous.id}`, 'json');
+    previousSettled = snapshot?.finished === true && snapshot.officialFinalized === true;
+  }
+  const event = next && (nextWindowOpen || previousSettled) ? next : previous ?? next;
   if (!event) return { gw: 9, open: false };
   const opensAt = new Date(Date.parse(event.deadline_time) - 12 * 3600000).toISOString();
   return { gw: event.id, deadline: event.deadline_time, opensAt,

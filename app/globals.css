@@ -4745,3 +4745,11 @@ main::before { transform: translateZ(0); }
   .ranking-head > span:nth-child(3)::after,
   .ranking-head > span:nth-child(4)::after { font-size: var(--ui-text-sm); }
 }
+
+.hp-cell.hp-eliminated { justify-self: stretch; min-width: 0; width: 100%; justify-content: center; text-align: center; }
+.hp-eliminated > span:first-child { white-space: nowrap; }
+.hp-eliminated .pixel-health { display: none; }
+
+.rank-history .history-life.life-gain, .rank-history .history-life.life-gain b, .rank-history .history-life.life-gain em { color: var(--color-success); }
+.rank-history .history-life.life-loss, .rank-history .history-life.life-loss b, .rank-history .history-life.life-loss em { color: var(--color-error); }
+.rank-history .history-life.life-neutral, .rank-history .history-life.life-neutral b, .rank-history .history-life.life-neutral em { color: var(--color-result-neutral); }

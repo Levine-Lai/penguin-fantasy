@@ -743,3 +743,28 @@ test('lightweight admin session checks require the HttpOnly administrator cookie
   const player = await signSession(env.SESSION_SECRET, { role: 'player', entryId: 1, exp: Date.now() + 60000 });
   assert.equal((await request('/admin/session', 'GET', undefined, { cookie: `__Host-penguin_admin=${player}` })).status, 401);
 });
+
+
+test('published settlement advances to the next preparation round without opening registration early', async () => {
+  const { env, cache } = await setup();
+  const ddl9 = Date.parse('2026-10-31T11:00:00Z');
+  const ddl10 = ddl9 + 7 * 86400000;
+  const now = ddl9 + 3 * 86400000;
+  cache.set('fpl:bootstrap', { value: { events: [{ id: 9, deadline_time: new Date(ddl9).toISOString() }, { id: 10, deadline_time: new Date(ddl10).toISOString() }] } });
+  for (const snapshot of [{ gw: 9, finished: false, officialFinalized: false }, { gw: 9, finished: true, officialFinalized: false }]) {
+    cache.set('snapshot:gw:9', snapshot);
+    assert.equal((await arenaWindow(env, now)).gw, 9);
+  }
+  cache.set('snapshot:gw:9', { gw: 9, finished: true, officialFinalized: true });
+  let window = await arenaWindow(env, now);
+  assert.equal(window.gw, 10); assert.equal(window.open, false);
+  assert.equal(Date.parse(window.opensAt), ddl10 - 12 * 3600000);
+  // The committed publication takes precedence over a stale KV snapshot.
+  cache.set('snapshot:gw:9', { gw: 9, finished: false, officialFinalized: false });
+  await env.OPS_DB.prepare('INSERT INTO published_rounds(gw,revision,snapshot,published_at) VALUES (?,?,?,?)')
+    .bind(9, 1, JSON.stringify({ gw: 9, finished: true, officialFinalized: true }), new Date(now).toISOString()).run();
+  assert.equal((await arenaWindow(env, now)).gw, 10);
+  window = await arenaWindow(env, ddl10 - 12 * 3600000);
+  assert.equal(window.gw, 10); assert.equal(window.open, true);
+  assert.equal((await arenaWindow(env, ddl10)).gw, 10);
+});

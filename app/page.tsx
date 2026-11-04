@@ -431,17 +431,17 @@ function InlineCaptainHistory({ playerName, history, currentGwLabel, stage }: { 
               <span className="history-result-box history-points" aria-hidden="true">
                 <b className={item.status === "not_started" ? "score-pending" : undefined}>{item.status === "not_started" ? "未开赛" : item.points}</b>{item.status === "not_started" ? null : <em>分</em>}
               </span>
-              <span className={`history-result-box history-life ${item.life === 2 ? "life-rare" : ""}`} aria-hidden="true">
+              <span className={`history-result-box history-life ${item.life > 0 ? "life-gain" : item.life < 0 ? "life-loss" : "life-neutral"} ${item.life === 2 ? "life-rare" : ""}`} aria-hidden="true">
                 <b>{signedLife(item.life)}</b><em>血</em>
               </span>
             </div>
-          </article>{item.duelLife !== undefined ? <article className="history-row"><strong className="history-gw">GW{item.gw}</strong><div className="history-captain"><b>决斗结算</b><small>{item.duelLife > 0 ? '胜利' : item.duelLife < 0 ? '失败' : '平局'}</small></div><div className="history-result"><span className="history-result-box history-life"><b>{signedLife(item.duelLife)}</b><em>血</em></span></div></article> : null}</Fragment>
+          </article>{item.duelLife !== undefined ? <article className="history-row"><strong className="history-gw">GW{item.gw}</strong><div className="history-captain"><b>决斗结算</b><small>{item.duelLife > 0 ? '胜利' : item.duelLife < 0 ? '失败' : '平局'}</small></div><div className="history-result"><span className={`history-result-box history-life ${item.duelLife > 0 ? "life-gain" : item.duelLife < 0 ? "life-loss" : "life-neutral"}`}><b>{signedLife(item.duelLife)}</b><em>血</em></span></div></article> : null}</Fragment>
         ))}
         <article className="history-row history-chapter-summary">
           <strong className="history-gw">CH.{stage.roman}</strong>
           <div className="history-captain"><b>{stage.title}</b><small>{stage.range} · 本章节血量变化</small></div>
           <div className="history-result" aria-label={`本章节血量变化 ${signedLife(chapterLife)}`}>
-            <span className={`history-result-box history-life ${chapterLife >= 2 ? "life-rare" : ""}`} aria-hidden="true">
+            <span className={`history-result-box history-life ${chapterLife > 0 ? "life-gain" : chapterLife < 0 ? "life-loss" : "life-neutral"} ${chapterLife >= 2 ? "life-rare" : ""}`} aria-hidden="true">
               <b>{signedLife(chapterLife)}</b><em>血</em>
             </span>
           </div>
@@ -465,7 +465,7 @@ function RankedPlayerCells({ player }: { player: RankedPlayer }) {
       </div>
       <strong className="stat-score"><span className={gpcStatus === "not_started" ? "score-pending" : undefined}>{gpcStatus === "not_started" ? "未开赛" : gpc}</span></strong>
       <strong className="stat-score stat-captain-total"><span>{captainTotal}</span></strong>
-      <div className="hp-cell" aria-label={`${hp} 点血量`}>
+      <div className={`hp-cell${hp === 0 ? " hp-eliminated" : ""}`} aria-label={`${hp} 点血量`}>
         {hp === 0 ? <span>已淘汰</span> : null}
         <span className="pixel-health" aria-hidden="true">
           {Array.from({ length: hp }, (_, index) => <i className="blood-drop" key={index}></i>)}

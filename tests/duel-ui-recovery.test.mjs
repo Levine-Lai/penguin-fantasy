@@ -256,3 +256,17 @@ test('daily captain scores update independently while duel settlement stays pend
     assert.deepEqual(outcomes().map(node => [node.props.children, node.props.className]), [['平局', 'resultDraw'], ['平局', 'resultDraw']]);
   } finally { h.restore(); }
 });
+
+
+test('the next preparation round hides old pairings and keeps submission disabled until opening', async () => {
+  const arena = { gw: 10, open: false, deadline: '2099-01-08T00:00:00Z', opensAt: '2099-01-07T12:00:00Z' };
+  const h = arenaHarness(() => ({ read: async () => ({ entryId: 1, mine: { arena, gw: 10, remaining: 4, submitted: false } }) }),
+    async () => ({ arena, members: [], duels: [{ id: 'old', gw: 9, challengerName: 'Old duel' }], results: [] }));
+  try {
+    h.render(); await h.flush();
+    assert.ok(h.nodes('h2').some(node => node.props.children === '准备决斗'));
+    assert.equal(h.nodes('article').length, 0);
+    assert.equal(h.nodes('button').find(node => node.props.className === 'challengeButton').props.disabled, true);
+    assert.ok(h.nodes('p').some(node => typeof node.props.children === 'string' && node.props.children.startsWith('报名开放：')));
+  } finally { h.restore(); }
+});

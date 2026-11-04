@@ -228,7 +228,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   return <div className={frame.preview}>
     <section className={`${frame.arena} ${styles.panel}`} style={assets} aria-label="正式决斗">
       <header className={`${frame.arenaHeader} ${styles.header}`}>
-        <div><small>GW{round?.gw ?? 9}</small><div className={styles.titleRow}><h2>{revealed ? '本轮决斗' : '发起决斗'}</h2>{mine ? <div className={styles.remaining}><small>剩余主动挑战</small><div className={styles.energyMeter} role="meter" aria-label="剩余主动挑战次数" aria-valuemin={0} aria-valuemax={5} aria-valuenow={mine.remaining} aria-valuetext={`剩余 ${mine.remaining} / 5 次`}>{Array.from({ length: 5 }, (_, index) => <i className={index < mine.remaining ? styles.energyFilled : styles.energyEmpty} key={index} aria-hidden="true" />)}</div></div> : null}</div></div>
+        <div><small>GW{round?.gw ?? 9}</small><div className={styles.titleRow}><h2>{revealed ? '本轮决斗' : round?.open ? '发起决斗' : '准备决斗'}</h2>{mine ? <div className={styles.remaining}><small>剩余主动挑战</small><div className={styles.energyMeter} role="meter" aria-label="剩余主动挑战次数" aria-valuemin={0} aria-valuemax={5} aria-valuenow={mine.remaining} aria-valuetext={`剩余 ${mine.remaining} / 5 次`}>{Array.from({ length: 5 }, (_, index) => <i className={index < mine.remaining ? styles.energyFilled : styles.energyEmpty} key={index} aria-hidden="true" />)}</div></div> : null}</div></div>
         {deadline ? <p className={styles.deadline}>DDL {chinaTime(deadline)}</p> : null}
       </header>
       {eliminated ? <p className={styles.muted}>已淘汰，不能再参与挑战。</p> : null}
