@@ -1,5 +1,7 @@
 # 企鹅杯：冰渊王座之战
 
+开发从 [个人工作流程](docs/workflow.md) 开始；出问题时参考 [恢复说明](docs/recovery.md)。一条需求对应一个分支和 PR，合并前运行 `npm run verify`，发布后运行 `npm run verify:online`。
+
 企鹅杯 2026–27 是一场贯穿 Fantasy Premier League 全赛季的生存竞赛。所有参赛者从终焉冰海出发，以每轮队长表现积累生命值，在五重试炼中争夺最后的冰渊王座。
 
 ## 五重试炼

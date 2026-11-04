@@ -1,11 +1,11 @@
 name: Deploy GitHub Pages
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: "40 23 * * *"
 
 permissions:
   contents: read
@@ -13,11 +13,12 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
+    name: Verify project
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -26,11 +27,26 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install browser for acceptance checks
+        run: npx playwright install --with-deps chromium
+
+      - name: Verify source and responsive layout
+        run: npm run verify
+        env:
+          NEXT_PUBLIC_BASE_PATH: ""
+
+      - name: Save acceptance report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-acceptance-report
+          path: test-results/
 
       - name: Configure project path
         shell: bash
@@ -45,14 +61,17 @@ jobs:
         run: npm run build:pages
 
       - name: Configure Pages
+        if: github.ref == 'refs/heads/main'
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v4
         with:
           path: ./out
 
   deploy:
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
