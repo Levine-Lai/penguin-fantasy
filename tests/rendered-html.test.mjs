@@ -51,7 +51,8 @@ test("server-renders the Penguin Cup leaderboard", async () => {
   assert.notDeepEqual(renderedPlayerNames.slice(0, 2), ["SSU - Sakai Moka", "企鹅"]);
   assert.match(html, /队长总分/);
   assert.doesNotMatch(html, />GPC<|>TP<|>HP</);
-  assert.equal((html.match(/class="rank-row/g) ?? []).length, 20);
+  const leaderboard = html.slice(html.indexOf('id="ranking"'), html.indexOf('aria-label="排行榜分页"'));
+  assert.equal((leaderboard.match(/class="rank-row/g) ?? []).length, 20);
   assert.doesNotMatch(html, /搜索玩家/);
 });
 

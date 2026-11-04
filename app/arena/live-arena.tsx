@@ -276,7 +276,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
       </div>
     </section>
     {resultGw ? <section className={`${frame.arena} ${styles.panel} ${styles.resultsPanel}`} style={assets} aria-label={`GW${resultGw}决斗`}>
-      <header className={`${frame.arenaHeader} ${styles.header}`}><h2>GW{resultGw}决斗</h2></header>
+      <header className={`${frame.arenaHeader} ${styles.header}`}><div><small>GW{resultGw}</small><div className={styles.titleRow}><h2>决斗情况</h2></div></div></header>
       <div className={styles.duels}>{renderDuels(resultDuels)}{!resultDuels.length ? <p className={styles.muted}>{revealed && !selectionReady ? '正在确认队长与入选对阵。' : '本轮暂无对阵。'}</p> : null}</div>
     </section> : null}
     <dialog ref={confirmDialog} className={styles.confirmDialog} style={assets} aria-labelledby="confirm-duel-title" aria-describedby="confirm-duel-note" onCancel={event => { if (busy) event.preventDefault(); else setConfirmation(null); }} onClick={event => { if (event.target === event.currentTarget && !busy) { const rect = event.currentTarget.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) setConfirmation(null); } }}>
