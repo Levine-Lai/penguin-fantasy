@@ -11,6 +11,7 @@ export type DuelRecord = {
   challenger_score: number | null; target_score: number | null; challenger_delta: number | null; target_delta: number | null;
 };
 export type Community = {
+  previousRound?: { gw: number; duels: DuelRecord[] } | null;
   arena: ArenaConfig; announcements: Announcement[]; duels: DuelRecord[];
   members: Array<{ entryId: number; teamName: string }>;
   results: PublishedDuel[];

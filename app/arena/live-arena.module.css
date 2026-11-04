@@ -119,3 +119,34 @@
   .energyMeter { width: 6rem; }
   .duelParticipant > strong { font-size: var(--ui-text-base); }
 }
+
+/* The chooser follows the leaderboard's single-row ledger. */
+.registration { --selection-row-height: 4.5rem; display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+.registration .selectionRow, .selectionHead { display: grid; grid-template-columns: 4.75rem minmax(0, 1fr) 9rem; align-items: center; gap: .5rem; padding-inline: .75rem; text-align: center; }
+.registration .selectionRow { position: relative; min-height: var(--selection-row-height); height: var(--selection-row-height); margin: 0; padding-block: .4rem; border: 0; border-bottom: 1px solid var(--arena-rule); background: var(--color-paper-3-a46); box-shadow: none; cursor: pointer; }
+.registration .selfRow, .registration .selfRow:hover { background: var(--color-paper-3-a46); cursor: default; }
+.selfRow > p { grid-column: 1 / -1; }
+.selectionHead { min-height: 3rem; border-block: 1px solid var(--arena-rule); color: var(--arena-muted); font-size: var(--ui-text-sm); }
+.candidates { display: block; max-height: calc(var(--selection-row-height) * 6 + 1px); padding: 0; overflow-y: auto; scrollbar-gutter: stable; border-bottom: 1px solid var(--arena-rule); }
+.registration .selectedRow { background: var(--color-accent-a14); outline: 1px solid var(--arena-cyan); outline-offset: -1px; }
+.registration .selectionRow:has(input:focus-visible) { outline: 2px solid var(--color-focus); outline-offset: -2px; }
+.selectionRadio { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; }
+.selectionName { display: grid; justify-items: center; min-width: 0; gap: .2rem; }
+.selectionName strong { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--ui-text-base); }
+.selectionName small { color: var(--arena-muted); font-size: var(--ui-text-sm); }
+.panel .selectionName .featured { color: var(--color-gold); }
+.selectionHealth { display: flex; justify-content: center; align-items: center; gap: .4rem; color: var(--color-health); font-size: var(--ui-text-sm); }
+.selectionHealth > span { display: grid; grid-template-columns: repeat(6, .65rem); gap: .15rem; }
+.selectionHealth :global(.blood-drop) { width: .65rem; height: .65rem; margin: 0; }
+.selectionRow :global(.rank-gem) { justify-self: center; width: 3rem; height: 3rem; min-width: 0; margin: 0; font-size: var(--ui-text-base); }
+.resultsPanel { margin-top: 2rem; }
+@media (max-width: 32rem) {
+  .registration { --selection-row-height: 4.75rem; }
+  .registration .selectionRow, .selectionHead { grid-template-columns: 2.5rem minmax(0, 1fr) 5.4rem; gap: .3rem; padding-inline: .3rem; }
+  .selectionRow :global(.rank-gem) { width: 2.4rem; height: 2.4rem; }
+  .selectionHealth { gap: .2rem; }
+  .selectionHealth > span { grid-template-columns: repeat(6, .45rem); gap: .1rem; }
+  .selectionHealth :global(.blood-drop) { width: .45rem; height: .45rem; }
+}
+
+.selfRow, .selectionHead { overflow-y: auto; scrollbar-gutter: stable; }

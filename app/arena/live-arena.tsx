@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
-import { chinaTime, loadCommunity, duelSelectionLabels, type Community } from '../operations-client';
+import { chinaTime, loadCommunity, duelSelectionLabels, type Community, type DuelRecord } from '../operations-client';
 import { createDuelClient, UncertainSubmission, type PlayerSession } from './duel-client';
 import frame from '../test/arena.module.css';
 import styles from './live-arena.module.css';
@@ -70,6 +70,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
     return () => { document.body.style.overflow = overflow; };
   }, [modalOpen]);
   const submitting = useRef(false);
+  const ranks = new Map(players.map((candidate, index) => [candidate.entryId, candidate.rank ?? index + 1]));
   const health = new Map(players.map(candidate => [candidate.entryId, candidate.hp]));
   const members = community?.members.length ? community.members : players.map(candidate => ({ entryId: candidate.entryId, teamName: candidate.name }));
   const identity = player?.entryId ?? null;
@@ -219,24 +220,16 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   const query = search.trim().toLocaleLowerCase();
   const candidates = members.filter(member => member.entryId !== identity && health.get(member.entryId) !== 0 && (
     !query || member.teamName.toLocaleLowerCase().includes(query) || String(member.entryId).includes(query)
-  ));
+  )).sort((left, right) => (ranks.get(left.entryId) ?? Number.MAX_SAFE_INTEGER) - (ranks.get(right.entryId) ?? Number.MAX_SAFE_INTEGER) || left.teamName.localeCompare(right.teamName, 'zh-CN'));
   const assets = { '--arena-frame-image': `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.webp")`, '--score-slot-image': `url("${siteBasePath}/assets/leaderboard/score-slot.webp")`, '--pixel-heart-image': `url("${siteBasePath}/assets/leaderboard/pixel-heart.svg")` } as CSSProperties;
   const targetHealth = confirmation ? health.get(confirmation.targetId) ?? 0 : 0;
   const healthRows = Math.max(1, Math.ceil(Math.max(player?.hp ?? 0, targetHealth) / 6));
   const publicDuels = community?.duels.filter(duel => duel.gw === round?.gw) ?? [];
   const selectionReady = community?.arena.gw === round?.gw && community?.arena.selectionReady;
-  return <div className={frame.preview}>
-    <section className={`${frame.arena} ${styles.panel}`} style={assets} aria-label="正式决斗">
-      <header className={`${frame.arenaHeader} ${styles.header}`}>
-        <div><small>GW{round?.gw ?? 9}</small><div className={styles.titleRow}><h2>{revealed ? '本轮决斗' : round?.open ? '发起决斗' : '准备决斗'}</h2>{mine ? <div className={styles.remaining}><small>剩余主动挑战</small><div className={styles.energyMeter} role="meter" aria-label="剩余主动挑战次数" aria-valuemin={0} aria-valuemax={5} aria-valuenow={mine.remaining} aria-valuetext={`剩余 ${mine.remaining} / 5 次`}>{Array.from({ length: 5 }, (_, index) => <i className={index < mine.remaining ? styles.energyFilled : styles.energyEmpty} key={index} aria-hidden="true" />)}</div></div> : null}</div></div>
-        {deadline ? <p className={styles.deadline}>DDL {chinaTime(deadline)}</p> : null}
-      </header>
-      {eliminated ? <p className={styles.muted}>已淘汰，不能再参与挑战。</p> : null}
-      {error ? <p className={styles.error} role="alert">{error}</p> : null}
-      {message ? <p className={styles.message} role="status">{message}</p> : null}
-      {revealed ? <div className={styles.duels}>
-        {mine?.submitted && mine.gw === round?.gw && mine.challenge ? <p className={styles.muted}>挑战 {mine.challenge.targetName} · {duelSelectionLabels[mine.selectionStatus ?? 'pending']}</p> : null}
-        {publicDuels.map(duel => {
+  const resultGw = revealed ? round?.gw : community?.previousRound?.gw;
+  const resultDuels = revealed ? publicDuels : community?.previousRound?.duels ?? [];
+  const renderDuels = (duels: DuelRecord[]) => {
+    return duels.map(duel => {
           const challengerRound = players.find(candidate => candidate.entryId === duel.challenger_id)?.history?.find(history => history.gw === duel.gw);
           const targetRound = players.find(candidate => candidate.entryId === duel.target_id)?.history?.find(history => history.gw === duel.gw);
           const challengerScore = duelCaptainScore(duel.gw, duel.challenger_score, duel.settled_at, players.find(candidate => candidate.entryId === duel.challenger_id)?.history);
@@ -247,30 +240,45 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
           <div className={`${frame.combatants} ${styles.duelCombatants}`}><div className={`${frame.combatant} ${styles.duelParticipant}`}><small>挑战者</small><strong>{duel.challengerName}</strong><DuelHealth hp={health.get(duel.challenger_id)} /><b className={`${styles.duelCaptain} ${!challengerRound?.usedViceCaptain ? styles.activeCaptain : ''}`}>C {duel.challengerCaptain?.captainName ?? '—'}</b><small className={challengerRound?.usedViceCaptain ? styles.activeCaptain : undefined}>V {duel.challengerCaptain?.viceCaptainName ?? '—'}</small><em className={`${styles.captainScore} ${scoreComparison > 0 ? styles.resultGain : scoreComparison < 0 ? styles.resultLoss : styles.resultDraw}`} aria-label="队长基础分">{challengerScore}</em></div><div className={`${frame.versus} ${styles.duelVersus}`}>VS</div><div className={`${frame.combatant} ${styles.duelParticipant}`}><small>被挑战者</small><strong>{duel.targetName}</strong><DuelHealth hp={health.get(duel.target_id)} /><b className={`${styles.duelCaptain} ${!targetRound?.usedViceCaptain ? styles.activeCaptain : ''}`}>C {duel.targetCaptain?.captainName ?? '—'}</b><small className={targetRound?.usedViceCaptain ? styles.activeCaptain : undefined}>V {duel.targetCaptain?.viceCaptainName ?? '—'}</small><em className={`${styles.captainScore} ${scoreComparison < 0 ? styles.resultGain : scoreComparison > 0 ? styles.resultLoss : styles.resultDraw}`} aria-label="队长基础分">{targetScore}</em></div></div>
           <div className={`${frame.outcome} ${styles.duelOutcome}`}><strong className={!duel.settled_at || duel.challenger_delta == null ? styles.resultPending : duel.challenger_delta! > 0 ? styles.resultGain : duel.challenger_delta! < 0 ? styles.resultLoss : styles.resultDraw}>{!duel.settled_at || duel.challenger_delta === null ? '未结算' : duel.challenger_delta! > 0 ? '+1 血' : duel.challenger_delta! < 0 ? '-1 血' : '平局'}</strong><strong className={!duel.settled_at || duel.target_delta == null ? styles.resultPending : duel.target_delta! > 0 ? styles.resultGain : duel.target_delta! < 0 ? styles.resultLoss : styles.resultDraw}>{!duel.settled_at || duel.target_delta === null ? '未结算' : duel.target_delta! > 0 ? '+1 血' : duel.target_delta! < 0 ? '-1 血' : '平局'}</strong></div>
         </article>;
-        })}
-        {!publicDuels.length ? <p className={styles.muted}>{selectionReady ? '本轮暂无对阵。' : '正在确认队长与入选对阵。'}</p> : null}
-      </div> : <div className={styles.registration}>
-        <aside className={styles.profile} aria-label="我的决斗信息">
-          <small>挑战者</small>
-          <h3 className={player && isFeatured(player.name) ? styles.featured : undefined}>{player?.name ?? '尚未登录'}</h3>
-          {player ? <><p className={styles.playerId}>FPL ID {player.entryId}</p><div className={styles.life} aria-label={`血量 ${player.hp}`}><span>血量</span><strong>{player.hp}</strong><span className={styles.drops} aria-hidden="true">{Array.from({ length: player.hp }, (_, index) => <i className="blood-drop" key={index} />)}</span></div></> : <p className={styles.muted}>请先在右上角登录。</p>}
-        </aside>
+        });
+  };
+  const rankCell = (entryId: number) => {
+    const rank = ranks.get(entryId) ?? players.length + members.findIndex(member => member.entryId === entryId) + 1;
+    return <strong className={`rank-gem rank-gem-${rank <= 3 ? rank : 4}`} aria-label={`第 ${rank} 名`} style={rank <= 3 ? { '--rank-badge-image': `url("${siteBasePath}/assets/leaderboard/rank-${rank}-ice.webp")` } as CSSProperties : undefined}>{rank}</strong>;
+  };
+  const selectionHealth = (hp: number) => <span className={styles.selectionHealth} aria-label={`血量 ${hp}`}><b>{hp}</b><span aria-hidden="true">{Array.from({ length: hp }, (_, index) => <i className="blood-drop" key={index} />)}</span></span>;
+  return <div className={frame.preview}>
+    <section className={`${frame.arena} ${styles.panel}`} style={assets} aria-label="正式决斗">
+      <header className={`${frame.arenaHeader} ${styles.header}`}>
+        <div><small>GW{round?.gw ?? 9}</small><div className={styles.titleRow}><h2>决斗选择</h2>{mine ? <div className={styles.remaining}><small>剩余主动挑战</small><div className={styles.energyMeter} role="meter" aria-label="剩余主动挑战次数" aria-valuemin={0} aria-valuemax={5} aria-valuenow={mine.remaining} aria-valuetext={`剩余 ${mine.remaining} / 5 次`}>{Array.from({ length: 5 }, (_, index) => <i className={index < mine.remaining ? styles.energyFilled : styles.energyEmpty} key={index} aria-hidden="true" />)}</div></div> : null}</div></div>
+        {deadline ? <p className={styles.deadline}>DDL {chinaTime(deadline)}</p> : null}
+      </header>
+      {eliminated ? <p className={styles.muted}>已淘汰，不能再参与挑战。</p> : null}
+      {error ? <p className={styles.error} role="alert">{error}</p> : null}
+      {message ? <p className={styles.message} role="status">{message}</p> : null}
+      <div className={styles.registration}>
+        <div className={`rank-row ${styles.selectionRow} ${styles.selfRow}`} role="group" aria-label="我的决斗信息">
+          {player ? <>{rankCell(player.entryId)}<span className={styles.selectionName}><strong className={isFeatured(player.name) ? styles.featured : undefined}>{player.name}</strong><small>FPL ID {player.entryId}</small></span>{selectionHealth(player.hp)}</> : <p className={styles.muted}>请先在右上角登录。</p>}
+        </div>
         <form className={styles.form} onSubmit={askConfirmation}>
-          {mine?.submitted ? <div className={styles.submitted} role="status"><h3>决斗情况</h3><small>GW{mine.gw} · 已提交挑战</small><span>挑战对象</span><strong className={mine.challenge && isFeatured(mine.challenge.targetName) ? styles.featured : undefined}>{mine.challenge?.targetName ?? '正在读取…'}</strong>{mine.challenge ? <small>FPL ID {mine.challenge.targetId}</small> : null}<p>提交后不可修改</p></div> : <>
-            <label className={frame.candidateSearch} htmlFor="duel-search"><span>搜索挑战对象</span><input id="duel-search" type="search" placeholder="玩家名称 / FPL ID" value={search} onChange={event => { setSearch(event.target.value); setTargetId(''); }} disabled={!player || busy} autoComplete="off" /></label>
-            <fieldset className={styles.fieldset} disabled={selectionLocked}><legend className={styles.srOnly}>选择挑战对象</legend><div className={`${frame.candidateList} ${styles.candidates}`}>
-              {candidates.map(member => <label key={member.entryId} className={targetId === String(member.entryId) ? frame.selectedCandidate : ''}>
-                <input type="radio" name="duel-target" value={member.entryId} checked={targetId === String(member.entryId)} onChange={event => setTargetId(event.target.value)} />
-                <span><strong className={isFeatured(member.teamName) ? styles.featured : undefined}>{member.teamName}</strong><small className={styles.candidateMeta}>FPL ID {member.entryId}<span className={styles.candidateHealth} aria-label={`血量 ${health.get(member.entryId) ?? 0}`}>{health.get(member.entryId) ?? 0}<i className="blood-drop" aria-hidden="true" /></span></small></span>
-              </label>)}
-              {!candidates.length ? <p className={frame.candidateEmpty}>{members.length ? '未找到玩家' : '玩家名单暂不可用，请刷新后重试'}</p> : null}
-            </div></fieldset>
-            <button className={frame.challengeButton} disabled={locked || !targetId}><strong>{busy ? '正在提交…' : '确认发起决斗'}</strong></button>
-            {closed && round ? <p className={styles.muted}>{round.opensAt && clock < Date.parse(round.opensAt) ? `报名开放：${chinaTime(round.opensAt)}` : '报名未开放或已截止'}</p> : null}
-          </>}
+          <label className={frame.candidateSearch} htmlFor="duel-search"><span className={styles.srOnly}>搜索挑战对象</span><input id="duel-search" type="search" placeholder="玩家名称 / FPL ID" value={search} onChange={event => { setSearch(event.target.value); setTargetId(''); }} disabled={!player || busy || Boolean(mine?.submitted)} autoComplete="off" /></label>
+          <div className={styles.selectionHead} aria-hidden="true"><span>阶位</span><span>玩家 ID</span><span>血量</span></div>
+          <fieldset className={styles.fieldset} disabled={selectionLocked}><legend className={styles.srOnly}>选择挑战对象</legend><div className={styles.candidates}>
+            {candidates.map(member => <label key={member.entryId} className={`rank-row ${styles.selectionRow} ${targetId === String(member.entryId) ? styles.selectedRow : ''}`}>
+              <input className={styles.selectionRadio} type="radio" name="duel-target" value={member.entryId} checked={targetId === String(member.entryId)} onChange={event => setTargetId(event.target.value)} />
+              {rankCell(member.entryId)}<span className={styles.selectionName}><strong className={isFeatured(member.teamName) ? styles.featured : undefined} title={member.teamName}>{member.teamName}</strong><small>FPL ID {member.entryId}</small></span>{selectionHealth(health.get(member.entryId) ?? 0)}
+            </label>)}
+            {!candidates.length ? <p className={frame.candidateEmpty}>{members.length ? '未找到玩家' : '玩家名单暂不可用，请刷新后重试'}</p> : null}
+          </div></fieldset>
+          {mine?.submitted ? <div className={styles.submitted} role="status"><strong>已提交挑战：{mine.challenge?.targetName ?? '正在读取…'}</strong><small>{duelSelectionLabels[mine.selectionStatus ?? 'pending']}</small><p>提交后不可修改</p></div> : <button className={frame.challengeButton} disabled={locked || !targetId}><strong>{busy ? '正在提交…' : '确认发起决斗'}</strong></button>}
+          {closed && round ? <p className={styles.muted}>{round.opensAt && clock < Date.parse(round.opensAt) ? `报名开放：${chinaTime(round.opensAt)}` : '报名未开放或已截止'}</p> : null}
         </form>
-      </div>}
+      </div>
     </section>
+    {resultGw ? <section className={`${frame.arena} ${styles.panel} ${styles.resultsPanel}`} style={assets} aria-label={`GW${resultGw}决斗`}>
+      <header className={`${frame.arenaHeader} ${styles.header}`}><h2>GW{resultGw}决斗</h2></header>
+      <div className={styles.duels}>{renderDuels(resultDuels)}{!resultDuels.length ? <p className={styles.muted}>{revealed && !selectionReady ? '正在确认队长与入选对阵。' : '本轮暂无对阵。'}</p> : null}</div>
+    </section> : null}
     <dialog ref={confirmDialog} className={styles.confirmDialog} style={assets} aria-labelledby="confirm-duel-title" aria-describedby="confirm-duel-note" onCancel={event => { if (busy) event.preventDefault(); else setConfirmation(null); }} onClick={event => { if (event.target === event.currentTarget && !busy) { const rect = event.currentTarget.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) setConfirmation(null); } }}>
       <form onSubmit={submit}>
         <header><small>GW{confirmation?.gw ?? round?.gw ?? 9}</small><h2 id="confirm-duel-title">确认发起决斗</h2></header>

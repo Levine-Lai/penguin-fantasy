@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import ts from 'typescript';
+import { duelSelectionLabels } from '../app/operations-client.ts';
 import { UncertainSubmission } from '../app/arena/duel-client.ts';
 
 // Run actual component event/effect callbacks with deterministic hooks and timers.
@@ -24,7 +25,7 @@ function arenaHarness(factory, communityLoader, scorePlayers) {
   globalThis.window = { addEventListener: add, removeEventListener: remove, setInterval: () => 1, clearInterval() {}, setTimeout(fn, ms) { timers.set(++timerId, { fn, ms }); return timerId; }, clearTimeout: id => timers.delete(id) };
   globalThis.document = { body: { style: { overflow: '' } }, visibilityState: 'visible', addEventListener: add, removeEventListener: remove };
   const community = { arena: { gw: 9, open: true, deadline: '2099-01-01T00:00:00Z' }, members: [{ entryId: 1, teamName: 'A' }, { entryId: 2, teamName: 'B' }], duels: [], results: [] };
-  const operations = { chinaTime: x => x, loadCommunity: communityLoader ?? (async () => { for (const handler of handlers.get('penguin-community-updated') ?? []) handler({ detail: community }); return community; }) };
+  const operations = { duelSelectionLabels, chinaTime: x => x, loadCommunity: communityLoader ?? (async () => { for (const handler of handlers.get('penguin-community-updated') ?? []) handler({ detail: community }); return community; }) };
   const jsx = (type, props) => ({ type, props }), compiled = { exports: {} };
   new Function('require', 'module', 'exports', js)(name => name === 'react' ? react : name === 'react/jsx-runtime' ? { jsx, jsxs: jsx } : name.includes('operations-client') ? operations : name.includes('duel-client') ? { createDuelClient: factory, UncertainSubmission } : { default: new Proxy({}, { get: (_, key) => String(key) }) }, compiled, compiled.exports);
   const render = () => { cursor = 0; effects = []; tree = compiled.exports.default({ player: { entryId: 1, name: 'A', hp: 3 }, players: scorePlayers ?? [{ entryId: 1, name: 'A', hp: 3 }, { entryId: 2, name: 'B', hp: 4 }] }); effects.forEach(fn => fn()); };
@@ -96,7 +97,7 @@ test('roster search and signed registration do not wait for a stalled community 
     let timer;
     await Promise.race([h.nodes('form')[1].props.onSubmit({ preventDefault() {} }), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Saved signup waited for the public feed')), 250); })]).finally(() => clearTimeout(timer));
     await h.flush(); assert.equal(writes, 1);
-    assert.ok(h.nodes('h3').some(node => node.props.children === '决斗情况'));
+    assert.ok(h.nodes('div').some(node => node.props.role === 'status' && node.props.className === 'submitted'));
     assert.equal(h.nodes('button').find(node => node.props.type === 'submit')?.props.disabled, false);
   } finally { h.restore(); }
 });
@@ -264,9 +265,30 @@ test('the next preparation round hides old pairings and keeps submission disable
     async () => ({ arena, members: [], duels: [{ id: 'old', gw: 9, challengerName: 'Old duel' }], results: [] }));
   try {
     h.render(); await h.flush();
-    assert.ok(h.nodes('h2').some(node => node.props.children === '准备决斗'));
+    assert.ok(h.nodes('h2').some(node => node.props.children === '决斗选择'));
     assert.equal(h.nodes('article').length, 0);
     assert.equal(h.nodes('button').find(node => node.props.className === 'challengeButton').props.disabled, true);
     assert.ok(h.nodes('p').some(node => typeof node.props.children === 'string' && node.props.children.startsWith('报名开放：')));
+  } finally { h.restore(); }
+});
+
+
+test('the selection ledger pins the player, sorts candidates by standing and shows the last settlement together', async () => {
+  const arena = { gw: 10, open: false, deadline: '2099-01-08T00:00:00Z', opensAt: '2099-01-07T12:00:00Z' };
+  const past = { id: 'previous', gw: 9, challenger_id: 2, target_id: 3, challengerName: 'B', targetName: 'C', settled_at: 'done', challenger_score: 3, target_score: 1, challenger_delta: 1, target_delta: -1 };
+  const players = [{ entryId: 1, name: 'A', rank: 8, hp: 3 }, { entryId: 2, name: 'B', rank: 3, hp: 2 }, { entryId: 3, name: 'C', rank: 1, hp: 4 }];
+  const h = arenaHarness(() => ({ read: async () => ({ entryId: 1, mine: { arena, gw: 10, remaining: 4 } }) }),
+    async () => ({ arena, members: players.map(p => ({ entryId: p.entryId, teamName: p.name })), duels: [], results: [], previousRound: { gw: 9, duels: [past] } }), players);
+  try {
+    h.render(); await h.flush();
+    assert.ok(h.nodes('h2').some(node => node.props.children === '决斗选择'));
+    assert.ok(h.nodes('section').some(node => node.props['aria-label'] === 'GW9决斗'));
+    const own = h.nodes('div').find(node => node.props['aria-label'] === '我的决斗信息');
+    assert.ok(own.props.className.includes('selfRow'));
+    assert.ok(!own.props.className.includes('selectedRow'));
+    assert.deepEqual(h.nodes('input').filter(node => node.props.type === 'radio').map(node => node.props.value), [3, 2]);
+    h.nodes('input').find(node => node.props.type === 'search').props.onChange({ target: { value: 'B' } }); h.render();
+    assert.deepEqual(h.nodes('input').filter(node => node.props.type === 'radio').map(node => node.props.value), [2]);
+    assert.equal(h.nodes('article').length, 1);
   } finally { h.restore(); }
 });

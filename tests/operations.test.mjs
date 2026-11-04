@@ -768,3 +768,21 @@ test('published settlement advances to the next preparation round without openin
   assert.equal(window.gw, 10); assert.equal(window.open, true);
   assert.equal((await arenaWindow(env, ddl10)).gw, 10);
 });
+
+
+test('the public feed exposes last-round settlements without disclosing next-round registrations', async () => {
+  const { env, cache, request } = await setup();
+  cache.set('fpl:bootstrap', { value: { events: [{ id: 9, deadline_time: new Date(Date.now() - 7 * 86400000).toISOString() }, { id: 10, deadline_time: new Date(Date.now() + 6 * 3600000).toISOString() }], elements: [] } });
+  await submitDuel(env.OPS_DB, 10, 1, 2, 'private-next');
+  const past = { id: 'published-past', gw: 9, challenger_id: 3, target_id: 4, created_at: '2026-10-31T01:00:00Z', selection_status: 'selected', deleted_at: null, settled_at: 'done', challenger_score: 8, target_score: 2, challenger_delta: 1, target_delta: -1 };
+  await env.OPS_DB.prepare('INSERT INTO published_rounds(gw,revision,snapshot,published_at) VALUES (?,?,?,?)')
+    .bind(9, 1, JSON.stringify({ gw: 9, finished: true, officialFinalized: true, teams: [], duelResults: [past] }), new Date().toISOString()).run();
+  const body = await (await request('/community')).json();
+  assert.equal(body.arena.gw, 10);
+  assert.deepEqual(body.duels, []);
+  assert.equal(body.arena.count, undefined);
+  assert.equal(body.previousRound.gw, 9);
+  assert.equal(body.previousRound.duels[0].challengerName, 'Player 3');
+  assert.equal(body.previousRound.duels[0].challenger_score, 8);
+  assert.ok(!JSON.stringify(body).includes('private-next'));
+});

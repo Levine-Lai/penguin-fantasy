@@ -273,8 +273,10 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
         return { ...row, settled_at: settled?.settled_at ?? null, challenger_score: settled?.challenger_score ?? null,
           target_score: settled?.target_score ?? null, challenger_delta: settled?.challenger_delta ?? null, target_delta: settled?.target_delta ?? null };
       });
+      const previous = history.filter(round => round.gw < config.gw && round.finished && round.officialFinalized).sort((a, b) => b.gw - a.gw)[0];
+      const previousRound = previous ? { gw: previous.gw, duels: await captainedDuels(env, (previous.duelResults ?? []).filter(row => !removed.has(row.id)), members) } : null;
       const revealed = Boolean(ddl && Date.now() >= Date.parse(ddl));
-      return response({ arena: { ...config, deadline: ddl, open: config.open && Boolean(ddl) && !revealed, ...(revealed ? { count: publicDuels.length, selectionReady } : {}) },
+      return response({ previousRound, arena: { ...config, deadline: ddl, open: config.open && Boolean(ddl) && !revealed, ...(revealed ? { count: publicDuels.length, selectionReady } : {}) },
         duels: revealed ? await captainedDuels(env, publicDuels, members) : [], results: published, removedDuelIds, announcements: announcementRows.results, members }, request);
     }
     if (path === '/api/visits' && request.method === 'POST') {
