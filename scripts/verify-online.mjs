@@ -1,10 +1,10 @@
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { snapshotDigest } from './snapshot-digest.mjs';
 
 // Read-only checks. Keep API access behind the shared Pages proxy.
 const expectedCommit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
-const expectedSnapshot = createHash('sha256').update(await readFile('app/static-fpl-data.json')).digest('hex');
+const expectedSnapshot = snapshotDigest(await readFile('app/static-fpl-data.json', 'utf8'));
 const sites = ['https://levine-lai.github.io/penguin-fantasy/', 'https://penguin-fantasy.pages.dev/'];
 async function read(url, json = false) {
   const response = await fetch(url, { signal: AbortSignal.timeout(30000) });

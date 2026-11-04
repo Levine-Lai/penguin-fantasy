@@ -10,6 +10,7 @@ const snapshot = JSON.parse(readFileSync(new URL('../../app/static-fpl-data.json
 for (const width of [320, 375, 390, 768, 1440]) {
   test(`${width}px: row borders, six-row scroll, and history containment`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
+    await page.clock.setFixedTime(new Date('2026-11-04T04:00:00Z'));
     const arena = { gw: 10, open: true, deadline: '2026-11-07T02:30:00Z', selectionReady: false };
     const identity = snapshot.league.teams[0].entryId;
     await page.addInitScript(id => localStorage.setItem('penguin-fantasy:player-id:v1', String(id)), identity);
@@ -33,6 +34,7 @@ for (const width of [320, 375, 390, 768, 1440]) {
       return ['Top', 'Right', 'Bottom', 'Left'].every(side => Number.parseFloat(css.getPropertyValue(`border-${side.toLowerCase()}-width`)) >= 1);
     }));
     expect(rowChecks.every(Boolean)).toBe(true);
+    await expect(chooser.getByRole('group', { name: '我的决斗信息' })).toHaveCSS('border-left-width', '1px');
     const scroll = await rows.first().evaluate(row => {
       const container = row.parentElement!;
       return { height: container.clientHeight, row: row.getBoundingClientRect().height, scroll: container.scrollHeight };
