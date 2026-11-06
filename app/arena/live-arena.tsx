@@ -316,7 +316,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
         <div className={styles.confirmActions}><button type="button" disabled={busy} onClick={() => setConfirmation(null)}>取消</button><button type="submit" disabled={busy}>{busy ? '正在提交…' : '确认提交'}</button></div>
       </form>
     </dialog>
-    <dialog ref={errorDialog} className={styles.confirmDialog} style={assets} aria-labelledby="duel-error-title" aria-describedby="duel-error-detail" onCancel={() => setFailure('')}>
+    <dialog ref={errorDialog} className={`${styles.confirmDialog} ${styles.errorDialog}`} style={assets} aria-labelledby="duel-error-title" aria-describedby="duel-error-detail" onCancel={() => setFailure('')}>
       <h2 id="duel-error-title">{uncertain ? '报名结果待确认' : '操作失败'}</h2><p id="duel-error-detail" className={styles.failureDetail}>{failure}</p>
       <div className={styles.confirmActions}><button type="button" onClick={() => setFailure('')}>知道了</button></div>
     </dialog>
