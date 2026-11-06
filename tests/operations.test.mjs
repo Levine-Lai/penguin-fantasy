@@ -26,6 +26,37 @@ async function setup() {
   return { db, env, cache, request, adminHeaders };
 }
 
+test('admin periods separate duels, login activity and audit records at exact round boundaries', async () => {
+  const { db, cache, request, adminHeaders } = await setup();
+  const end9 = Date.now() - 86400000, end10 = Date.now() + 86400000;
+  const iso = timestamp => new Date(timestamp).toISOString();
+  cache.set('fpl:bootstrap', { value: { events: [
+    { id: 8, deadline_time: iso(end9 - 7 * 86400000) },
+    { id: 9, deadline_time: iso(end9) }, { id: 10, deadline_time: iso(end10) },
+  ] } });
+  for (const [id, gw, removed] of [['old', 9, null], ['new', 10, null], ['removed', 10, iso(end9)]]) {
+    await db.prepare('INSERT INTO duels(id,gw,challenger_id,target_id,created_at,deleted_at) VALUES (?,?,?,?,?,?)')
+      .bind(id, gw, 1, 2, iso(end9), removed).run();
+  }
+  for (const [id, entry, time] of [['old', 1, end9 - 1], ['start', 2, end9], ['middle', 2, end9 + 1], ['end', 3, end10]]) {
+    await db.prepare('INSERT INTO player_logins VALUES (?,?,?,?)').bind(id, entry, '手机', iso(time)).run();
+    await db.prepare('INSERT INTO audit_log VALUES (?,?,?,?,?)').bind(id, 'admin_login', 'admin', '', iso(time)).run();
+  }
+  const get = async query => (await request(`/admin/overview?${query}`, 'GET', undefined, adminHeaders)).json();
+  const previous = await get('gw=9');
+  assert.deepEqual(previous.duels.map(row => row.id), ['old']);
+  assert.deepEqual(previous.activity.map(row => row.id), ['old']);
+  const current = await get('gw=10');
+  assert.deepEqual(current.round, { gw: 10, start: iso(end9), end: iso(end10) });
+  assert.deepEqual(current.duels.map(row => row.id), ['new']);
+  assert.equal(current.duelPagination.total, 1); assert.equal(current.arena.count, 1);
+  assert.deepEqual(new Set(current.activity.map(row => row.id)), new Set(['start', 'middle']));
+  assert.deepEqual(current.players, [{ entry_id: 2, firstLogin: iso(end9), lastLogin: iso(end9 + 1) }]);
+  assert.deepEqual(new Set(current.logs.map(row => row.id)), new Set(['start', 'middle']));
+  assert.equal((await get('gw=10&includeRemoved=true')).duelPagination.total, 2);
+  for (const gw of ['bad', '9.5', '999']) assert.equal((await request(`/admin/overview?gw=${gw}`, 'GET', undefined, adminHeaders)).status, 400);
+});
+
 test('admin duel pagination exposes history beyond 300 rows and keeps the round count independent of pages', async () => {
   const { db, request, adminHeaders } = await setup();
   const ids = [];

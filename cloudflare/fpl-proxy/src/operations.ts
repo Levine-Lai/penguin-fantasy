@@ -203,26 +203,36 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
       if (path === '/api/admin/session' && request.method === 'GET') return response({ authenticated: true }, request);
       if (path === '/api/admin/logout' && request.method === 'POST') return response({ ok: true }, request, 200, { 'set-cookie': `${cookieName}=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0` });
       if (path === '/api/admin/overview' && request.method === 'GET') {
-        const selectedDay = /^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get('day') ?? '') ? url.searchParams.get('day')! : beijingDay();
-        const start = new Date(`${selectedDay}T00:00:00+08:00`).toISOString();
-        const end = new Date(Date.parse(start) + 86400000).toISOString();
+        const [config, bootstrap] = await Promise.all([
+          arenaWindow(env),
+          env.FPL_CACHE.get<{ value: { events: Array<{ id: number; deadline_time: string }> } }>('fpl:bootstrap', 'json'),
+        ]);
+        const events = (bootstrap?.value.events ?? []).filter(event => Number.isFinite(Date.parse(event.deadline_time))).sort((a, b) => a.id - b.id);
+        const requested = url.searchParams.get('gw');
+        const gw = requested === null ? config.gw : Number(requested);
+        const event = events.find(event => event.id === gw);
+        if (!Number.isInteger(gw) || !event) throw new ApiError(requested === null ? 503 : 400, '统计轮次无效或赛程尚未就绪');
+        const previous = events.filter(item => item.id < gw).at(-1);
+        const start = previous ? new Date(previous.deadline_time).toISOString() : '1970-01-01T00:00:00.000Z';
+        const end = new Date(event.deadline_time).toISOString();
         const pageIndex = (value: string | null) => Math.max(0, Math.min(10000, Math.floor(Number(value) || 0)));
         const page = pageIndex(url.searchParams.get('page'));
         const includeRemoved = url.searchParams.get('includeRemoved') === 'true';
-        const duelWhere = includeRemoved ? '' : 'WHERE deleted_at IS NULL';
+        const duelWhere = `WHERE gw=?${includeRemoved ? '' : ' AND deleted_at IS NULL'}`;
         const duelPageSize = 50;
-        const duelTotal = (await db.prepare(`SELECT COUNT(*) AS count FROM duels ${duelWhere}`).first<{ count: number }>())?.count ?? 0;
+        const duelTotal = (await db.prepare(`SELECT COUNT(*) AS count FROM duels ${duelWhere}`).bind(gw).first<{ count: number }>())?.count ?? 0;
         const duelPage = Math.min(pageIndex(url.searchParams.get('duelPage')), Math.max(0, Math.ceil(duelTotal / duelPageSize) - 1));
-        const [members, config, duelRows, announcements, activity, players, logs] = await Promise.all([
-          roster(env), arenaWindow(env),
-          db.prepare(`SELECT * FROM duels ${duelWhere} ORDER BY created_at DESC,rowid DESC LIMIT ? OFFSET ?`).bind(duelPageSize, duelPage * duelPageSize).all<Duel>(),
+        const [members, duelRows, announcements, activity, players, logs] = await Promise.all([
+          roster(env),
+          db.prepare(`SELECT * FROM duels ${duelWhere} ORDER BY created_at DESC,rowid DESC LIMIT ? OFFSET ?`).bind(gw, duelPageSize, duelPage * duelPageSize).all<Duel>(),
           db.prepare('SELECT * FROM announcements ORDER BY created_at DESC LIMIT 100').all(),
           db.prepare('SELECT * FROM player_logins WHERE created_at>=? AND created_at<? ORDER BY created_at DESC LIMIT 50 OFFSET ?').bind(start, end, page * 50).all(),
           db.prepare('SELECT entry_id, MIN(created_at) AS firstLogin, MAX(created_at) AS lastLogin FROM player_logins WHERE created_at>=? AND created_at<? GROUP BY entry_id ORDER BY lastLogin DESC').bind(start, end).all(),
-          db.prepare('SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 50').all(),
+          db.prepare('SELECT * FROM audit_log WHERE created_at>=? AND created_at<? ORDER BY created_at DESC LIMIT 50').bind(start, end).all(),
         ]);
-        const activeCount = (await db.prepare('SELECT COUNT(*) AS count FROM duels WHERE gw=? AND deleted_at IS NULL').bind(config.gw).first<{ count: number }>())?.count ?? 0;
-        return response({ day: selectedDay, page, arena: { ...config, deadline: await deadline(env, config.gw), count: activeCount },
+        const activeCount = (await db.prepare('SELECT COUNT(*) AS count FROM duels WHERE gw=? AND deleted_at IS NULL').bind(gw).first<{ count: number }>())?.count ?? 0;
+        return response({ round: { gw, start: previous ? start : null, end }, rounds: events.map(item => ({ gw: item.id })), page,
+          arena: { ...(gw === config.gw ? config : { gw, open: false, opensAt: new Date(Date.parse(end) - 12 * 3600000).toISOString() }), deadline: end, count: activeCount },
           duelPagination: { page: duelPage, pageSize: duelPageSize, total: duelTotal },
           members, duels: await captainedDuels(env, duelRows.results, members), announcements: announcements.results,
           activity: activity.results, players: players.results, logs: logs.results }, request);

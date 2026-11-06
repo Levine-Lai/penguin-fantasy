@@ -60,9 +60,58 @@ function callback(name) {
   return ts.transpileModule('const extracted=' + value, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
 }
 
+test('uncertain submissions retry failed status reads and clear the warning when no saved duel is found', async () => {
+  let recovering = false, checks = 0, posts = 0;
+  const h = arenaHarness(id => ({
+    read: async () => {
+      if (recovering && ++checks < 3) throw new TypeError('Failed to fetch');
+      return { entryId: id, token: 'test', mine: { gw: 9, remaining: 5, submitted: false, challenge: null } };
+    },
+    submit: async () => { posts++; recovering = true; throw new UncertainSubmission(); },
+  }));
+  try {
+    h.render(); await h.flush();
+    h.nodes('input').find(node => node.props.type === 'radio').props.onChange({ target: { value: '2' } }); h.render();
+    h.nodes('form')[0].props.onSubmit({ preventDefault() {} }); h.render();
+    await h.nodes('form')[1].props.onSubmit({ preventDefault() {} }); await h.flush();
+    assert.ok(h.nodes('h2').some(node => node.props.children === '报名结果待确认'));
+    for (const delay of [15000, 30000, 60000]) {
+      const timer = [...h.timers.values()].find(timer => timer.ms === delay);
+      assert.ok(timer, `Expected recovery at ${delay}ms`); timer.fn(); await h.flush();
+    }
+    assert.equal(checks, 3); assert.equal(posts, 1);
+    assert.equal(h.nodes('p').find(node => node.props.id === 'duel-error-detail').props.children, '');
+    assert.ok(h.nodes('p').some(node => node.props.children === '未查到本轮有效报名，可重新选择后提交。'));
+    assert.equal(h.nodes('fieldset')[0].props.disabled, false);
+  } finally { h.restore(); }
+});
+
+test('uncertain status recovery stops after three failures without resubmitting or unlocking the form', async () => {
+  let recovering = false, checks = 0, posts = 0;
+  const h = arenaHarness(id => ({
+    read: async () => {
+      if (recovering) { checks++; throw new TypeError('Failed to fetch'); }
+      return { entryId: id, token: 'test', mine: { gw: 9, remaining: 5, submitted: false, challenge: null } };
+    },
+    submit: async () => { posts++; recovering = true; throw new UncertainSubmission(); },
+  }));
+  try {
+    h.render(); await h.flush();
+    h.nodes('input').find(node => node.props.type === 'radio').props.onChange({ target: { value: '2' } }); h.render();
+    h.nodes('form')[0].props.onSubmit({ preventDefault() {} }); h.render();
+    await h.nodes('form')[1].props.onSubmit({ preventDefault() {} }); await h.flush();
+    for (const delay of [15000, 30000, 60000]) {
+      [...h.timers.values()].find(timer => timer.ms === delay).fn(); await h.flush();
+    }
+    assert.equal(checks, 3); assert.equal(posts, 1);
+    assert.match(h.nodes('p').find(node => node.props.id === 'duel-error-detail').props.children, /重新打开页面查看/);
+    assert.equal(h.nodes('fieldset')[0].props.disabled, true);
+  } finally { h.restore(); }
+});
+
 test('admin delete keeps its saved result and local removal when overview refresh fails', async () => {
   let data = { duels: [{ id: 'duel', deleted_at: null }], announcements: [] }, notice = '', error = '', saved = false;
-  const deps = { setBusy() {}, setError: v => { error = v; }, setNotice: v => { notice = v; }, load: async () => { throw new Error('GET failed'); }, day: '2026-10-22', page: 0, duelPage: 0, showRemoved: false, setLoggedIn() {} };
+  const deps = { setBusy() {}, setError: v => { error = v; }, setNotice: v => { notice = v; }, load: async () => { throw new Error('GET failed'); }, gw: 9, page: 0, duelPage: 0, showRemoved: false, setLoggedIn() {} };
   const run = new Function(...Object.keys(deps), callback('run') + ';return extracted;')(...Object.values(deps));
   const pending = [];
   const removeDeps = { window: { confirm: () => true, prompt: () => 'reason' }, operationsFetch: async () => { saved = true; }, setData: updater => { data = updater(data); }, run: (...args) => { const result = run(...args); pending.push(result); return result; } };
@@ -189,7 +238,7 @@ test('an open page checks at DDL plus 90 minutes, retries a partial capture, and
 
 test('admin login completes without waiting for the dashboard and reconciles a lost acknowledgement once', async () => {
   let busy = false, loggedIn = false, password = 'test', refreshes = 0; const paths = [];
-  const deps = { busy, authRevision: { current: 0 }, setBusy: v => { busy = v; }, setError() {}, setNotice() {}, setPassword: v => { password = v; }, setLoggedIn: v => { loggedIn = v; }, password, day: '2026-10-28', page: 0,
+  const deps = { busy, authRevision: { current: 0 }, setBusy: v => { busy = v; }, setError() {}, setNotice() {}, setPassword: v => { password = v; }, setLoggedIn: v => { loggedIn = v; }, password, gw: 9, page: 0,
     operationsFetch: async path => { paths.push(path); if (path === '/admin/login') throw new DOMException('signal timed out', 'TimeoutError'); return { authenticated: true }; },
     refreshDashboard: () => { refreshes++; return new Promise(() => {}); } };
   const login = new Function(...Object.keys(deps), callback('login') + ';return extracted;')(...Object.values(deps));
@@ -200,7 +249,7 @@ test('admin login completes without waiting for the dashboard and reconciles a l
 
 test('an explicit wrong-password rejection is never hidden by session recovery', async () => {
   let error = '', loggedIn = false; const paths = [];
-  const deps = { busy: false, authRevision: { current: 0 }, setBusy() {}, setError: v => { error = v; }, setNotice() {}, setPassword() {}, setLoggedIn: v => { loggedIn = v; }, password: 'test', day: '2026-10-28', page: 0,
+  const deps = { busy: false, authRevision: { current: 0 }, setBusy() {}, setError: v => { error = v; }, setNotice() {}, setPassword() {}, setLoggedIn: v => { loggedIn = v; }, password: 'test', gw: 9, page: 0,
     operationsFetch: async path => { paths.push(path); throw Object.assign(new Error('管理员密码不正确'), { status: 401 }); }, refreshDashboard: () => assert.fail('Must not open dashboard') };
   const login = new Function(...Object.keys(deps), callback('login') + ';return extracted;')(...Object.values(deps));
   await login({ preventDefault() {} }); assert.equal(loggedIn, false); assert.equal(error, '管理员密码不正确'); assert.deepEqual(paths, ['/admin/login']);
@@ -208,9 +257,22 @@ test('an explicit wrong-password rejection is never hidden by session recovery',
 
 test('a stale dashboard response cannot log the administrator back in after logout', async () => {
   let release, updates = 0; const authRevision = { current: 0 };
-  const deps = { authRevision, useCallback: fn => fn, operationsFetch: () => new Promise(resolve => { release = resolve; }), today: () => '2026-10-28', setData: () => { updates++; }, setLoggedIn: () => { updates++; } };
+  const deps = { authRevision, overviewRevision: { current: 0 }, useCallback: fn => fn, operationsFetch: () => new Promise(resolve => { release = resolve; }), today: () => '2026-10-28', setData: () => { updates++; }, setLoggedIn: () => { updates++; } };
   const load = new Function(...Object.keys(deps), callback('load') + ';return extracted;')(...Object.values(deps));
   const pending = load(); authRevision.current++; release({ members: [] }); await pending; assert.equal(updates, 0);
+});
+
+test('a slow earlier overview cannot replace the latest selected gameweek', async () => {
+  const pending = [], selected = [];
+  const deps = { authRevision: { current: 0 }, overviewRevision: { current: 0 }, useCallback: fn => fn,
+    operationsFetch: () => new Promise(resolve => pending.push(resolve)),
+    setData: data => selected.push(data.round.gw), setGw() {}, setPage() {}, setLoggedIn() {}, setDuelPage() {},
+  };
+  const load = new Function(...Object.keys(deps), callback('load') + ';return extracted;')(...Object.values(deps));
+  const earlier = load(10), latest = load(9);
+  pending[1]({ round: { gw: 9 }, page: 0, duelPagination: { page: 0 } }); await latest;
+  pending[0]({ round: { gw: 10 }, page: 0, duelPagination: { page: 0 } }); await earlier;
+  assert.deepEqual(selected, [9]);
 });
 
 

@@ -55,7 +55,7 @@ test("server-renders the Penguin Cup leaderboard", async () => {
   assert.doesNotMatch(html, />GPC<|>TP<|>HP</);
   const leaderboard = html.slice(html.indexOf('id="ranking"'), html.indexOf('aria-label="排行榜分页"'));
   assert.equal((leaderboard.match(/class="rank-row/g) ?? []).length, 20);
-  assert.doesNotMatch(html, /搜索玩家/);
+  assert.doesNotMatch(leaderboard, /搜索玩家/);
 });
 
 test("keeps the five-stage interaction and unified ranking contracts", async () => {
@@ -393,7 +393,7 @@ test("formal arena uses the header identity and searchable framed registration",
   const html = await response.text();
   assert.match(html, /site-header/);
   assert.match(html, /发起决斗/);
-  assert.match(html, /搜索挑战对象/);
+  assert.match(html, /搜索玩家名称\/FPL ID/);
   assert.match(html, /请先在右上角登录/);
   const [arena, home, css] = await Promise.all([
     readFile(new URL('../app/arena/live-arena.tsx', import.meta.url), 'utf8'),

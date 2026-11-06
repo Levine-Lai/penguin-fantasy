@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-04T01:46:16.157Z",
+  "generatedAt": "2026-11-06T07:30:12.425Z",
   "league": {
     "ready": true,
     "leagueId": 511690,
@@ -145,12 +145,12 @@
         "teamName": "Summerfan"
       },
       {
-        "entryId": 7455,
-        "teamName": "Fitz"
+        "entryId": 113485,
+        "teamName": "海水过滤器电鳗发电机集齐了 可以绿箭头吗"
       },
       {
-        "entryId": 113485,
-        "teamName": "一人血书 求这刺聊点啥回归"
+        "entryId": 7455,
+        "teamName": "Fitz"
       },
       {
         "entryId": 13130,
@@ -221,12 +221,12 @@
         "teamName": "HindMics"
       },
       {
-        "entryId": 10008,
-        "teamName": "Clark's Team"
-      },
-      {
         "entryId": 9045,
         "teamName": "Noodle FC"
+      },
+      {
+        "entryId": 10008,
+        "teamName": "Clark's Team"
       },
       {
         "entryId": 24950,
@@ -257,12 +257,12 @@
         "teamName": "Bill's Red Riffs"
       },
       {
-        "entryId": 3871,
-        "teamName": "红烧天堂"
-      },
-      {
         "entryId": 228011,
         "teamName": "谨慎分析 大胆梭哈"
+      },
+      {
+        "entryId": 3871,
+        "teamName": "红烧天堂"
       },
       {
         "entryId": 28425,
@@ -15438,7 +15438,7 @@
           },
           {
             "entryId": 113485,
-            "teamName": "一人血书 求这刺聊点啥回归",
+            "teamName": "海水过滤器电鳗发电机集齐了 可以绿箭头吗",
             "captainId": 411,
             "captainName": "Haaland",
             "viceCaptainId": 154,
@@ -15725,22 +15725,6 @@
             "captainPickRate": 78.4
           },
           {
-            "entryId": 10008,
-            "teamName": "Clark's Team",
-            "captainId": 166,
-            "captainName": "N.Jackson",
-            "viceCaptainId": 411,
-            "viceCaptainName": "Haaland",
-            "scoringCaptainId": 166,
-            "scoringCaptainName": "N.Jackson",
-            "captainPoints": 9,
-            "originalCaptainPoints": 9,
-            "captainStatus": "finished",
-            "originalCaptainStatus": "finished",
-            "usedViceCaptain": false,
-            "captainPickRate": 7.2
-          },
-          {
             "entryId": 9045,
             "teamName": "Noodle FC",
             "captainId": 68,
@@ -15755,6 +15739,22 @@
             "originalCaptainStatus": "finished",
             "usedViceCaptain": false,
             "captainPickRate": 0.9
+          },
+          {
+            "entryId": 10008,
+            "teamName": "Clark's Team",
+            "captainId": 166,
+            "captainName": "N.Jackson",
+            "viceCaptainId": 411,
+            "viceCaptainName": "Haaland",
+            "scoringCaptainId": 166,
+            "scoringCaptainName": "N.Jackson",
+            "captainPoints": 9,
+            "originalCaptainPoints": 9,
+            "captainStatus": "finished",
+            "originalCaptainStatus": "finished",
+            "usedViceCaptain": false,
+            "captainPickRate": 7.2
           },
           {
             "entryId": 24950,
@@ -16637,7 +16637,7 @@
             "captainPickRate": 0.9
           }
         ],
-        "updatedAt": "2026-11-03T23:30:44.132Z",
+        "updatedAt": "2026-11-05T23:30:50.295Z",
         "duelResults": [
           {
             "id": "aead0ebf-f087-4a27-8f69-a6f1839fadd3",
@@ -16715,7 +16715,7 @@
             "selection_status": "selected"
           }
         ],
-        "publicationRevision": 4
+        "publicationRevision": 6
       }
     ],
     "deadlines": [
