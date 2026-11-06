@@ -120,6 +120,13 @@
 .duelCard { background: var(--color-paper-2-a84); }
 .duelVersus { font-size: var(--ui-text-sm); }
 .confirmDialog { font-size: var(--ui-text-base); }
+.errorDialog { width: min(28rem, calc(100% - 2rem)); padding: clamp(1rem, 4vw, 1.5rem); }
+.errorDialog[open] { display: grid; gap: 1rem; }
+.errorDialog h2 { margin: 0; font-size: var(--ui-text-lg); line-height: 1.4; }
+.errorDialog p.failureDetail { margin: 0; font-size: var(--ui-text-base); line-height: 1.65; }
+.errorDialog .confirmActions { grid-template-columns: minmax(0, 1fr); margin-top: .25rem; }
+.errorDialog .confirmActions button { min-height: 2.8rem; padding: .65rem 1rem; font: 700 var(--ui-text-base)/1.4 var(--font-label); }
+.errorDialog :focus-visible { outline-width: 2px; outline-offset: -4px; }
 
 @media (max-width: 32rem) {
   .titleRow { gap: .75rem; }
