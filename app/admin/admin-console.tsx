@@ -7,7 +7,7 @@ import styles from './admin.module.css';
 
 type Member = { entryId: number; teamName: string };
 type Overview = {
-  day: string; page: number; arena: ArenaConfig; members: Member[]; duels: DuelRecord[]; announcements: Announcement[];
+  round: { gw: number; start: string | null; end: string }; rounds: Array<{ gw: number }>; page: number; arena: ArenaConfig; members: Member[]; duels: DuelRecord[]; announcements: Announcement[];
   duelPagination: { page: number; pageSize: number; total: number };
   activity: Array<{ id: string; entry_id: number; device: string; created_at: string }>;
   players: Array<{ entry_id: number; firstLogin: string; lastLogin: string }>;
@@ -27,21 +27,23 @@ export default function AdminConsole() {
   const [busy, setBusy] = useState(false);
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState<Tab>('duels');
-  const [day, setDay] = useState(today);
+  const [gw, setGw] = useState<number | undefined>();
   const [page, setPage] = useState(0);
   const [showRemoved, setShowRemoved] = useState(false);
   const [duelPage, setDuelPage] = useState(0);
   const authRevision = useRef(0);
+  const overviewRevision = useRef(0);
 
-  const load = useCallback(async (selectedDay?: string, selectedPage = 0, selectedDuelPage = 0, includeRemoved = false) => {
+  const load = useCallback(async (selectedGw?: number, selectedPage = 0, selectedDuelPage = 0, includeRemoved = false) => {
     const revision = authRevision.current;
-    const response = await operationsFetch<Overview>(`/admin/overview?day=${selectedDay ?? today()}&page=${selectedPage}&duelPage=${selectedDuelPage}&includeRemoved=${includeRemoved}`);
-    if (revision !== authRevision.current) return;
-    setData(response); setLoggedIn(true); setDuelPage(response.duelPagination.page);
+    const requestRevision = ++overviewRevision.current;
+    const response = await operationsFetch<Overview>(`/admin/overview?${selectedGw === undefined ? '' : `gw=${selectedGw}&`}page=${selectedPage}&duelPage=${selectedDuelPage}&includeRemoved=${includeRemoved}`);
+    if (revision !== authRevision.current || requestRevision !== overviewRevision.current) return;
+    setData(response); setGw(response.round.gw); setPage(response.page); setLoggedIn(true); setDuelPage(response.duelPagination.page);
   }, []);
-  const refreshDashboard = useCallback((revision: number, selectedDay?: string, selectedPage = 0) => {
+  const refreshDashboard = useCallback((revision: number, selectedGw?: number, selectedPage = 0) => {
     setNotice('正在读取管理数据…');
-    void load(selectedDay, selectedPage).then(() => {
+    void load(selectedGw, selectedPage).then(() => {
       if (revision === authRevision.current) setNotice('');
     }).catch(reason => {
       if (revision !== authRevision.current) return;
@@ -67,7 +69,7 @@ export default function AdminConsole() {
     try {
       await operation(); setNotice(success);
       if (refresh) {
-        try { await load(day, page, duelPage, showRemoved); }
+        try { await load(gw, page, duelPage, showRemoved); }
         catch { setError(success ? '操作已完成，列表暂未刷新，请稍后刷新数据。' : '登录已完成，列表读取失败，请重试。'); }
       }
     }
@@ -89,7 +91,7 @@ export default function AdminConsole() {
         catch { throw reason; }
       }
       if (revision !== authRevision.current) return;
-      setPassword(''); setLoggedIn(true); refreshDashboard(revision, day, page);
+      setPassword(''); setLoggedIn(true); refreshDashboard(revision, gw, page);
     } catch (reason) { if (revision === authRevision.current) setError((reason as Error).message); }
     finally { if (revision === authRevision.current) setBusy(false); }
   };
@@ -122,15 +124,22 @@ export default function AdminConsole() {
   return <main className={styles.shell}>
     <header className={styles.header}><div><small>PENGUIN CUP · ADMIN</small><h1>联赛管理</h1></div><div className={styles.actions}><a href="/arena/" target="_blank" rel="noreferrer">正式决斗页 ↗</a><Link href="/">战榜</Link><button disabled={busy} onClick={logout}>退出</button></div></header>
     <nav className={styles.tabs} aria-label="后台模块">{tabs.map(([id, label]) => <button aria-current={tab === id ? 'page' : undefined} key={id} onClick={() => { setTab(id); }}>{label}</button>)}</nav>
-    <div className={styles.toolbar}><label>统计日期（北京时间）<input type="date" value={day} onChange={event => { setDay(event.target.value); setPage(0); }} /></label><button disabled={busy || !day} onClick={() => { setPage(0); void run(() => load(day, 0, duelPage, showRemoved), '', false); }}>刷新数据</button></div>
+    {tab !== 'announcements' ? <div className={styles.toolbar}>
+      <label>统计轮次<select aria-label="统计轮次" value={gw ?? ''} disabled={busy || !data} onChange={event => {
+        const next = Number(event.target.value);
+        void run(() => load(next, 0, 0, showRemoved), '', false);
+      }}>{!data ? <option value="">读取中…</option> : data.rounds.map(round => <option key={round.gw} value={round.gw}>GW{round.gw}</option>)}</select></label>
+      <button disabled={busy} onClick={() => { void run(() => load(gw, page, duelPage, showRemoved), '', false); }}>刷新数据</button>
+      {data ? <small className={styles.muted}>{data.round.start ? chinaTime(data.round.start) : '季前'} — {chinaTime(data.round.end)}（北京时间）</small> : null}
+    </div> : null}
     {error ? <p role="alert" className={styles.error}>{error}</p> : null}{notice ? <p role="status" className={styles.notice}>{notice}</p> : null}
     {data && tab === 'duels' ? <>
       <section className={styles.panel}><h2>报名时间</h2>
         <p>GW{data?.arena.gw} · {data?.arena.open ? '已开放' : '未开放'} · 已报名 {data.arena.count ?? 0} 组<br /><small>开放 {chinaTime(data?.arena.opensAt)} · DDL {chinaTime(data?.arena.deadline)}</small></p>
         <p className={styles.muted}>每轮 DDL 前 12 小时自动开放，DDL 截止。报名不限组数，按提交顺序选出 5 组；同队长不计并顺延，未入选不扣次数。双方本轮只能参与一组；GW9–GW20 共 5 次主动挑战权；不同队长同分不扣血、不返还次数。</p></section>
-      <section className={styles.panel}><div className={styles.sectionHead}><h2>决斗记录</h2><label><input type="checkbox" checked={showRemoved} onChange={event => { const includeRemoved = event.target.checked; setShowRemoved(includeRemoved); setDuelPage(0); void run(() => load(day, page, 0, includeRemoved), '', false); }} disabled={busy} /> 显示已移除</label></div>
+      <section className={styles.panel}><div className={styles.sectionHead}><h2>决斗记录</h2><label><input type="checkbox" checked={showRemoved} onChange={event => { const includeRemoved = event.target.checked; setShowRemoved(includeRemoved); setDuelPage(0); void run(() => load(gw, page, 0, includeRemoved), '', false); }} disabled={busy} /> 显示已移除</label></div>
         <div className={styles.tableWrap}><table><thead><tr><th>比赛周</th><th>提交时间（北京时间）</th><th>发起者 → 对手</th><th>双方队长 C / V</th><th>结果</th><th>状态</th><th>操作</th></tr></thead><tbody>{data?.duels.filter(item => showRemoved || !item.deleted_at).map(item => <tr key={item.id}><td>GW{item.gw}</td><td>{chinaTime(item.created_at)}</td><td>{item.challengerName}<small>ID {item.challenger_id}</small> → {item.targetName}<small>ID {item.target_id}</small></td><td><span>挑战者：{item.challengerCaptain ? `C ${item.challengerCaptain.captainName}` : '尚未读取'}</span>{item.challengerCaptain?.viceCaptainName ? <small>V {item.challengerCaptain.viceCaptainName}</small> : null}<span>被挑战者：{item.targetCaptain ? `C ${item.targetCaptain.captainName}` : '尚未读取'}</span>{item.targetCaptain?.viceCaptainName ? <small>V {item.targetCaptain.viceCaptainName}</small> : null}</td><td>{item.settled_at ? `${item.challenger_score} : ${item.target_score}` : item.selection_status && !['pending', 'selected'].includes(item.selection_status) ? '不计本轮' : '待结算'}</td><td>{item.deleted_at ? '已移除' : item.settled_at ? '已结算' : duelSelectionLabels[item.selection_status ?? 'pending']}</td><td>{item.deleted_at ? item.delete_reason || '—' : <button disabled={busy} className={styles.danger} onClick={() => remove('duels', item.id, `${item.challengerName} → ${item.targetName}`)}>移除</button>}</td></tr>)}</tbody></table></div>
-        {!data?.duels.some(item => showRemoved || !item.deleted_at) ? <p className={styles.empty}>尚无正式提交的决斗。</p> : null}<div className={styles.actions} aria-label="决斗记录分页"><button disabled={busy || duelPage === 0} onClick={() => { void run(() => load(day, page, duelPage - 1, showRemoved), '', false); }}>上一页</button><span>第 {duelPage + 1} / {Math.max(1, Math.ceil(data.duelPagination.total / data.duelPagination.pageSize))} 页 · {data.duelPagination.total} 条</span><button disabled={busy || (duelPage + 1) * data.duelPagination.pageSize >= data.duelPagination.total} onClick={() => { void run(() => load(day, page, duelPage + 1, showRemoved), '', false); }}>下一页</button></div></section>
+        {!data?.duels.some(item => showRemoved || !item.deleted_at) ? <p className={styles.empty}>尚无正式提交的决斗。</p> : null}<div className={styles.actions} aria-label="决斗记录分页"><button disabled={busy || duelPage === 0} onClick={() => { void run(() => load(gw, page, duelPage - 1, showRemoved), '', false); }}>上一页</button><span>第 {duelPage + 1} / {Math.max(1, Math.ceil(data.duelPagination.total / data.duelPagination.pageSize))} 页 · {data.duelPagination.total} 条</span><button disabled={busy || (duelPage + 1) * data.duelPagination.pageSize >= data.duelPagination.total} onClick={() => { void run(() => load(gw, page, duelPage + 1, showRemoved), '', false); }}>下一页</button></div></section>
     </> : null}
     {data && tab === 'announcements' ? <>
       <section className={styles.panel}><h2>发布公告</h2><form className={styles.form} onSubmit={event => { event.preventDefault(); const form = event.currentTarget; const input = new FormData(form); void run(async () => { await operationsFetch('/admin/announcements', { method: 'POST', body: JSON.stringify({ title: input.get('title'), body: input.get('body'), day: input.get('day') }) }); form.reset(); }, '公告已发布，所选日期访问的玩家可见'); }}>
@@ -138,9 +147,9 @@ export default function AdminConsole() {
       <section className={styles.panel}><h2>已发布公告</h2>{data?.announcements.map(item => <article className={styles.record} key={item.id}><div><small>{item.display_day} {item.deleted_at ? '· 已撤下' : ''}</small><h3>{item.title}</h3><p className={styles.pre}>{item.body}</p></div>{!item.deleted_at ? <button disabled={busy} className={styles.danger} onClick={() => remove('announcements', item.id, item.title)}>撤下</button> : null}</article>)}{!data?.announcements.length ? <p className={styles.empty}>暂无公告。</p> : null}</section>
     </> : null}
     {data && tab === 'players' ? <>
-      <section className={styles.panel}><h2>当天登录玩家 · {data?.players.length ?? 0} 人</h2><div className={styles.tableWrap}><table><thead><tr><th>玩家</th><th>首次登录</th><th>最近登录</th></tr></thead><tbody>{data?.players.map(player => <tr key={player.entry_id}><td>{name(player.entry_id)}<small>FPL ID {player.entry_id}</small></td><td>{chinaTime(player.firstLogin)}</td><td>{chinaTime(player.lastLogin)}</td></tr>)}</tbody></table></div>{!data?.players.length ? <p className={styles.empty}>当天暂无登录记录。</p> : null}</section>
-      <section className={styles.panel}><h2>登录记录</h2><div className={styles.tableWrap}><table><thead><tr><th>登录时间</th><th>玩家</th><th>设备</th></tr></thead><tbody>{data?.activity.map(item => <tr key={item.id}><td>{chinaTime(item.created_at)}</td><td>{name(item.entry_id)}<small>FPL ID {item.entry_id}</small></td><td>{item.device}</td></tr>)}</tbody></table></div><div className={styles.actions}><button disabled={busy || page === 0} onClick={() => { const next = page - 1; setPage(next); void run(() => load(day, next, duelPage, showRemoved), '', false); }}>上一页</button><span>第 {page + 1} 页</span><button disabled={busy || (data?.activity.length ?? 0) < 50} onClick={() => { const next = page + 1; setPage(next); void run(() => load(day, next, duelPage, showRemoved), '', false); }}>下一页</button></div></section>
+      <section className={styles.panel}><h2>本轮登录玩家 · {data?.players.length ?? 0} 人</h2><div className={styles.tableWrap}><table><thead><tr><th>玩家</th><th>首次登录</th><th>最近登录</th></tr></thead><tbody>{data?.players.map(player => <tr key={player.entry_id}><td>{name(player.entry_id)}<small>FPL ID {player.entry_id}</small></td><td>{chinaTime(player.firstLogin)}</td><td>{chinaTime(player.lastLogin)}</td></tr>)}</tbody></table></div>{!data?.players.length ? <p className={styles.empty}>本轮暂无登录记录。</p> : null}</section>
+      <section className={styles.panel}><h2>登录记录</h2><div className={styles.tableWrap}><table><thead><tr><th>登录时间</th><th>玩家</th><th>设备</th></tr></thead><tbody>{data?.activity.map(item => <tr key={item.id}><td>{chinaTime(item.created_at)}</td><td>{name(item.entry_id)}<small>FPL ID {item.entry_id}</small></td><td>{item.device}</td></tr>)}</tbody></table></div><div className={styles.actions}><button disabled={busy || page === 0} onClick={() => { const next = page - 1; setPage(next); void run(() => load(gw, next, duelPage, showRemoved), '', false); }}>上一页</button><span>第 {page + 1} 页</span><button disabled={busy || (data?.activity.length ?? 0) < 50} onClick={() => { const next = page + 1; setPage(next); void run(() => load(gw, next, duelPage, showRemoved), '', false); }}>下一页</button></div></section>
     </> : null}
-    {data && tab === 'audit' ? <section className={styles.panel}><h2>最近操作</h2><div className={styles.tableWrap}><table><thead><tr><th>时间</th><th>操作</th><th>对象</th><th>说明</th></tr></thead><tbody>{data?.logs.map(log => <tr key={log.id}><td>{chinaTime(log.created_at)}</td><td>{actionLabels[log.action] ?? log.action}</td><td>{log.target}</td><td>{log.detail || '—'}</td></tr>)}</tbody></table></div></section> : null}
+    {data && tab === 'audit' ? <section className={styles.panel}><h2>本轮操作记录</h2><div className={styles.tableWrap}><table><thead><tr><th>时间</th><th>操作</th><th>对象</th><th>说明</th></tr></thead><tbody>{data?.logs.map(log => <tr key={log.id}><td>{chinaTime(log.created_at)}</td><td>{actionLabels[log.action] ?? log.action}</td><td>{log.target}</td><td>{log.detail || '—'}</td></tr>)}</tbody></table></div></section> : null}
   </main>;
 }

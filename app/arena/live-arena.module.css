@@ -28,6 +28,13 @@
 .candidateHealth { display: inline-flex; align-items: center; gap: .3rem; color: var(--color-health); }
 .candidateHealth i { margin: 0; }
 .form { min-width: 0; }
+.search { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; padding: .7rem 1rem; border: 1px solid var(--color-rule-bright); background: var(--color-accent-a06); }
+.search:focus-within { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.searchIcon { flex: 0 0 1.25rem; width: 1.25rem; height: 1.25rem; color: var(--arena-cyan); }
+.search input { width: 100%; min-width: 0; min-height: 2rem; padding: .2rem 0; border: 0; background: transparent; color: var(--arena-cyan); font: 500 var(--ui-text-base)/1.5 system-ui, sans-serif; }
+.search input::placeholder { color: var(--arena-cyan); opacity: .8; }
+.panel .search input:focus-visible { outline: none; }
+.search:has(input:disabled) { opacity: .55; }
 .fieldset { border: 0; min-width: 0; padding: 0; margin: 0 0 1rem; }
 .fieldset:disabled { opacity: .55; }
 .candidates { max-height: 22rem; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: var(--color-rule-bright) var(--color-paper); padding: 2px; }

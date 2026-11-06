@@ -28,6 +28,12 @@ for (const width of [320, 375, 390, 768, 1440]) {
     const chooser = page.getByRole('region', { name: '正式决斗', exact: true });
     const rows = chooser.locator('label.rank-row');
     await expect(rows.first()).toBeVisible();
+    const search = chooser.getByRole('searchbox', { name: '搜索玩家名称/FPL ID' });
+    await expect(search).toHaveAttribute('placeholder', '搜索玩家名称/FPL ID');
+    await search.fill('48961');
+    await expect(rows).toHaveCount(1);
+    await expect(rows.first()).toContainText('SSU - Sakai Moka');
+    await search.clear();
     expect(await rows.count()).toBeGreaterThan(6);
     const rowChecks = await rows.evaluateAll(elements => elements.map(row => {
       const css = getComputedStyle(row);

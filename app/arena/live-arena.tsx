@@ -88,9 +88,11 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
     if (own.entryId === currentIdentity.current) {
       recoverRead('mine');
       setSession(own); setUncertain(false);
-      if (own.mine.submitted && pendingRecovery.current?.entryId === own.entryId && pendingRecovery.current.gw === own.mine.gw) {
+      const pending = pendingRecovery.current;
+      if (pending?.entryId === own.entryId) {
         pendingRecovery.current = null;
-        setError(''); setFailure(''); setMessage('报名已提交，不可修改。');
+        setError(''); setFailure('');
+        setMessage(own.mine.gw !== pending.gw ? '比赛周已变化，请重新选择。' : own.mine.submitted ? '报名已提交，不可修改。' : '未查到本轮有效报名，可重新选择后提交。');
       }
     }
     return own;
@@ -177,9 +179,26 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
     return () => { window.removeEventListener('penguin-community-updated', updated); document.removeEventListener('visibilitychange', visible); };
   }, [refreshMine, reload, recoverRead]);
   useEffect(() => {
-    if (!uncertain) return;
-    const timer = window.setTimeout(() => { void refreshMine().catch(() => {}); }, 15000);
-    return () => window.clearTimeout(timer);
+    const pending = pendingRecovery.current;
+    if (!uncertain || !pending) return;
+    let active = true;
+    let attempt = 0;
+    let timer: number;
+    const delays = [15000, 30000, 60000];
+    const check = async () => {
+      try { await refreshMine(); }
+      catch {
+        if (!active || pendingRecovery.current !== pending) return;
+        attempt++;
+        if (attempt < delays.length) timer = window.setTimeout(() => { void check(); }, delays[attempt]);
+        else {
+          const detail = '暂无法核对报名结果，请稍后重新打开页面查看，请勿重复提交。';
+          setError(detail); setFailure(detail);
+        }
+      }
+    };
+    timer = window.setTimeout(() => { void check(); }, delays[0]);
+    return () => { active = false; window.clearTimeout(timer); };
   }, [uncertain, refreshMine]);
   useEffect(() => {
     const dialog = confirmDialog.current;
@@ -261,7 +280,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
           {player ? <>{rankCell(player.entryId)}<span className={styles.selectionName}><strong className={isFeatured(player.name) ? styles.featured : undefined}>{player.name}</strong><small>FPL ID {player.entryId}</small></span>{selectionHealth(player.hp)}</> : <p className={styles.muted}>请先在右上角登录。</p>}
         </div>
         <form className={styles.form} onSubmit={askConfirmation}>
-          <label className={frame.candidateSearch} htmlFor="duel-search"><span className={styles.srOnly}>搜索挑战对象</span><input id="duel-search" type="search" placeholder="玩家名称 / FPL ID" value={search} onChange={event => { setSearch(event.target.value); setTargetId(''); }} disabled={!player || busy || Boolean(mine?.submitted)} autoComplete="off" /></label>
+          <label className={styles.search} htmlFor="duel-search"><svg className={styles.searchIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 5 5" /></svg><span className={styles.srOnly}>搜索玩家名称/FPL ID</span><input id="duel-search" type="search" placeholder="搜索玩家名称/FPL ID" value={search} onChange={event => { setSearch(event.target.value); setTargetId(''); }} disabled={!player || busy || Boolean(mine?.submitted)} autoComplete="off" /></label>
           <div className={styles.selectionHead} aria-hidden="true"><span>阶位</span><span>玩家 ID</span><span>血量</span></div>
           <fieldset className={styles.fieldset} disabled={selectionLocked}><legend className={styles.srOnly}>选择挑战对象</legend><div className={styles.candidates}>
             {candidates.map(member => <label key={member.entryId} className={`rank-row ${styles.selectionRow} ${targetId === String(member.entryId) ? styles.selectedRow : ''}`}>
@@ -298,7 +317,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
       </form>
     </dialog>
     <dialog ref={errorDialog} className={styles.confirmDialog} style={assets} aria-labelledby="duel-error-title" aria-describedby="duel-error-detail" onCancel={() => setFailure('')}>
-      <h2 id="duel-error-title">操作失败</h2><p id="duel-error-detail" className={styles.failureDetail}>{failure}</p>
+      <h2 id="duel-error-title">{uncertain ? '报名结果待确认' : '操作失败'}</h2><p id="duel-error-detail" className={styles.failureDetail}>{failure}</p>
       <div className={styles.confirmActions}><button type="button" onClick={() => setFailure('')}>知道了</button></div>
     </dialog>
   </div>;
