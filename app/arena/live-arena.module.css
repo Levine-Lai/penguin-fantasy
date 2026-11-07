@@ -102,9 +102,9 @@
 .duelVersus { grid-column: 2; grid-row: 1 / span 6; justify-content: center; align-self: center; }
 .panel .activeCaptain { color: var(--arena-cyan); }
 
-.panel { --duel-inline-padding: .8rem; }
-.duelCombatants { padding-inline: var(--duel-inline-padding); }
-.duelOutcome { grid-template-columns: minmax(0, 1fr) 2.6rem minmax(0, 1fr); column-gap: .4rem; padding-inline: var(--duel-inline-padding); }
+.panel { --duel-inline-padding: .8rem; --duel-center-width: clamp(4.25rem, 6vw, 5rem); }
+.duelCombatants { padding-inline: var(--duel-inline-padding); grid-template-columns: minmax(0, 1fr) var(--duel-center-width) minmax(0, 1fr); }
+.duelOutcome { grid-template-columns: minmax(0, 1fr) var(--duel-center-width) minmax(0, 1fr); column-gap: .4rem; padding-inline: var(--duel-inline-padding); }
 .duelOutcome > strong { grid-row: 1; }
 .duelOutcome:not(.excludedOutcome) > strong:last-child { grid-column: 3; border-left: 0; }
 .duelOutcome::before { content: ''; grid-column: 2; grid-row: 1; width: 1px; justify-self: center; background: var(--arena-rule); }
@@ -120,9 +120,12 @@
 .filters { display: flex; gap: .5rem; margin-left: auto; }
 .filters button { min-height: 2.75rem; padding: .5rem 1rem; border: 1px solid var(--arena-rule); background: var(--color-paper-2); color: var(--arena-muted); font: 700 var(--ui-text-sm)/1.4 var(--font-label); cursor: pointer; }
 .filters button[aria-pressed=true] { color: var(--arena-cyan); border-color: var(--arena-cyan); background: var(--color-accent-a14); }
-.inactive > header { position: relative; padding-bottom: 3rem; }
-.inactive > header > span:not(.inactiveStamp), .inactive .duelCombatants, .inactive .duelOutcome { opacity: .65; }
-.duelCard > header .inactiveStamp { position: absolute; right: .75rem; bottom: .4rem; display: grid; place-items: center; width: 4.5rem; height: 2.1rem; border: 2px solid var(--color-error); border-radius: 50%; color: var(--color-error); font: 700 var(--ui-text-sm)/1 var(--font-label); transform: rotate(-8deg); z-index: 1; }
+.inactive { background: var(--color-paper); }
+.inactive > header > span { opacity: .5; }
+.inactive .duelParticipant { opacity: .42; }
+.inactive .duelOutcome { opacity: .65; }
+.inactiveStamp { position: relative; display: grid; place-items: center; width: calc(100% - .5rem); height: clamp(2.75rem, 4.5vw, 3.5rem); border: 2px solid var(--color-error); border-radius: 50%; color: var(--color-error); font: 700 clamp(.875rem, 1.4vw, 1.125rem)/1 var(--font-label); white-space: nowrap; transform: rotate(-8deg); z-index: 1; }
+@media (min-width: 48.01rem) and (max-width: 72rem) { .duels { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .duelOutcome.excludedOutcome { grid-template-columns: minmax(0, 1fr); }
 .excludedOutcome::before { display: none; }
 .duelOutcome .excludedReason { grid-column: 1 / -1; color: var(--color-error); text-align: center; }

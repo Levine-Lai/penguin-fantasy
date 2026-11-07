@@ -23,7 +23,7 @@ export default function RulesPlayerLink({ siteBasePath }: { siteBasePath: string
   return (
     <a className={`player-login-button ${remembered ? "player-login-active" : ""}`} href={`${siteBasePath}/#${remembered ? "my-ranking" : "ranking"}`}>
       <small>{remembered ? "已登录" : "PLAYER"}</small>
-      <strong>{remembered ? "我的成绩" : "登录"}</strong>
+      <strong>{remembered ? "成绩" : "登录"}</strong>
     </a>
   );
 }
