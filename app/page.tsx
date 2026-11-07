@@ -5,6 +5,8 @@ import { currentTrialBootstrapScript, fallbackGwDeadlines, type GwDeadline } fro
 import { currentStageAt, type StageId } from "./current-stage";
 import staticFplData from "./static-fpl-data.json";
 import InlineCaptainHistory, { type CaptainHistoryEntry } from "./components/captain-history";
+import heading from "./components/section-heading.module.css";
+import ledger from "./components/leaderboard.module.css";
 import LiveArena from './arena/live-arena';
 import { playerHealth } from '../shared/player-health';
 import { loadCommunity, recordPlayerLogin, type Community, type PublishedDuel } from './operations-client';
@@ -388,7 +390,7 @@ function Score({ value, opponent }: { value: number; opponent: number }) {
 function ChallengePanel({ melee = false, gameweek = "GW12" }: { melee?: boolean; gameweek?: string }) {
   return (
     <aside className="panel challenge-panel">
-      <header className="panel-title"><div><small>{melee ? "THE ABYSS · GW31–GW34" : `ICE DRAGON ARENA · ${gameweek}`}</small><h2>{melee ? "万丈冰渊" : "本轮决斗"}</h2></div><span>{melee ? "∞" : "05"}</span></header>
+      <header className={`${heading.heading} ${heading.pageHeading}`}><div><small>{melee ? "THE ABYSS · GW31–GW34" : `ICE DRAGON ARENA · ${gameweek}`}</small><h2>{melee ? "万丈冰渊" : "本轮决斗"}</h2></div><span>{melee ? "∞" : "05"}</span></header>
       <div className="challenge-head"><span>对阵双方</span><span>当周队长得分</span></div>
       <div className="challenge-list">
         {challenges.map((item) => (
@@ -420,7 +422,7 @@ function RankedPlayerCells({ player }: { player: RankedPlayer }) {
       <div className="player-id-cell">
         <strong className={`player-id ${featuredTeamOrder.has(name) ? "featured-player" : ""}`}>{name}</strong>
       </div>
-      <strong className="stat-score"><span className={gpcStatus === "not_started" ? "score-pending" : undefined}>{gpcStatus === "not_started" ? "未开赛" : gpc}</span></strong>
+      <strong className={`stat-score ${gpcStatus === "not_started" ? ledger.pendingScore : ""}`}><span className={gpcStatus === "not_started" ? ledger.pendingLabel : undefined}>{gpcStatus === "not_started" ? "未开赛" : gpc}</span></strong>
       <strong className="stat-score stat-captain-total"><span>{captainTotal}</span></strong>
       <div className={`hp-cell${hp === 0 ? " hp-eliminated" : ""}`} aria-label={`${hp} 点血量`}>
         {hp === 0 ? <span>已淘汰</span> : null}
@@ -458,7 +460,7 @@ function CaptainSelectorList({ captain, id }: { captain: CaptainPopularity; id: 
 function KnockoutPanel() {
   return (
     <aside className="panel knockout-panel">
-      <header className="panel-title"><div><small>PLAYOFF SEEDING · GW35</small><h2>冰渊王座对决</h2></div><span>16</span></header>
+      <header className={`${heading.heading} ${heading.pageHeading}`}><div><small>PLAYOFF SEEDING · GW35</small><h2>冰渊王座对决</h2></div><span>16</span></header>
       <div className="knockout-list">
         {knockoutMatches.map((match) => (
           <article className="playoff-match" key={match.id}>
@@ -813,8 +815,8 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
 
       {!isArenaPreview && activeStage === 2 ? <div className="arena-home"><LiveArena player={myRanking} players={ranking} /></div> : null}
       {isArenaPreview && activeStage === 2 ? arenaPreview : <section className="boards">
-        <article className="panel ranking-panel" id="ranking" style={rankingPanelAssets}>
-          <header className="panel-title"><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>
+        <article className={`panel ranking-panel ${ledger.ranking}`} id="ranking" style={rankingPanelAssets}>
+          <header className={`${heading.heading} ${heading.pageHeading}`}><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>
           {myRanking ? <section className="my-ranking-strip" id="my-ranking" aria-label="我的成绩">
             <header><div><strong>{myRanking.name}</strong></div><button type="button" className="my-ranking-logout" onClick={logoutPlayer} aria-label="退出登录">退出</button></header>
             <article className={`rank-row selectable current-player-row ${myStandingExpanded ? "selected" : ""}`} role="button" tabIndex={0} aria-expanded={myStandingExpanded} aria-controls="my-ranking-history" onClick={() => setMyStandingExpanded((expanded) => !expanded)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setMyStandingExpanded((expanded) => !expanded); } }}><RankedPlayerCells player={myRanking} /></article>
@@ -857,8 +859,8 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
             <button onClick={() => { setExpandedPlayer(null); setRankingPage((page) => Math.min(pageCount - 1, page + 1)); }} disabled={rankingPage === pageCount - 1} aria-label="下一页"><span aria-hidden="true">›</span></button>
           </nav>
         </article>
-        <article className="panel ranking-panel captain-rate-panel" style={rankingPanelAssets}>
-          <header className="panel-title"><div><small>{latestCaptainSnapshot ? `GW${latestCaptainSnapshot.gw}` : currentTrialLabel}</small><h2>队长选择率</h2></div></header>
+        <article className={`panel ranking-panel captain-rate-panel ${ledger.captains}`} style={rankingPanelAssets}>
+          <header className={`${heading.heading} ${heading.pageHeading}`}><div><small>{latestCaptainSnapshot ? `GW${latestCaptainSnapshot.gw}` : currentTrialLabel}</small><h2>队长选择率</h2></div></header>
           <div className="captain-rate-head"><span>队长名字</span><span>当轮分数</span><span>选择人数</span><span>选择率</span></div>
           <div className="captain-rate-list">
             {captainPopularity.map((captain, index) => {
@@ -867,8 +869,8 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
               const detailId = `captain-selectors-${index}`;
               return <Fragment key={captain.name}>
               <button type="button" className={`captain-rate-row selectable ${isExpanded ? "selected" : ""}`} aria-expanded={isExpanded} aria-controls={detailId} aria-label={`${captain.name}，${captain.selections} 人选择，${isExpanded ? "收起" : "查看"}玩家名单`} onClick={() => setExpandedCaptain((current) => current === captain.name ? null : captain.name)}>
-                <strong className="captain-rate-name">{captain.name}<span className="captain-rate-toggle" aria-hidden="true">{isExpanded ? "−" : "+"}</span></strong>
-                <strong className="stat-score"><span className={captain.status === "not_started" ? "score-pending" : undefined}>{captain.status === "not_started" ? "未开赛" : captain.points}</span></strong>
+                <strong className="captain-rate-name">{captain.name}</strong>
+                <strong className={`stat-score ${captain.status === "not_started" ? ledger.pendingScore : ""}`}><span className={captain.status === "not_started" ? ledger.pendingLabel : undefined}>{captain.status === "not_started" ? "未开赛" : captain.points}</span></strong>
                 <strong>{captain.selections} 人</strong>
                 <strong className={isRare ? "rare-captain-rate" : undefined}>{captain.rate.toFixed(1)}%</strong>
               </button>
