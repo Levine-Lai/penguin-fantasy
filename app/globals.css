@@ -4089,6 +4089,7 @@ main > * {
 }
 
 .player-login-button strong {
+  white-space: nowrap;
   margin-block-start: var(--space-3xs);
   color: var(--color-accent);
   font-size: 0.78rem;

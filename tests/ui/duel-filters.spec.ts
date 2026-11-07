@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
 const snapshot = JSON.parse(readFileSync(new URL('../../app/static-fpl-data.json', import.meta.url), 'utf8'));
-for (const width of [320, 375, 390, 768, 1440]) {
+for (const width of [320, 375, 390, 768, 1024, 1440]) {
   test(`${width}px: effective/all duels, excluded reasons, shared headings and pending scores`, async ({ page }) => {
     await page.setViewportSize({ width, height: 950 });
     await page.clock.setFixedTime(new Date('2026-11-07T04:00:00Z'));
@@ -28,6 +28,9 @@ for (const width of [320, 375, 390, 768, 1440]) {
       await route.fulfill({ json: data });
     });
     await page.goto('/');
+    const standing = page.getByRole('button', { name: '查看我的成绩', exact: true });
+    await expect(standing.locator('strong')).toHaveText('成绩');
+    expect(await standing.locator('strong').evaluate(node => { const range = document.createRange(); range.selectNodeContents(node); return range.getClientRects().length; })).toBe(1);
     const panel = page.getByRole('region', { name: `GW${gw}决斗`, exact: true });
     const cards = panel.locator('article[data-duel-id]');
     await expect(cards).toHaveCount(5);
@@ -43,9 +46,24 @@ for (const width of [320, 375, 390, 768, 1440]) {
       await expect(card.getByText('未结算', { exact: true })).toHaveCount(0);
       const stamp = card.getByText('未生效', { exact: true });
       await expect(stamp).toBeVisible();
+      await expect(card.getByText('VS', { exact: true })).toHaveCount(0);
+      const alignment = await card.evaluate(card => {
+        const stamp = [...card.querySelectorAll('span')].find(node => node.textContent === '未生效')!.getBoundingClientRect();
+        const body = card.children[1].getBoundingClientRect();
+        const header = card.querySelector('header')!.getBoundingClientRect();
+        const css = getComputedStyle(card.querySelector('header')!);
+        const participant = getComputedStyle(card.querySelector('[aria-label="队长基础分"]')!.parentElement!);
+        return { centered: Math.abs((stamp.left + stamp.right) / 2 - (body.left + body.right) / 2),
+          headerHeight: header.height, headerPadding: css.padding, opacity: Number(participant.opacity) };
+      });
+      expect(alignment.centered).toBeLessThan(1);
+      const activeHeader = await panel.locator('[data-duel-id="selected-0"] header').evaluate(header => ({ height: header.getBoundingClientRect().height, padding: getComputedStyle(header).padding }));
+      expect(alignment.headerPadding).toBe(activeHeader.padding);
+      expect(Math.abs(alignment.headerHeight - activeHeader.height)).toBeLessThan(1);
+      expect(alignment.opacity).toBeLessThan(.5);
       const overlaps = await card.evaluate(card => {
         const badge = [...card.querySelectorAll('span')].find(node => node.textContent === '未生效')!.getBoundingClientRect();
-        return [...card.querySelectorAll('header span, strong, b, em')].filter(node => node.textContent !== '未生效').some(node => {
+        return [...card.querySelectorAll('header span, strong, b, em, small, [aria-label^="血量"]')].filter(node => node.textContent !== '未生效').some(node => {
           const core = node.getBoundingClientRect();
           return badge.left < core.right && badge.right > core.left && badge.top < core.bottom && badge.bottom > core.top;
         });
@@ -72,5 +90,7 @@ for (const width of [320, 375, 390, 768, 1440]) {
     await page.locator('#ranking').screenshot({ path: `test-results/pending-ranking-${width}.png`, style: '.site-header { visibility: hidden; }' });
     await page.reload();
     await expect(panel.locator('article[data-duel-id]')).toHaveCount(5);
+    await page.goto('/rules/');
+    await expect(page.locator('.site-header .player-login-active strong')).toHaveText('成绩');
   });
 }
