@@ -1,5 +1,5 @@
 .panel { width: 100%; margin: 0; }
-.header { grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; }
+.header { gap: 1rem; }
 .deadline, .muted { color: var(--arena-muted); font-size: var(--ui-text-sm); line-height: 1.6; }
 .titleRow { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem 1.5rem; }
 .remaining { display: grid; gap: .4rem; color: var(--arena-muted); }
@@ -60,7 +60,7 @@
 .panel :focus-visible { outline: 2px solid var(--arena-cyan); outline-offset: 2px; }
 @media (max-width: 48rem) {
   .registration, .duels { grid-template-columns: minmax(0, 1fr); }
-  .header { grid-template-columns: minmax(0, 1fr); gap: .4rem; }
+  .header { gap: .75rem; }
   .profile { padding: 1rem; }
   .profile h3 { margin-block: .5rem; font-size: var(--ui-text-lg); }
 }
@@ -106,18 +106,26 @@
 .duelCombatants { padding-inline: var(--duel-inline-padding); }
 .duelOutcome { grid-template-columns: minmax(0, 1fr) 2.6rem minmax(0, 1fr); column-gap: .4rem; padding-inline: var(--duel-inline-padding); }
 .duelOutcome > strong { grid-row: 1; }
-.duelOutcome > strong:last-child { grid-column: 3; border-left: 0; }
+.duelOutcome:not(.excludedOutcome) > strong:last-child { grid-column: 3; border-left: 0; }
 .duelOutcome::before { content: ''; grid-column: 2; grid-row: 1; width: 1px; justify-self: center; background: var(--arena-rule); }
 @media (max-width: 48rem) { .panel { --duel-inline-padding: .45rem; } }
 
 /* Four readable UI sizes, shared by data and controls. */
 .panel { font-size: var(--ui-text-base); box-shadow: none; }
-.panel h2 { font-size: var(--ui-text-title); }
-.header > div > small, .duelCard > header span, .duelParticipant > small,
+.duelCard > header span, .duelParticipant > small,
 .duelOutcome > strong, .panel label > span, .panel label small { font-size: var(--ui-text-sm); line-height: 1.5; letter-spacing: .02em; }
 .duelCard > header { flex-wrap: wrap; }
 .duelParticipant > strong { font-size: var(--ui-text-lg); }
 .duelCard { background: var(--color-paper-2-a84); }
+.filters { display: flex; gap: .5rem; margin-left: auto; }
+.filters button { min-height: 2.75rem; padding: .5rem 1rem; border: 1px solid var(--arena-rule); background: var(--color-paper-2); color: var(--arena-muted); font: 700 var(--ui-text-sm)/1.4 var(--font-label); cursor: pointer; }
+.filters button[aria-pressed=true] { color: var(--arena-cyan); border-color: var(--arena-cyan); background: var(--color-accent-a14); }
+.inactive > header { position: relative; padding-bottom: 3rem; }
+.inactive > header > span:not(.inactiveStamp), .inactive .duelCombatants, .inactive .duelOutcome { opacity: .65; }
+.duelCard > header .inactiveStamp { position: absolute; right: .75rem; bottom: .4rem; display: grid; place-items: center; width: 4.5rem; height: 2.1rem; border: 2px solid var(--color-error); border-radius: 50%; color: var(--color-error); font: 700 var(--ui-text-sm)/1 var(--font-label); transform: rotate(-8deg); z-index: 1; }
+.duelOutcome.excludedOutcome { grid-template-columns: minmax(0, 1fr); }
+.excludedOutcome::before { display: none; }
+.duelOutcome .excludedReason { grid-column: 1 / -1; color: var(--color-error); text-align: center; }
 .duelVersus { font-size: var(--ui-text-sm); }
 .confirmDialog { font-size: var(--ui-text-base); }
 .errorDialog { width: min(28rem, calc(100% - 2rem)); padding: clamp(1rem, 4vw, 1.5rem); }

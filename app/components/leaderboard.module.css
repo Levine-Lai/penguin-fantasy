@@ -1,0 +1,7 @@
+.pendingLabel { display: inline-block; color: var(--color-muted); font: 700 var(--ui-text-sm)/1.4 var(--font-label); white-space: nowrap; }
+.pendingScore { padding-inline: .25rem; }
+@media (max-width: 32rem) {
+  .ranking :global(.rank-row), .ranking :global(.ranking-head) { grid-template-columns: 1.9rem minmax(0, 1fr) 3.5rem 2.45rem 3.9rem; }
+  .captains :global(.captain-rate-row), .captains :global(.captain-rate-head) { grid-template-columns: minmax(0, 1fr) 3.5rem 3.25rem 3.25rem; }
+  .ranking .pendingScore, .captains .pendingScore { width: 3.4rem; min-width: 3.4rem; }
+}

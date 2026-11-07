@@ -212,6 +212,7 @@ test('FPL ID login needs no code, keeps registration private and locks at DDL', 
   assert.equal('duels' in mine, false);
   assert.equal(mine.remaining, 4);
   assert.equal((await (await request('/community')).json()).duels.length, 0);
+  assert.deepEqual((await (await request('/community')).json()).allDuels, []);
   assert.equal('count' in (await (await request('/community')).json()).arena, false);
   assert.equal((await request('/duels', 'POST', { targetId: 3, gw: 9 }, playerHeaders)).status, 409);
   const overview = await (await request('/admin/overview', 'GET', undefined, adminHeaders)).json();
@@ -638,6 +639,9 @@ test('queue skips same original captains and unavailable picks, selects five lat
   assert.equal(publicFeed.arena.count, 5);
   assert.equal(publicFeed.arena.selectionReady, true);
   assert.deepEqual(publicFeed.duels.map(d => d.challenger_id), [7, 9, 11, 13, 15]);
+  assert.deepEqual(publicFeed.allDuels.map(d => d.challenger_id), [1, 3, 5, 7, 9, 11, 13, 15, 17]);
+  assert.deepEqual(publicFeed.allDuels.map(d => d.selection_status), rows.map(row => row.selection_status));
+  assert.ok(publicFeed.allDuels.every(row => row.settled_at === null && row.challenger_score === null));
   const snapshot = { gw: 9, finished: true, officialFinalized: true, teams: cache.get('league:roster').map(m => ({ ...m, captainPoints: m.entryId, scoringCaptainId: 999 })) };
   const committed = await commitRound(env, snapshot, 0);
   assert.deepEqual(committed.duelResults.map(d => d.challenger_id), [7, 9, 11, 13, 15]);
@@ -806,14 +810,20 @@ test('the public feed exposes last-round settlements without disclosing next-rou
   cache.set('fpl:bootstrap', { value: { events: [{ id: 9, deadline_time: new Date(Date.now() - 7 * 86400000).toISOString() }, { id: 10, deadline_time: new Date(Date.now() + 6 * 3600000).toISOString() }], elements: [] } });
   await submitDuel(env.OPS_DB, 10, 1, 2, 'private-next');
   const past = { id: 'published-past', gw: 9, challenger_id: 3, target_id: 4, created_at: '2026-10-31T01:00:00Z', selection_status: 'selected', deleted_at: null, settled_at: 'done', challenger_score: 8, target_score: 2, challenger_delta: 1, target_delta: -1 };
+  await env.OPS_DB.prepare('INSERT INTO duels(id,gw,challenger_id,target_id,created_at,selection_status) VALUES (?,?,?,?,?,?)')
+    .bind('excluded-past', 9, 5, 6, '2026-10-31T02:00:00Z', 'same_captain').run();
   await env.OPS_DB.prepare('INSERT INTO published_rounds(gw,revision,snapshot,published_at) VALUES (?,?,?,?)')
     .bind(9, 1, JSON.stringify({ gw: 9, finished: true, officialFinalized: true, teams: [], duelResults: [past] }), new Date().toISOString()).run();
   const body = await (await request('/community')).json();
   assert.equal(body.arena.gw, 10);
   assert.deepEqual(body.duels, []);
+  assert.deepEqual(body.allDuels, []);
   assert.equal(body.arena.count, undefined);
   assert.equal(body.previousRound.gw, 9);
   assert.equal(body.previousRound.duels[0].challengerName, 'Player 3');
   assert.equal(body.previousRound.duels[0].challenger_score, 8);
+  assert.equal(body.previousRound.allDuels[0].challenger_score, 8);
+  assert.deepEqual(body.previousRound.allDuels.map(row => row.id), ['published-past', 'excluded-past']);
+  assert.equal(body.previousRound.allDuels[1].selection_status, 'same_captain');
   assert.ok(!JSON.stringify(body).includes('private-next'));
 });

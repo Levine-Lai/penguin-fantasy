@@ -268,7 +268,7 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
     if (path === '/api/community' && request.method === 'GET') {
       const config = await arenaWindow(env); const ddl = await deadline(env, config.gw);
       const [members, duelRows, announcementRows, deleted, history] = await Promise.all([
-        roster(env), db.prepare('SELECT * FROM duels WHERE gw=? AND deleted_at IS NULL ORDER BY created_at').bind(config.gw).all<Duel>(),
+        roster(env), db.prepare('SELECT * FROM duels WHERE gw=? AND deleted_at IS NULL ORDER BY created_at,rowid').bind(config.gw).all<Duel>(),
         db.prepare('SELECT id,title,body,display_day FROM announcements WHERE display_day=? AND deleted_at IS NULL ORDER BY created_at DESC').bind(beijingDay()).all(),
         db.prepare('SELECT id FROM duels WHERE deleted_at IS NOT NULL').all<{ id: string }>(),
         publishedHistory(env),
@@ -278,16 +278,23 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
       const published = (history ?? []).flatMap(snapshot => snapshot.duelResults ?? []).filter(row => !removed.has(row.id));
       const publishedById = new Map(published.map(row => [row.id, row]));
       const selectionReady = duelRows.results.every(row => row.selection_status !== 'pending');
-      const publicDuels = duelRows.results.filter(row => row.selection_status === 'selected').map(row => {
+      const withPublishedScores = (rows: Duel[]) => rows.map(row => {
         const settled = publishedById.get(row.id);
         return { ...row, settled_at: settled?.settled_at ?? null, challenger_score: settled?.challenger_score ?? null,
           target_score: settled?.target_score ?? null, challenger_delta: settled?.challenger_delta ?? null, target_delta: settled?.target_delta ?? null };
       });
+      const allPublicDuels = withPublishedScores(duelRows.results);
+      const publicDuels = allPublicDuels.filter(row => row.selection_status === 'selected');
       const previous = history.filter(round => round.gw < config.gw && round.finished && round.officialFinalized).sort((a, b) => b.gw - a.gw)[0];
-      const previousRound = previous ? { gw: previous.gw, duels: await captainedDuels(env, (previous.duelResults ?? []).filter(row => !removed.has(row.id)), members) } : null;
+      const previousRows = previous ? (await db.prepare('SELECT * FROM duels WHERE gw=? AND deleted_at IS NULL ORDER BY created_at,rowid').bind(previous.gw).all<Duel>()).results : [];
+      const previousAll = new Map(previousRows.map(row => [row.id, row]));
+      for (const row of previous?.duelResults ?? []) if (!removed.has(row.id) && !previousAll.has(row.id)) previousAll.set(row.id, row);
+      const previousRound = previous ? { gw: previous.gw,
+        duels: await captainedDuels(env, (previous.duelResults ?? []).filter(row => !removed.has(row.id)), members),
+        allDuels: await captainedDuels(env, withPublishedScores([...previousAll.values()]).sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at)), members) } : null;
       const revealed = Boolean(ddl && Date.now() >= Date.parse(ddl));
       return response({ previousRound, arena: { ...config, deadline: ddl, open: config.open && Boolean(ddl) && !revealed, ...(revealed ? { count: publicDuels.length, selectionReady } : {}) },
-        duels: revealed ? await captainedDuels(env, publicDuels, members) : [], results: published, removedDuelIds, announcements: announcementRows.results, members }, request);
+        duels: revealed ? await captainedDuels(env, publicDuels, members) : [], allDuels: revealed ? await captainedDuels(env, allPublicDuels, members) : [], results: published, removedDuelIds, announcements: announcementRows.results, members }, request);
     }
     if (path === '/api/visits' && request.method === 'POST') {
       await limit(env, request, 'visits', 180, 60000);

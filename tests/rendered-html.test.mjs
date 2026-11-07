@@ -140,7 +140,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /scheduleDailyRefresh/);
   assert.doesNotMatch(page, /data-refresh|refresh-status|刷新排行榜数据/);
   assert.match(page, /type CaptainPopularity/);
-  assert.match(page, /className="panel ranking-panel captain-rate-panel"/);
+  assert.match(page, /panel ranking-panel captain-rate-panel/);
   assert.match(page, />队长名字</);
   assert.match(page, />当轮分数</);
   assert.match(page, />选择人数</);

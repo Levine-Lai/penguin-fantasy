@@ -5,6 +5,7 @@ import { chinaTime, loadCommunity, duelSelectionLabels, type Community, type Due
 import { createDuelClient, UncertainSubmission, type PlayerSession } from './duel-client';
 import frame from '../test/arena.module.css';
 import styles from './live-arena.module.css';
+import heading from '../components/section-heading.module.css';
 
 type DuelCaptainRound = { gw: number; points: number; status?: 'not_started' | 'playing' | 'finished'; usedViceCaptain?: boolean };
 export type DuelPlayer = { entryId: number; name: string; rank: number | null; hp: number; captainTotal: number; history?: DuelCaptainRound[] };
@@ -37,6 +38,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   const [session, setSession] = useState<PlayerSession | null>(null);
   const [targetId, setTargetId] = useState('');
   const [search, setSearch] = useState('');
+  const [duelFilter, setDuelFilter] = useState<'selected' | 'all'>('selected');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -247,17 +249,22 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   const selectionReady = community?.arena.gw === round?.gw && community?.arena.selectionReady;
   const resultGw = revealed ? round?.gw : community?.previousRound?.gw;
   const resultDuels = revealed ? publicDuels : community?.previousRound?.duels ?? [];
+  const allResultDuels = (revealed ? community?.allDuels : community?.previousRound?.allDuels) ?? resultDuels;
+  const displayedDuels = (duelFilter === 'all' ? allResultDuels : resultDuels.filter(duel => duel.selection_status === undefined || duel.selection_status === 'selected')).slice().sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at));
   const renderDuels = (duels: DuelRecord[]) => {
     return duels.map(duel => {
+          const reasons = { same_captain: '队长一致', overflow: '报名时间在后', missing_captain: '队长数据不可用', pending: '等待队长确认' };
+          const reason = duel.selection_status && duel.selection_status !== 'selected' ? reasons[duel.selection_status] : null;
+          const inactive = Boolean(reason && duel.selection_status !== 'pending');
           const challengerRound = players.find(candidate => candidate.entryId === duel.challenger_id)?.history?.find(history => history.gw === duel.gw);
           const targetRound = players.find(candidate => candidate.entryId === duel.target_id)?.history?.find(history => history.gw === duel.gw);
           const challengerScore = duelCaptainScore(duel.gw, duel.challenger_score, duel.settled_at, players.find(candidate => candidate.entryId === duel.challenger_id)?.history);
           const targetScore = duelCaptainScore(duel.gw, duel.target_score, duel.settled_at, players.find(candidate => candidate.entryId === duel.target_id)?.history);
           const scoreComparison = typeof challengerScore === 'number' && typeof targetScore === 'number' ? Math.sign(challengerScore - targetScore) : 0;
-          return <article className={`${frame.duelCard} ${styles.duelCard}`} key={duel.id} style={{ '--duel-health-rows': Math.max(1, Math.ceil(Math.max(health.get(duel.challenger_id) ?? 0, health.get(duel.target_id) ?? 0) / 6)) } as CSSProperties}>
-          <header className={frame.duelCardHeader}><span>GW{duel.gw}</span><span>{chinaTime(duel.created_at)}</span></header>
+          return <article className={`${frame.duelCard} ${styles.duelCard} ${inactive ? styles.inactive : ""}`} key={duel.id} data-duel-id={duel.id} style={{ '--duel-health-rows': Math.max(1, Math.ceil(Math.max(health.get(duel.challenger_id) ?? 0, health.get(duel.target_id) ?? 0) / 6)) } as CSSProperties}>
+          <header className={frame.duelCardHeader}><span>GW{duel.gw}</span><span>{chinaTime(duel.created_at)}</span>{inactive ? <span className={styles.inactiveStamp}>未生效</span> : null}</header>
           <div className={`${frame.combatants} ${styles.duelCombatants}`}><div className={`${frame.combatant} ${styles.duelParticipant}`}><small>挑战者</small><strong>{duel.challengerName}</strong><DuelHealth hp={health.get(duel.challenger_id)} /><b className={`${styles.duelCaptain} ${!challengerRound?.usedViceCaptain ? styles.activeCaptain : ''}`}>C {duel.challengerCaptain?.captainName ?? '—'}</b><small className={challengerRound?.usedViceCaptain ? styles.activeCaptain : undefined}>V {duel.challengerCaptain?.viceCaptainName ?? '—'}</small><em className={`${styles.captainScore} ${scoreComparison > 0 ? styles.resultGain : scoreComparison < 0 ? styles.resultLoss : styles.resultDraw}`} aria-label="队长基础分">{challengerScore}</em></div><div className={`${frame.versus} ${styles.duelVersus}`}>VS</div><div className={`${frame.combatant} ${styles.duelParticipant}`}><small>被挑战者</small><strong>{duel.targetName}</strong><DuelHealth hp={health.get(duel.target_id)} /><b className={`${styles.duelCaptain} ${!targetRound?.usedViceCaptain ? styles.activeCaptain : ''}`}>C {duel.targetCaptain?.captainName ?? '—'}</b><small className={targetRound?.usedViceCaptain ? styles.activeCaptain : undefined}>V {duel.targetCaptain?.viceCaptainName ?? '—'}</small><em className={`${styles.captainScore} ${scoreComparison < 0 ? styles.resultGain : scoreComparison > 0 ? styles.resultLoss : styles.resultDraw}`} aria-label="队长基础分">{targetScore}</em></div></div>
-          <div className={`${frame.outcome} ${styles.duelOutcome}`}><strong className={!duel.settled_at || duel.challenger_delta == null ? styles.resultPending : duel.challenger_delta! > 0 ? styles.resultGain : duel.challenger_delta! < 0 ? styles.resultLoss : styles.resultDraw}>{!duel.settled_at || duel.challenger_delta === null ? '未结算' : duel.challenger_delta! > 0 ? '+1 血' : duel.challenger_delta! < 0 ? '-1 血' : '平局'}</strong><strong className={!duel.settled_at || duel.target_delta == null ? styles.resultPending : duel.target_delta! > 0 ? styles.resultGain : duel.target_delta! < 0 ? styles.resultLoss : styles.resultDraw}>{!duel.settled_at || duel.target_delta === null ? '未结算' : duel.target_delta! > 0 ? '+1 血' : duel.target_delta! < 0 ? '-1 血' : '平局'}</strong></div>
+          <div className={`${frame.outcome} ${styles.duelOutcome} ${reason ? styles.excludedOutcome : ""}`}>{reason ? <strong className={styles.excludedReason}>{reason}</strong> : [<strong key="challenger" className={!duel.settled_at || duel.challenger_delta == null ? styles.resultPending : duel.challenger_delta! > 0 ? styles.resultGain : duel.challenger_delta! < 0 ? styles.resultLoss : styles.resultDraw}>{!duel.settled_at || duel.challenger_delta === null ? '未结算' : duel.challenger_delta! > 0 ? '+1 血' : duel.challenger_delta! < 0 ? '-1 血' : '平局'}</strong>,<strong key="target" className={!duel.settled_at || duel.target_delta == null ? styles.resultPending : duel.target_delta! > 0 ? styles.resultGain : duel.target_delta! < 0 ? styles.resultLoss : styles.resultDraw}>{!duel.settled_at || duel.target_delta === null ? '未结算' : duel.target_delta! > 0 ? '+1 血' : duel.target_delta! < 0 ? '-1 血' : '平局'}</strong>]}</div>
         </article>;
         });
   };
@@ -268,7 +275,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   const selectionHealth = (hp: number) => <span className={styles.selectionHealth} aria-label={`血量 ${hp}`}><b>{hp}</b><span aria-hidden="true">{Array.from({ length: hp }, (_, index) => <i className="blood-drop" key={index} />)}</span></span>;
   return <div className={frame.preview}>
     <section className={`${frame.arena} ${styles.panel}`} style={assets} aria-label="正式决斗">
-      <header className={`${frame.arenaHeader} ${styles.header}`}>
+      <header className={`${heading.heading} ${styles.header}`}>
         <div><small>GW{round?.gw ?? 9}</small><div className={styles.titleRow}><h2>决斗选择</h2>{mine ? <div className={styles.remaining}><small>剩余主动挑战</small><div className={styles.energyMeter} role="meter" aria-label="剩余主动挑战次数" aria-valuemin={0} aria-valuemax={5} aria-valuenow={mine.remaining} aria-valuetext={`剩余 ${mine.remaining} / 5 次`}>{Array.from({ length: 5 }, (_, index) => <i className={index < mine.remaining ? styles.energyFilled : styles.energyEmpty} key={index} aria-hidden="true" />)}</div></div> : null}</div></div>
         {deadline ? <p className={styles.deadline}>DDL {chinaTime(deadline)}</p> : null}
       </header>
@@ -295,8 +302,8 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
       </div>
     </section>
     {resultGw ? <section className={`${frame.arena} ${styles.panel} ${styles.resultsPanel}`} style={assets} aria-label={`GW${resultGw}决斗`}>
-      <header className={`${frame.arenaHeader} ${styles.header}`}><div><small>GW{resultGw}</small><div className={styles.titleRow}><h2>决斗情况</h2></div></div></header>
-      <div className={styles.duels}>{renderDuels(resultDuels)}{!resultDuels.length ? <p className={styles.muted}>{revealed && !selectionReady ? '正在确认队长与入选对阵。' : '本轮暂无对阵。'}</p> : null}</div>
+      <header className={`${heading.heading} ${styles.header}`}><div><small>GW{resultGw}</small><h2>决斗情况</h2></div><div className={styles.filters} role="group" aria-label="决斗显示范围"><button type="button" aria-pressed={duelFilter === 'selected'} onClick={() => setDuelFilter('selected')}>已生效</button><button type="button" aria-pressed={duelFilter === 'all'} onClick={() => setDuelFilter('all')}>全部</button></div></header>
+      <div className={styles.duels}>{renderDuels(displayedDuels)}{!displayedDuels.length ? <p className={styles.muted}>{revealed && !selectionReady ? '正在确认队长与入选对阵。' : '本轮暂无对阵。'}</p> : null}</div>
     </section> : null}
     <dialog ref={confirmDialog} className={styles.confirmDialog} style={assets} aria-labelledby="confirm-duel-title" aria-describedby="confirm-duel-note" onCancel={event => { if (busy) event.preventDefault(); else setConfirmation(null); }} onClick={event => { if (event.target === event.currentTarget && !busy) { const rect = event.currentTarget.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) setConfirmation(null); } }}>
       <form onSubmit={submit}>
