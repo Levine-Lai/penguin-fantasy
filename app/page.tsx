@@ -412,6 +412,7 @@ function ChallengePanel({ melee = false, gameweek = "GW12" }: { melee?: boolean;
 
 function RankedPlayerCells({ player }: { player: RankedPlayer }) {
   const { name, rank, gpc, gpcStatus, captainTotal, hp } = player;
+  const eliminated = hp === 0;
   return (
     <>
       <strong
@@ -419,17 +420,19 @@ function RankedPlayerCells({ player }: { player: RankedPlayer }) {
         aria-label={`第 ${rank} 名`}
         style={rank && rank <= 3 ? { "--rank-badge-image": `url("${siteBasePath}/assets/leaderboard/rank-${rank}-ice.webp")` } as CSSProperties : undefined}
       ><span aria-hidden="true">{rank}</span></strong>
-      <div className="player-id-cell">
+      <div className={eliminated ? `player-id-cell ${ledger.eliminatedName}` : "player-id-cell"}>
         <strong className={`player-id ${featuredTeamOrder.has(name) ? "featured-player" : ""}`}>{name}</strong>
+        {eliminated ? <small className={ledger.eliminatedTotal}>总分 {captainTotal}</small> : null}
       </div>
-      <strong className={`stat-score ${gpcStatus === "not_started" ? ledger.pendingScore : ""}`}><span className={gpcStatus === "not_started" ? ledger.pendingLabel : undefined}>{gpcStatus === "not_started" ? "未开赛" : gpc}</span></strong>
-      <strong className="stat-score stat-captain-total"><span>{captainTotal}</span></strong>
-      <div className={`hp-cell${hp === 0 ? " hp-eliminated" : ""}`} aria-label={`${hp} 点血量`}>
-        {hp === 0 ? <span>已淘汰</span> : null}
-        <span className="pixel-health" aria-hidden="true">
-          {Array.from({ length: hp }, (_, index) => <i className="blood-drop" key={index}></i>)}
-        </span>
-      </div>
+      {eliminated ? <strong className={ledger.eliminatedStatus}>已淘汰</strong> : <>
+        <strong className={`stat-score ${gpcStatus === "not_started" ? ledger.pendingScore : ""}`}><span className={gpcStatus === "not_started" ? ledger.pendingLabel : undefined}>{gpcStatus === "not_started" ? "未开赛" : gpc}</span></strong>
+        <strong className="stat-score stat-captain-total"><span>{captainTotal}</span></strong>
+        <div className="hp-cell" aria-label={`${hp} 点血量`}>
+          <span className="pixel-health" aria-hidden="true">
+            {Array.from({ length: hp }, (_, index) => <i className="blood-drop" key={index}></i>)}
+          </span>
+        </div>
+      </>}
     </>
   );
 }
@@ -710,6 +713,7 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
     const hasStarted = Number.isFinite(deadline) && deadline <= currentTime;
     return hasStarted ? Math.max(latestGw, event.gw) : latestGw;
   }, 0);
+  const currentTrialGw = isArenaPreview ? 9 : latestStartedGw;
   const currentTrialLabel = isArenaPreview ? "GW 9" : latestStartedGw > 0 ? `GW ${latestStartedGw}` : "见习者集结";
   const pendingLoginTeam = pendingEntryId === null ? null : leagueTeams.find((team) => team.entryId === pendingEntryId) ?? null;
 
@@ -819,9 +823,9 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
           <header className={`${heading.heading} ${heading.pageHeading}`}><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>
           {myRanking ? <section className="my-ranking-strip" id="my-ranking" aria-label="我的成绩">
             <header><div><strong>{myRanking.name}</strong></div><button type="button" className="my-ranking-logout" onClick={logoutPlayer} aria-label="退出登录">退出</button></header>
-            <article className={`rank-row selectable current-player-row ${myStandingExpanded ? "selected" : ""}`} role="button" tabIndex={0} aria-expanded={myStandingExpanded} aria-controls="my-ranking-history" onClick={() => setMyStandingExpanded((expanded) => !expanded)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setMyStandingExpanded((expanded) => !expanded); } }}><RankedPlayerCells player={myRanking} /></article>
+            <article className={`rank-row selectable current-player-row ${myRanking.hp === 0 ? ledger.eliminatedRow : ""} ${myStandingExpanded ? "selected" : ""}`} role="button" tabIndex={0} aria-expanded={myStandingExpanded} aria-controls="my-ranking-history" onClick={() => setMyStandingExpanded((expanded) => !expanded)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setMyStandingExpanded((expanded) => !expanded); } }}><RankedPlayerCells player={myRanking} /></article>
             <div id="my-ranking-history" className="ranking-disclosure" data-open={myStandingExpanded} aria-hidden={!myStandingExpanded} inert={!myStandingExpanded}>
-              <div className="ranking-disclosure-clip"><div className="rank-history-wrap"><InlineCaptainHistory playerName={myRanking.name} history={myRanking.history} currentGwLabel={currentTrialLabel} stage={stage} /></div></div>
+              <div className="ranking-disclosure-clip"><div className="rank-history-wrap"><InlineCaptainHistory playerName={myRanking.name} history={myRanking.history} currentGwLabel={currentTrialLabel} stage={stage} hideCaptainGw={myRanking.hp === 0 ? currentTrialGw : undefined} /></div></div>
             </div>
           </section> : null}
           <div className="ranking-head"><span>阶位</span><span>玩家 ID</span><span>当周队长得分</span><span>队长总分</span><span>血量</span></div>
@@ -830,7 +834,7 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
               const { entryId, name, history } = player;
               return <Fragment key={entryId}>
                 <article
-                  className={`rank-row selectable ${expandedPlayer === entryId ? "selected" : ""} ${playerEntryId === entryId ? "current-player-row" : ""}`}
+                  className={`rank-row selectable ${player.hp === 0 ? ledger.eliminatedRow : ""} ${expandedPlayer === entryId ? "selected" : ""} ${playerEntryId === entryId ? "current-player-row" : ""}`}
                   onClick={() => {
                     setExpandedPlayer((current) => current === entryId ? null : entryId);
                   }}
@@ -848,7 +852,7 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
                   <RankedPlayerCells player={player} />
                 </article>
                 <div id={`ranking-history-${entryId}`} className="ranking-disclosure" data-open={expandedPlayer === entryId} aria-hidden={expandedPlayer !== entryId} inert={expandedPlayer !== entryId}>
-                  <div className="ranking-disclosure-clip"><div className="rank-history-wrap"><InlineCaptainHistory playerName={name} history={history} currentGwLabel={currentTrialLabel} stage={stage} /></div></div>
+                  <div className="ranking-disclosure-clip"><div className="rank-history-wrap"><InlineCaptainHistory playerName={name} history={history} currentGwLabel={currentTrialLabel} stage={stage} hideCaptainGw={player.hp === 0 ? currentTrialGw : undefined} /></div></div>
                 </div>
               </Fragment>;
             })}
