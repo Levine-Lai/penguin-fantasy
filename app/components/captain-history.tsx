@@ -7,18 +7,19 @@ type HistoryStage = { gwFrom: number; gwTo: number; roman: string; title: string
 
 function signedLife(value: number): string { return value > 0 ? `+${value}` : String(value); }
 
-export default function InlineCaptainHistory({ playerName, history, currentGwLabel, stage }: { playerName: string; history: CaptainHistoryEntry[]; currentGwLabel: string; stage: HistoryStage }) {
+export default function InlineCaptainHistory({ playerName, history, currentGwLabel, stage, hideCaptainGw }: { playerName: string; history: CaptainHistoryEntry[]; currentGwLabel: string; stage: HistoryStage; hideCaptainGw?: number }) {
   // Chapter panels stay independent: chapter II never shows chapter I records,
   // while total life and captain totals keep ranking players across all chapters.
   const chapterHistory = history.filter((item) => item.gw >= stage.gwFrom && item.gw <= stage.gwTo);
   const chapterLife = chapterHistory.reduce((total, item) => total + item.life + (item.duelLife ?? 0), 0);
+  const visibleHistory = chapterHistory.filter((item) => item.gw !== hideCaptainGw || item.duelLife !== undefined);
 
   return (
     <section className={`rank-history ${styles.history}`} aria-label={`${playerName} 在${stage.title}的队长选择记录`}>
       <header><strong>队长选择记录</strong><small>{currentGwLabel}</small></header>
       <div>
-        {chapterHistory.length === 0 ? <p className="history-empty">本章节尚无队长选择记录</p> : chapterHistory.map((item) => (
-          <Fragment key={item.gw}><article className="history-row">
+        {visibleHistory.length === 0 ? <p className="history-empty">{chapterHistory.length === 0 ? "本章节尚无队长选择记录" : "本章节暂无可显示的记录"}</p> : visibleHistory.map((item) => (
+          <Fragment key={item.gw}>{item.gw !== hideCaptainGw ? <article className="history-row">
             <strong className="history-gw">GW{item.gw}</strong>
             <div className="history-captain"><b>{item.captain}{item.usedViceCaptain ? "（副）" : ""}</b><small className={item.rate < 10 ? "rare-pick" : ""}>选择率 {item.rate}%</small></div>
             <div
@@ -32,7 +33,7 @@ export default function InlineCaptainHistory({ playerName, history, currentGwLab
                 <b>{signedLife(item.life)}</b><em>血</em>
               </span>
             </div>
-          </article>{item.duelLife !== undefined ? <article className="history-row"><strong className="history-gw">GW{item.gw}</strong><div className="history-captain"><b>决斗结算</b><small>{item.duelLife > 0 ? '胜利' : item.duelLife < 0 ? '失败' : '平局'}</small></div><div className="history-result"><span className={`history-result-box history-life ${item.duelLife > 0 ? "life-gain" : item.duelLife < 0 ? "life-loss" : "life-neutral"}`}><b>{signedLife(item.duelLife)}</b><em>血</em></span></div></article> : null}</Fragment>
+          </article> : null}{item.duelLife !== undefined ? <article className="history-row"><strong className="history-gw">GW{item.gw}</strong><div className="history-captain"><b>决斗结算</b><small>{item.duelLife > 0 ? '胜利' : item.duelLife < 0 ? '失败' : '平局'}</small></div><div className="history-result"><span className={`history-result-box history-life ${item.duelLife > 0 ? "life-gain" : item.duelLife < 0 ? "life-loss" : "life-neutral"}`}><b>{signedLife(item.duelLife)}</b><em>血</em></span></div></article> : null}</Fragment>
         ))}
         <article className="history-row history-chapter-summary">
           <strong className="history-gw">CH.{stage.roman}</strong>

@@ -169,7 +169,7 @@ test("keeps the five-stage interaction and unified ranking contracts", async () 
   assert.match(page, /data-current-trial suppressHydrationWarning/);
   assert.match(page, /currentTrialBootstrapScript/);
   assert.match(captainHistory, /尚无队长选择记录/);
-  assert.match(page, /InlineCaptainHistory playerName=\{name\} history=\{history\} currentGwLabel=\{currentTrialLabel\} stage=\{stage\}/);
+  assert.match(page, /InlineCaptainHistory playerName=\{name\} history=\{history\} currentGwLabel=\{currentTrialLabel\} stage=\{stage\} hideCaptainGw=\{player.hp === 0 \? currentTrialGw : undefined\}/);
   assert.match(captainHistory, /history\.filter\(\(item\) => item\.gw >= stage\.gwFrom && item\.gw <= stage\.gwTo\)/);
   assert.match(page, /lifeEarnedInStage\(stageForGw\(snapshot\.gw\), result\.captainPoints, result\.captainPickRate\)/);
   assert.match(page, /if \(!stage \|\| stage\.id === 5\) return 0;/);
