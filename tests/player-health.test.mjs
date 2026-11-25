@@ -28,3 +28,21 @@ test('GW9–GW20 deducts one life at three or fewer points, only after round con
     }
   }
 });
+
+test('GW12 selected players use only team results, and a revived player follows normal GW13 health', () => {
+  const selection = { gw: 12, status: 'success', abyss: [1], ice: [2], abyssScore: 10, iceScore: 3 };
+  const previous = [round(8, 10), round(11, 2, { teams: [{ entryId: 1, captainPoints: 2 }, { entryId: 2, captainPoints: 8 }] })];
+  const death = round(9, 2);
+  for (const points of [-1, 3, 10, 20]) {
+    const snapshot = round(12, points, { resurrection: selection, teams: [{ entryId: 1, captainPoints: points }, { entryId: 2, captainPoints: points }] });
+    assert.equal(playerHealth([death, snapshot], 1).hp, 1);
+    const iceHistory = [round(1, 10, { teams: [{ entryId: 2, captainPoints: 10 }] }), snapshot];
+    assert.equal(playerHealth(iceHistory, 2).hp, 1);
+    assert.equal(playerHealth([iceHistory[0], { ...snapshot, resurrection: { ...selection, status: 'failed' } }], 2).hp, 3);
+  }
+  const revive = round(12, 10, { resurrection: selection });
+  assert.equal(playerHealth([death, revive, round(13, 2)], 1).hp, 0);
+  assert.equal(playerHealth([death, revive, round(13, 10)], 1).hp, 2);
+  assert.equal(playerHealth([death, { ...revive, officialFinalized: false }], 1).hp, 0);
+  assert.equal(playerHealth([...previous, round(12, 10)], 1).hp, 2);
+});

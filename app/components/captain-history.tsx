@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import styles from "./captain-history.module.css";
 
-export type CaptainHistoryEntry = { gw: number; captain: string; rate: number; points: number; life: number; duelLife?: number; status?: "not_started" | "playing" | "finished"; usedViceCaptain?: boolean };
+export type CaptainHistoryEntry = { gw: number; captain: string; rate: number; points: number; life: number; duelLife?: number; resurrectionLife?: number; status?: "not_started" | "playing" | "finished"; usedViceCaptain?: boolean };
 
 type HistoryStage = { gwFrom: number; gwTo: number; roman: string; title: string; range: string };
 
@@ -11,8 +11,8 @@ export default function InlineCaptainHistory({ playerName, history, currentGwLab
   // Chapter panels stay independent: chapter II never shows chapter I records,
   // while total life and captain totals keep ranking players across all chapters.
   const chapterHistory = history.filter((item) => item.gw >= stage.gwFrom && item.gw <= stage.gwTo);
-  const chapterLife = chapterHistory.reduce((total, item) => total + item.life + (item.duelLife ?? 0), 0);
-  const visibleHistory = chapterHistory.filter((item) => item.gw !== hideCaptainGw || item.duelLife !== undefined);
+  const chapterLife = chapterHistory.reduce((total, item) => total + item.life + (item.duelLife ?? 0) + (item.resurrectionLife ?? 0), 0);
+  const visibleHistory = chapterHistory.filter((item) => item.gw !== hideCaptainGw || item.duelLife !== undefined || item.resurrectionLife !== undefined);
 
   return (
     <section className={`rank-history ${styles.history}`} aria-label={`${playerName} 在${stage.title}的队长选择记录`}>
@@ -33,7 +33,13 @@ export default function InlineCaptainHistory({ playerName, history, currentGwLab
                 <b>{signedLife(item.life)}</b><em>血</em>
               </span>
             </div>
-          </article> : null}{item.duelLife !== undefined ? <article className="history-row"><strong className="history-gw">GW{item.gw}</strong><div className="history-captain"><b>决斗结算</b><small>{item.duelLife > 0 ? '胜利' : item.duelLife < 0 ? '失败' : '平局'}</small></div><div className="history-result"><span className={`history-result-box history-life ${item.duelLife > 0 ? "life-gain" : item.duelLife < 0 ? "life-loss" : "life-neutral"}`}><b>{signedLife(item.duelLife)}</b><em>血</em></span></div></article> : null}</Fragment>
+          </article> : null}
+          {item.resurrectionLife !== undefined ? <article className="history-row">
+            <strong className="history-gw">GW{item.gw}</strong>
+            <div className="history-captain"><b>深渊复生</b><small>挑战结算</small></div>
+            <div className="history-result"><span className={`history-result-box history-life ${item.resurrectionLife > 0 ? "life-gain" : item.resurrectionLife < 0 ? "life-loss" : "life-neutral"}`}><b>{signedLife(item.resurrectionLife)}</b><em>血</em></span></div>
+          </article> : null}
+          {item.duelLife !== undefined ? <article className="history-row"><strong className="history-gw">GW{item.gw}</strong><div className="history-captain"><b>决斗结算</b><small>{item.duelLife > 0 ? '胜利' : item.duelLife < 0 ? '失败' : '平局'}</small></div><div className="history-result"><span className={`history-result-box history-life ${item.duelLife > 0 ? "life-gain" : item.duelLife < 0 ? "life-loss" : "life-neutral"}`}><b>{signedLife(item.duelLife)}</b><em>血</em></span></div></article> : null}</Fragment>
         ))}
         <article className="history-row history-chapter-summary">
           <strong className="history-gw">CH.{stage.roman}</strong>

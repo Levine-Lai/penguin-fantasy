@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { operationsFetch, operationsOrigin, chinaTime, duelSelectionLabels, type ArenaConfig, type Announcement, type DuelRecord } from '../operations-client';
+import { operationsFetch, operationsOrigin, chinaTime, duelSelectionLabels, type ArenaConfig, type Announcement, type DuelRecord, type ResurrectionState } from '../operations-client';
 import styles from './admin.module.css';
 
 type Member = { entryId: number; teamName: string };
 type Overview = {
+  resurrection?: ResurrectionState;
   round: { gw: number; start: string | null; end: string }; rounds: Array<{ gw: number }>; page: number; arena: ArenaConfig; members: Member[]; duels: DuelRecord[]; announcements: Announcement[];
   duelPagination: { page: number; pageSize: number; total: number };
   activity: Array<{ id: string; entry_id: number; device: string; created_at: string }>;
@@ -134,9 +135,21 @@ export default function AdminConsole() {
     </div> : null}
     {error ? <p role="alert" className={styles.error}>{error}</p> : null}{notice ? <p role="status" className={styles.notice}>{notice}</p> : null}
     {data && tab === 'duels' ? <>
+      {data.resurrection ? <section className={styles.panel}><h2>GW12 · 深渊复生</h2>
+        <p>深渊组 {data.resurrection.counts.abyss} 人 · 冰海组 {data.resurrection.counts.ice} 人</p>
+        <p><small>{chinaTime(data.resurrection.opensAt)} — {chinaTime(data.resurrection.closesAt)}（北京时间）</small></p>
+        {data.resurrection.result ? <p>{data.resurrection.result.status === 'success' ? '复生成功' : data.resurrection.result.status === 'failed' ? '复生失败' : data.resurrection.result.status === 'cancelled' ? '人数不足，挑战取消' : '待结算'} · {data.resurrection.result.abyssScore ?? '—'} : {data.resurrection.result.iceScore ?? '—'}</p> : null}
+        <div className={styles.tableWrap}><table><thead><tr><th>玩家</th><th>阵营</th><th>报名时间（北京时间）</th><th>状态</th></tr></thead><tbody>
+          {data.resurrection.registrations.map(item => <tr key={item.entry_id}>
+            <td>{data.members.find(member => member.entryId === item.entry_id)?.teamName ?? item.entry_id}<small>FPL ID {item.entry_id}</small></td>
+            <td>{item.side === 'abyss' ? '深渊组' : '冰海组'}</td><td>{chinaTime(item.created_at)}</td>
+            <td>{{ pending: '等待入选', selected: '已入选', overflow: '人数超额', cancelled: '挑战取消' }[item.selection_status]}</td>
+          </tr>)}
+        </tbody></table></div>
+      </section> : null}
       <section className={styles.panel}><h2>报名时间</h2>
         <p>GW{data?.arena.gw} · {data?.arena.open ? '已开放' : '未开放'} · 已报名 {data.arena.count ?? 0} 组<br /><small>开放 {chinaTime(data?.arena.opensAt)} · DDL {chinaTime(data?.arena.deadline)}</small></p>
-        <p className={styles.muted}>每轮 DDL 前 12 小时自动开放，DDL 截止。报名不限组数，按提交顺序选出 5 组；同队长不计并顺延，未入选不扣次数。双方本轮只能参与一组；GW9–GW20 共 5 次主动挑战权；不同队长同分不扣血、不返还次数。</p></section>
+        <p className={styles.muted}>每轮 DDL 前 12 小时开放，DDL 截止。通常按提交顺序选出 5 组；深渊复生开启后的 GW13 取消组数上限。同队长不计，未入选不扣次数；每人每轮仅一组，GW9–GW20 共 5 次主动挑战权。</p></section>
       <section className={styles.panel}><div className={styles.sectionHead}><h2>决斗记录</h2><label><input type="checkbox" checked={showRemoved} onChange={event => { const includeRemoved = event.target.checked; setShowRemoved(includeRemoved); setDuelPage(0); void run(() => load(gw, page, 0, includeRemoved), '', false); }} disabled={busy} /> 显示已移除</label></div>
         <div className={styles.tableWrap}><table><thead><tr><th>比赛周</th><th>提交时间（北京时间）</th><th>发起者 → 对手</th><th>双方队长 C / V</th><th>结果</th><th>状态</th><th>操作</th></tr></thead><tbody>{data?.duels.filter(item => showRemoved || !item.deleted_at).map(item => <tr key={item.id}><td>GW{item.gw}</td><td>{chinaTime(item.created_at)}</td><td>{item.challengerName}<small>ID {item.challenger_id}</small> → {item.targetName}<small>ID {item.target_id}</small></td><td><span>挑战者：{item.challengerCaptain ? `C ${item.challengerCaptain.captainName}` : '尚未读取'}</span>{item.challengerCaptain?.viceCaptainName ? <small>V {item.challengerCaptain.viceCaptainName}</small> : null}<span>被挑战者：{item.targetCaptain ? `C ${item.targetCaptain.captainName}` : '尚未读取'}</span>{item.targetCaptain?.viceCaptainName ? <small>V {item.targetCaptain.viceCaptainName}</small> : null}</td><td>{item.settled_at ? `${item.challenger_score} : ${item.target_score}` : item.selection_status && !['pending', 'selected'].includes(item.selection_status) ? '不计本轮' : '待结算'}</td><td>{item.deleted_at ? '已移除' : item.settled_at ? '已结算' : duelSelectionLabels[item.selection_status ?? 'pending']}</td><td>{item.deleted_at ? item.delete_reason || '—' : <button disabled={busy} className={styles.danger} onClick={() => remove('duels', item.id, `${item.challengerName} → ${item.targetName}`)}>移除</button>}</td></tr>)}</tbody></table></div>
         {!data?.duels.some(item => showRemoved || !item.deleted_at) ? <p className={styles.empty}>尚无正式提交的决斗。</p> : null}<div className={styles.actions} aria-label="决斗记录分页"><button disabled={busy || duelPage === 0} onClick={() => { void run(() => load(gw, page, duelPage - 1, showRemoved), '', false); }}>上一页</button><span>第 {duelPage + 1} / {Math.max(1, Math.ceil(data.duelPagination.total / data.duelPagination.pageSize))} 页 · {data.duelPagination.total} 条</span><button disabled={busy || (duelPage + 1) * data.duelPagination.pageSize >= data.duelPagination.total} onClick={() => { void run(() => load(gw, page, duelPage + 1, showRemoved), '', false); }}>下一页</button></div></section>

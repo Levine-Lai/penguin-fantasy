@@ -1,4 +1,5 @@
 import type { OpsEnv } from './operations.ts';
+import { selectResurrection } from './resurrection.ts';
 
 export type ArenaWindow = { gw: number; open: boolean; deadline?: string; opensAt?: string; closesAt?: string; nextOpensAt?: string };
 type Events = { value: { events: Array<{ id: number; deadline_time: string }> } };
@@ -59,6 +60,8 @@ export async function selectRound(env: OpsEnv, gw: number, now = Date.now()): Pr
   const picks = await env.FPL_CACHE.get<{ checkedEntryIds: number[]; picksByEntry: Record<string, { captainId: number } | null> }>(`picks:gw:${gw}`, 'json');
   if (!picks) return false;
   const rows = await db.prepare('SELECT challenger_id,target_id FROM duels WHERE gw=? AND deleted_at IS NULL').bind(gw).all<{ challenger_id: number; target_id: number }>();
+  const resurrection = gw === 13 ? await selectResurrection(env, now) : null;
+  const groupLimit = resurrection?.status === 'selected' ? Number.MAX_SAFE_INTEGER : 5;
   const checked = new Set(picks.checkedEntryIds);
   if (!rows.results.every(row => checked.has(row.challenger_id) && checked.has(row.target_id))) return false;
   // Selection and the one-time marker share a transaction. SQL ranks the current active rows,
@@ -75,9 +78,9 @@ export async function selectRound(env: OpsEnv, gw: number, now = Date.now()): Pr
     ) UPDATE duels SET selection_status=(SELECT CASE
       WHEN left_id IS NULL OR right_id IS NULL THEN 'missing_captain'
       WHEN left_id=right_id THEN 'same_captain'
-      WHEN position<=5 THEN 'selected' ELSE 'overflow' END FROM ranked WHERE ranked.id=duels.id)
+      WHEN position<=? THEN 'selected' ELSE 'overflow' END FROM ranked WHERE ranked.id=duels.id)
     WHERE gw=? AND deleted_at IS NULL AND NOT EXISTS(SELECT 1 FROM duel_selections WHERE gw=?)`)
-      .bind(JSON.stringify(picks.picksByEntry), JSON.stringify(picks.picksByEntry), gw, gw, gw),
+      .bind(JSON.stringify(picks.picksByEntry), JSON.stringify(picks.picksByEntry), gw, groupLimit, gw, gw),
     db.prepare('INSERT OR IGNORE INTO duel_selections(gw,selected_at) VALUES (?,?)').bind(gw, new Date(now).toISOString()),
   ]);
   return true;
@@ -85,6 +88,7 @@ export async function selectRound(env: OpsEnv, gw: number, now = Date.now()): Pr
 
 export async function selectDueRounds(env: OpsEnv, now = Date.now()): Promise<void> {
   if (!env.OPS_DB) return;
+  await selectResurrection(env, now);
   const rows = await env.OPS_DB.prepare(`SELECT DISTINCT gw FROM duels WHERE deleted_at IS NULL AND gw BETWEEN 9 AND 20
     AND NOT EXISTS(SELECT 1 FROM duel_selections WHERE duel_selections.gw=duels.gw)`).all<{ gw: number }>();
   for (const { gw } of rows.results) await selectRound(env, gw, now);

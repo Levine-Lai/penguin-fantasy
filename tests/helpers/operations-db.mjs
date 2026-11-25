@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 
 export function database() {
   const sqlite = new DatabaseSync(':memory:');
-  for (const migration of ['0001_operations.sql', '0002_player_logins.sql', '0003_published_rounds.sql', '0004_duel_queue.sql']) {
+  for (const migration of ['0001_operations.sql', '0002_player_logins.sql', '0003_published_rounds.sql', '0004_duel_queue.sql', '0005_resurrection.sql']) {
     sqlite.exec(readFileSync(new URL(`../../cloudflare/fpl-proxy/migrations/${migration}`, import.meta.url), 'utf8'));
   }
   const wrap = (query, values = []) => ({

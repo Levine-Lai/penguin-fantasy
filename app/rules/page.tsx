@@ -17,6 +17,19 @@ export default function RulesPage() {
       <header className="site-header"><div className="header-inner"><a className="brand" href={`${siteBasePath}/`} aria-label="企鹅杯首页"><span className="brand-emblem" aria-hidden="true"></span><span className="brand-copy"><strong>PENGUIN CUP</strong><small>THE FROZEN ABYSS</small></span></a><nav className="top-nav rules-return-nav" aria-label="返回导航"><a className="active" href={`${siteBasePath}/`} aria-label="返回战榜">战榜</a></nav><RulesPlayerLink siteBasePath={siteBasePath} /><div className="gameweek"><small>当前试炼</small><strong data-current-trial suppressHydrationWarning>见习者集结</strong></div></div></header>
       <script dangerouslySetInnerHTML={{ __html: currentTrialBootstrapScript }} />
       <section className="rules-hero"><div><h1>冰渊法典</h1></div><a href={`${siteBasePath}/`}>← 返回战榜</a></section>
+      <section className="rules-grid"><article className="rule-stage">
+        <header><strong>GW12</strong><div><small>特别挑战</small><h2>深渊复生</h2></div></header>
+        <ul>
+          <li>北京时间 11 月 26 日 12:00 至 27 日 12:00 报名。深渊组限已淘汰玩家，冰海组限存活玩家。</li>
+          <li>双方按报名顺序各取人数较少一组的前 5–8 人，任一组不足 5 人则取消。</li>
+          <li>报名后锁定 GW12 普通决斗资格，未入选者恢复普通规则。挑战不消耗个人主动挑战次数。</li>
+          <li>比较双方 GW12 队长基础分总和，同分算深渊组失败。副队长替补沿用现有规则。</li>
+          <li>入选者本轮仅按挑战结果结算，队长 ≥10 不加血、≤3 不扣血。</li>
+          <li>深渊组胜则全员以 1 血复活，冰海组各扣 1 血；深渊组负则继续淘汰，冰海组各加 1 血。</li>
+          <li>挑战开启后，GW13 取消前 5 组限制；每人每轮一组、个人剩余挑战次数、同队长无效及报名窗口照常。</li>
+        </ul>
+        <footer><a href={`${siteBasePath}/#resurrection`}>前往报名</a></footer>
+      </article></section>
       <section className="rules-grid">{phases.map((phase) => <article className="rule-stage" key={phase.id}><header><strong>{phase.id}</strong><div><small>{phase.range}</small><h2>{phase.title}</h2></div></header><ul>{phase.rules.map((rule) => <li key={rule}>{rule}</li>)}</ul><footer><span>晋级</span><strong>{phase.advance}</strong></footer></article>)}</section>
     </main>
   );

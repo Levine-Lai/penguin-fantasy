@@ -6,6 +6,7 @@ import { createDuelClient, UncertainSubmission, type PlayerSession } from './due
 import frame from '../test/arena.module.css';
 import styles from './live-arena.module.css';
 import heading from '../components/section-heading.module.css';
+import ResurrectionPanel from './resurrection-panel';
 
 type DuelCaptainRound = { gw: number; points: number; status?: 'not_started' | 'playing' | 'finished'; usedViceCaptain?: boolean };
 export type DuelPlayer = { entryId: number; name: string; rank: number | null; hp: number; captainTotal: number; history?: DuelCaptainRound[] };
@@ -236,10 +237,13 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   const revealed = Boolean(round?.deadline && clock >= Date.parse(round.deadline));
   const closed = !round?.open || revealed || Boolean(round.closesAt && clock >= Date.parse(round.closesAt));
   const eliminated = mine?.eliminated || player?.hp === 0;
-  const locked = eliminated || busy || uncertain || closed || !mine || mine.gw !== round?.gw || mine.submitted || mine.remaining <= 0;
+  const locked = eliminated || busy || uncertain || closed || !mine || mine.resurrectionLocked || mine.gw !== round?.gw || mine.submitted || mine.remaining <= 0;
   const selectionLocked = eliminated || !player || busy || uncertain || Boolean(mine?.submitted);
   const query = search.trim().toLocaleLowerCase();
-  const candidates = members.filter(member => member.entryId !== identity && health.get(member.entryId) !== 0 && (
+  const resurrectionParticipants = round?.gw === 12
+    ? new Set(community?.resurrection?.registrations.filter(item => item.selection_status === 'selected' || item.selection_status === 'pending').map(item => item.entry_id))
+    : new Set<number>();
+  const candidates = members.filter(member => member.entryId !== identity && health.get(member.entryId) !== 0 && !resurrectionParticipants.has(member.entryId) && (
     !query || member.teamName.toLocaleLowerCase().includes(query) || String(member.entryId).includes(query)
   )).sort((left, right) => (ranks.get(left.entryId) ?? Number.MAX_SAFE_INTEGER) - (ranks.get(right.entryId) ?? Number.MAX_SAFE_INTEGER) || left.teamName.localeCompare(right.teamName, 'zh-CN'));
   const assets = { '--arena-frame-image': `url("${siteBasePath}/assets/leaderboard/ice-frame-complete.webp")`, '--score-slot-image': `url("${siteBasePath}/assets/leaderboard/score-slot.webp")`, '--pixel-heart-image': `url("${siteBasePath}/assets/leaderboard/pixel-heart.svg")` } as CSSProperties;
@@ -274,6 +278,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   };
   const selectionHealth = (hp: number) => <span className={styles.selectionHealth} aria-label={`血量 ${hp}`}><b>{hp}</b><span aria-hidden="true">{Array.from({ length: hp }, (_, index) => <i className="blood-drop" key={index} />)}</span></span>;
   return <div className={frame.preview}>
+    <ResurrectionPanel player={player} players={players} community={community} client={client} onRegistered={reload} />
     <section className={`${frame.arena} ${styles.panel}`} style={assets} aria-label="正式决斗">
       <header className={`${heading.heading} ${styles.header}`}>
         <div><small>GW{round?.gw ?? 9}</small><div className={styles.titleRow}><h2>决斗选择</h2>{mine ? <div className={styles.remaining}><small>剩余主动挑战</small><div className={styles.energyMeter} role="meter" aria-label="剩余主动挑战次数" aria-valuemin={0} aria-valuemax={5} aria-valuenow={mine.remaining} aria-valuetext={`剩余 ${mine.remaining} / 5 次`}>{Array.from({ length: 5 }, (_, index) => <i className={index < mine.remaining ? styles.energyFilled : styles.energyEmpty} key={index} aria-hidden="true" />)}</div></div> : null}</div></div>
@@ -296,7 +301,8 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
             </label>)}
             {!candidates.length ? <p className={frame.candidateEmpty}>{members.length ? '未找到玩家' : '玩家名单暂不可用，请刷新后重试'}</p> : null}
           </div></fieldset>
-          {mine?.submitted ? <div className={styles.submitted} role="status"><strong>已提交挑战：{mine.challenge?.targetName ?? '正在读取…'}</strong><small>{duelSelectionLabels[mine.selectionStatus ?? 'pending']}</small><p>提交后不可修改</p></div> : <button className={frame.challengeButton} disabled={locked || !targetId}><strong>{busy ? '正在提交…' : '确认发起决斗'}</strong></button>}
+          {mine?.resurrectionLocked ? <p className={styles.muted}>已报名深渊复生，本轮普通决斗已锁定。</p>
+            : mine?.submitted ? <div className={styles.submitted} role="status"><strong>已提交挑战：{mine.challenge?.targetName ?? '正在读取…'}</strong><small>{duelSelectionLabels[mine.selectionStatus ?? 'pending']}</small><p>提交后不可修改</p></div> : <button className={frame.challengeButton} disabled={locked || !targetId}><strong>{busy ? '正在提交…' : '确认发起决斗'}</strong></button>}
           {closed && round ? <p className={styles.muted}>{round.opensAt && clock < Date.parse(round.opensAt) ? `报名开放：${chinaTime(round.opensAt)}` : '报名未开放或已截止'}</p> : null}
         </form>
       </div>
