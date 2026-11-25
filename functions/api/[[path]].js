@@ -1,6 +1,6 @@
 const upstreamOrigin = "https://penguin-cup-fpl-api.nbafantasy.workers.dev";
 const publicApiPath = /^(?:health|status|league|history|gw\/\d+)$/;
-const operationsPath = /^(?:community|visits|player\/session|duels(?:\/mine)?|admin\/(?:login|logout|session|overview|arena|player-code|announcements(?:\/[\w-]+)?|duels\/[\w-]+))$/;
+const operationsPath = /^(?:community|resurrection(?:\/mine)?|visits|player\/session|duels(?:\/mine)?|admin\/(?:login|logout|session|overview|arena|player-code|announcements(?:\/[\w-]+)?|duels\/[\w-]+))$/;
 const allowedOrigins = new Set(["https://penguin-fantasy.pages.dev", "https://levine-lai.github.io", "https://penguin-cup-2627.hazy-lemon-8599.chatgpt.site"]);
 
 function corsHeaders(request) {

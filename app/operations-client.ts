@@ -11,6 +11,7 @@ export type DuelRecord = {
   challenger_score: number | null; target_score: number | null; challenger_delta: number | null; target_delta: number | null;
 };
 export type Community = {
+  resurrection?: ResurrectionState;
   previousRound?: { gw: number; duels: DuelRecord[]; allDuels?: DuelRecord[] } | null;
   allDuels?: DuelRecord[];
   arena: ArenaConfig; announcements: Announcement[]; duels: DuelRecord[];
@@ -69,3 +70,10 @@ export function chinaTime(value: string | null | undefined): string {
 export function recordPlayerLogin(entryId: number): void {
   void operationsFetch('/visits', { method: 'POST', body: JSON.stringify({ id: crypto.randomUUID(), entryId, kind: 'identify' }) }).catch(() => {});
 }
+import type { ResurrectionRegistration, ResurrectionResult } from '../shared/resurrection';
+export type ResurrectionState = {
+  gw: number; opensAt: string; closesAt: string; open: boolean;
+  counts: { abyss: number; ice: number };
+  selection: ResurrectionResult | null; result?: ResurrectionResult | null;
+  registrations: ResurrectionRegistration[]; mine: ResurrectionRegistration | null;
+};

@@ -1,6 +1,7 @@
 import { selectRound } from './duel-rules.ts';
 import type { Duel, OpsEnv, OpsStatement, Snapshot } from './operations.ts';
 import { playerHealth } from '../../../shared/player-health.ts';
+import { selectResurrection, settleResurrection } from './resurrection.ts';
 
 export class PublicationConflict extends Error {
   constructor(gw: number) { super(`GW${gw} publication changed while scores were being fetched`); }
@@ -52,11 +53,13 @@ export async function commitRound(env: OpsEnv, snapshot: Snapshot, expectedRevis
       WHERE id=? AND deleted_at IS NULL AND ${revisionGuard}`)
       .bind(settled.settled_at, left, right, delta, -delta, row.id, snapshot.gw, expectedRevision));
   }
-  const published = { ...snapshot, duelResults: results, publicationRevision: expectedRevision + 1 };
+  const resurrection = snapshot.gw === 12 ? settleResurrection(await selectResurrection(env), snapshot) : undefined;
+  const published = { ...snapshot, ...(resurrection ? { resurrection } : {}), duelResults: results, publicationRevision: expectedRevision + 1 };
   if (snapshot.finished && snapshot.officialFinalized && snapshot.gw >= 9) {
     const removedRows = (await db.prepare('SELECT id FROM duels WHERE deleted_at IS NOT NULL').all<{ id: string }>()).results;
     const removed = new Set(removedRows.map(row => row.id));
-    const history = (await publishedHistory(env)).filter(round => round.gw < snapshot.gw);
+    // A corrected older round must respect a later finalized resurrection.
+    const history = (await publishedHistory(env)).filter(round => round.gw !== snapshot.gw);
     const eliminated = snapshot.teams.filter(team => playerHealth([...history, published], team.entryId, removed).eliminated).map(team => team.entryId);
     // A newer round may have accepted a registration before this round settled.
     // Void it with the same publication, releasing its reserved challenge right.

@@ -1,6 +1,8 @@
 import { arenaWindow, selectRound, usedChallengeSql, usesChallenge } from './duel-rules.ts';
 import { commitRound, publicationRevision, publishedHistory, publishedRound } from './publication.ts';
 import { playerHealth } from '../../../shared/player-health.ts';
+import { resurrectionGw, type ResurrectionResult } from '../../../shared/resurrection.ts';
+import { registerResurrection, resurrectionLockSql, resurrectionState, selectResurrection } from './resurrection.ts';
 
 export interface OpsStatement {
   bind(...values: unknown[]): OpsStatement;
@@ -22,7 +24,7 @@ export interface OpsEnv {
 type Member = { entryId: number; teamName: string };
 type Session = { role: 'admin' | 'player'; exp: number; entryId?: number; codeHash?: string };
 export type Duel = { id: string; gw: number; challenger_id: number; target_id: number; created_at: string; selection_status: 'pending' | 'selected' | 'same_captain' | 'overflow' | 'missing_captain'; deleted_at: string | null; settled_at: string | null; challenger_score: number | null; target_score: number | null; challenger_delta: number | null; target_delta: number | null };
-export type Snapshot = { gw: number; finished?: boolean; officialFinalized?: boolean; duelResults?: Duel[]; publicationRevision?: number; teams: Array<{ entryId: number; captainPoints: number; captainPickRate?: number | null; scoringCaptainName?: string; captainName?: string | null }> };
+export type Snapshot = { gw: number; finished?: boolean; officialFinalized?: boolean; duelResults?: Duel[]; resurrection?: ResurrectionResult; publicationRevision?: number; teams: Array<{ entryId: number; captainPoints: number; captainPickRate?: number | null; scoringCaptainName?: string; captainName?: string | null }> };
 
 const canonicalOrigin = 'https://penguin-fantasy.pages.dev';
 const origins = new Set([canonicalOrigin, 'https://levine-lai.github.io', 'https://penguin-cup-2627.hazy-lemon-8599.chatgpt.site']);
@@ -160,6 +162,7 @@ export async function submitDuel(db: OpsDatabase, gw: number, challengerId: numb
       (challenger_id IN (?,?) OR target_id IN (?,?)))
     AND (SELECT COUNT(*) FROM duels WHERE challenger_id=? AND gw BETWEEN 9 AND 20 AND deleted_at IS NULL
       AND ${usedChallengeSql})<5
+    AND (?!=12 OR ${resurrectionLockSql})
     ${gate ? `AND (julianday('now') >= julianday(?,'-12 hours') OR EXISTS (
       SELECT 1 FROM settings WHERE key='arena_test_open' AND json_valid(value)
       AND json_extract(value,'$.gw')=? AND json_extract(value,'$.open')=1
@@ -174,12 +177,13 @@ export async function submitDuel(db: OpsDatabase, gw: number, challengerId: numb
     ${gate?.health ? `AND (SELECT COALESCE(SUM(revision),0) FROM published_rounds)=?
       AND (SELECT COUNT(*) FROM duels WHERE deleted_at IS NOT NULL)=?` : ''}`)
     .bind(id, gw, challengerId, targetId, new Date().toISOString(), challengerId, targetId, gw,
-      challengerId, targetId, challengerId, targetId, challengerId, ...(gate ? [gate.deadline, gw, gw, gate.deadline] : []), ...(gate?.health ? [gate.health.revision, gate.health.removed] : [])).run();
+      challengerId, targetId, challengerId, targetId, challengerId, gw, challengerId, targetId,
+      ...(gate ? [gate.deadline, gw, gw, gate.deadline] : []), ...(gate?.health ? [gate.health.revision, gate.health.removed] : [])).run();
   return result.meta.changes === 1;
 }
 export async function handleOperations(request: Request, env: OpsEnv): Promise<Response | null> {
   const url = new URL(request.url); const path = url.pathname;
-  if (!/^\/api\/(admin(?:\/|$)|community$|visits$|player\/session$|duels(?:\/|$))/.test(path)) return null;
+  if (!/^\/api\/(admin(?:\/|$)|community$|resurrection(?:\/mine)?$|visits$|player\/session$|duels(?:\/|$))/.test(path)) return null;
   try {
     const origin = request.headers.get('origin');
     if (origin && !origins.has(origin) && !/^http:\/\/localhost:\d+$/.test(origin)) throw new ApiError(403, '来源不受支持');
@@ -231,7 +235,9 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
           db.prepare('SELECT * FROM audit_log WHERE created_at>=? AND created_at<? ORDER BY created_at DESC LIMIT 50').bind(start, end).all(),
         ]);
         const activeCount = (await db.prepare('SELECT COUNT(*) AS count FROM duels WHERE gw=? AND deleted_at IS NULL').bind(gw).first<{ count: number }>())?.count ?? 0;
-        return response({ round: { gw, start: previous ? start : null, end }, rounds: events.map(item => ({ gw: item.id })), page,
+        const resurrection = gw === 12 ? { ...await resurrectionState(env, undefined, Date.now(), true),
+          result: (await publishedRound(env, 12))?.resurrection ?? null } : undefined;
+        return response({ resurrection, round: { gw, start: previous ? start : null, end }, rounds: events.map(item => ({ gw: item.id })), page,
           arena: { ...(gw === config.gw ? config : { gw, open: false, opensAt: new Date(Date.parse(end) - 12 * 3600000).toISOString() }), deadline: end, count: activeCount },
           duelPagination: { page: duelPage, pageSize: duelPageSize, total: duelTotal },
           members, duels: await captainedDuels(env, duelRows.results, members), announcements: announcements.results,
@@ -293,7 +299,9 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
         duels: await captainedDuels(env, (previous.duelResults ?? []).filter(row => !removed.has(row.id)), members),
         allDuels: await captainedDuels(env, withPublishedScores([...previousAll.values()]).sort((a, b) => Date.parse(a.created_at) - Date.parse(b.created_at)), members) } : null;
       const revealed = Boolean(ddl && Date.now() >= Date.parse(ddl));
-      return response({ previousRound, arena: { ...config, deadline: ddl, open: config.open && Boolean(ddl) && !revealed, ...(revealed ? { count: publicDuels.length, selectionReady } : {}) },
+      const resurrection = await resurrectionState(env);
+      const outcome = history.find(snapshot => snapshot.gw === resurrectionGw)?.resurrection;
+      return response({ previousRound, resurrection: { ...resurrection, result: outcome ?? null }, arena: { ...config, deadline: ddl, open: config.open && Boolean(ddl) && !revealed, ...(revealed ? { count: publicDuels.length, selectionReady } : {}) },
         duels: revealed ? await captainedDuels(env, publicDuels, members) : [], allDuels: revealed ? await captainedDuels(env, allPublicDuels, members) : [], results: published, removedDuelIds, announcements: announcementRows.results, members }, request);
     }
     if (path === '/api/visits' && request.method === 'POST') {
@@ -315,6 +323,29 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
       const token = await signSession(env.SESSION_SECRET, { role: 'player', entryId, exp: Date.now() + 12 * 3600000 });
       return response({ token, entryId }, request);
     }
+    if (path === '/api/resurrection/mine' && request.method === 'GET') {
+      const entryId = await playerSession(env, request);
+      const state = await resurrectionState(env, entryId);
+      const health = (await healthState(env)).player(entryId);
+      const duel = await db.prepare('SELECT id FROM duels WHERE gw=12 AND deleted_at IS NULL AND (challenger_id=? OR target_id=?)')
+        .bind(entryId, entryId).first();
+      return response({ ...state, ...health, entryId, ordinaryDuel: Boolean(duel) }, request);
+    }
+    if (path === '/api/resurrection' && request.method === 'POST') {
+      await limit(env, request, 'resurrection-submit', 20, 60000);
+      const entryId = await playerSession(env, request);
+      const state = await resurrectionState(env, entryId);
+      if (state.mine) return response({ ok: true, registration: state.mine }, request);
+      if (!state.open) throw new ApiError(409, '深渊复生报名尚未开放或已截止');
+      const input = await body(request);
+      const health = await healthState(env);
+      const side = health.player(entryId).eliminated ? 'abyss' : 'ice';
+      if (input.side !== side) throw new ApiError(409, side === 'abyss' ? '已淘汰玩家仅可报名深渊组' : '深渊组仅限已淘汰玩家');
+      if (!await registerResurrection(env, entryId, side, health.revision, health.removed)) {
+        throw new ApiError(409, '报名状态已变化，或已参加本轮普通决斗，请重新查看');
+      }
+      return response({ ok: true }, request, 201);
+    }
     if (path === '/api/duels/mine' && request.method === 'GET') {
       const entryId = await playerSession(env, request); const config = await arenaWindow(env);
       const life = (await healthState(env)).player(entryId);
@@ -322,13 +353,22 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
       const used = rows.results.filter(row => row.challenger_id === entryId && usesChallenge(row)).length;
       const submitted = rows.results.find(row => row.gw === config.gw && row.challenger_id === entryId);
       const target = submitted ? (await roster(env)).find(member => member.entryId === submitted.target_id) : null;
-      return response({ entryId, arena: config, ...life, remaining: Math.max(0, 5 - used), gw: config.gw, selectionStatus: submitted?.selection_status ?? null,
+      const resurrection = config.gw === resurrectionGw ? await resurrectionState(env, entryId) : null;
+      const resurrectionLocked = resurrection?.mine?.selection_status === 'pending' || resurrection?.mine?.selection_status === 'selected';
+      return response({ entryId, arena: config, ...life, resurrectionLocked, remaining: Math.max(0, 5 - used), gw: config.gw, selectionStatus: submitted?.selection_status ?? null,
         submitted: Boolean(submitted), challenge: submitted ? { targetId: submitted.target_id, targetName: target?.teamName ?? `ID ${submitted.target_id}` } : null }, request);
     }
     if (path === '/api/duels' && request.method === 'POST') {
       await limit(env, request, 'duel-submit', 20, 60000);
       const entryId = await playerSession(env, request); const input = await body(request);
       const config = await arenaWindow(env); const ddl = await deadline(env, config.gw);
+      if (config.gw === resurrectionGw) {
+        await selectResurrection(env);
+        const blocked = await db.prepare(`SELECT entry_id FROM resurrection_registrations
+          WHERE entry_id IN (?,?) AND selection_status IN ('pending','selected')`)
+          .bind(entryId, Number(input.targetId)).first();
+        if (blocked) throw new ApiError(409, '你或该玩家已报名深渊复生，不能参加本轮普通决斗');
+      }
       if (!ddl) throw new ApiError(409, '本轮 DDL 尚未就绪，请稍后再试');
       if (Date.now() >= Date.parse(ddl)) throw new ApiError(409, '本轮报名已截止');
       if (!config.open) throw new ApiError(409, '本轮报名尚未开放');

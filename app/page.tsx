@@ -9,6 +9,7 @@ import heading from "./components/section-heading.module.css";
 import ledger from "./components/leaderboard.module.css";
 import LiveArena from './arena/live-arena';
 import { playerHealth } from '../shared/player-health';
+import { resurrectionLife, type ResurrectionResult } from '../shared/resurrection';
 import { loadCommunity, recordPlayerLogin, type Community, type PublishedDuel } from './operations-client';
 
 const siteBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
@@ -33,6 +34,7 @@ type GwSnapshot = {
   finished?: boolean;
   officialFinalized?: boolean;
   duelResults?: PublishedDuel[];
+  resurrection?: ResurrectionResult;
   ready: boolean;
   gw: number;
   deadlineTime: string;
@@ -636,20 +638,27 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
 
   const ranking = useMemo<RankedPlayer[]>(() => {
     const rows = leagueTeams.map((team) => {
-      const lifeState = playerHealth(gwSnapshots.map(snapshot => ({ ...snapshot, duelResults: snapshot.duelResults ?? community?.results?.filter(row => row.gw === snapshot.gw) })), team.entryId, new Set(community?.removedDuelIds));
+      const healthRounds = gwSnapshots.map(snapshot => ({ ...snapshot,
+        resurrection: snapshot.resurrection ?? (snapshot.gw === 12 ? community?.resurrection?.result ?? undefined : undefined),
+        duelResults: snapshot.duelResults ?? community?.results?.filter(row => row.gw === snapshot.gw) }));
+      const removed = new Set(community?.removedDuelIds);
+      const lifeState = playerHealth(healthRounds, team.entryId, removed);
       const history = gwSnapshots.flatMap<CaptainHistoryEntry>((snapshot) => {
         const result = snapshot.teams.find((entry) => entry.entryId === team.entryId);
-        if (!result?.captainName) return [];
-        const life = (snapshot.gw >= 9 && (!snapshot.finished || !snapshot.officialFinalized)) || (lifeState.eliminatedGw !== null && snapshot.gw > lifeState.eliminatedGw) || (result.captainStatus && result.captainStatus !== "finished" && result.captainPoints <= 3)
+        const special = resurrectionLife(healthRounds.find(round => round.gw === snapshot.gw)?.resurrection, team.entryId);
+        if (!result || (!result.captainName && special === null)) return [];
+        const eliminatedBeforeRound = playerHealth(healthRounds.filter(round => round.gw < snapshot.gw), team.entryId, removed).eliminated;
+        const life = special !== null || (snapshot.gw >= 9 && (!snapshot.finished || !snapshot.officialFinalized)) || eliminatedBeforeRound || (result.captainStatus && result.captainStatus !== "finished" && result.captainPoints <= 3)
           ? 0
           : lifeEarnedInStage(stageForGw(snapshot.gw), result.captainPoints, result.captainPickRate);
         const duel = (snapshot.duelResults?.filter(row => !community?.removedDuelIds?.includes(row.id)) ?? community?.results)?.find(duel => duel.gw === snapshot.gw && (duel.challenger_id === team.entryId || duel.target_id === team.entryId));
         return [{
           gw: snapshot.gw,
-          captain: result.scoringCaptainName ?? result.captainName,
+          captain: result.scoringCaptainName ?? result.captainName ?? '—',
           rate: result.captainPickRate ?? 0,
           points: result.captainPoints,
           life,
+          resurrectionLife: special ?? undefined,
           duelLife: duel ? (duel.challenger_id === team.entryId ? duel.challenger_delta : duel.target_delta) ?? 0 : undefined,
           status: result.captainStatus,
           usedViceCaptain: result.usedViceCaptain,
