@@ -278,7 +278,7 @@ export default function LiveArena({ player, players }: { player: DuelPlayer | nu
   };
   const selectionHealth = (hp: number) => <span className={styles.selectionHealth} aria-label={`血量 ${hp}`}><b>{hp}</b><span aria-hidden="true">{Array.from({ length: hp }, (_, index) => <i className="blood-drop" key={index} />)}</span></span>;
   return <div className={frame.preview}>
-    <ResurrectionPanel player={player} players={players} community={community} client={client} onRegistered={reload} />
+    <ResurrectionPanel player={player} players={players} community={community} client={client} onRegistered={reload} assets={assets} />
     <section className={`${frame.arena} ${styles.panel}`} style={assets} aria-label="正式决斗">
       <header className={`${heading.heading} ${styles.header}`}>
         <div><small>GW{round?.gw ?? 9}</small><div className={styles.titleRow}><h2>决斗选择</h2>{mine ? <div className={styles.remaining}><small>剩余主动挑战</small><div className={styles.energyMeter} role="meter" aria-label="剩余主动挑战次数" aria-valuemin={0} aria-valuemax={5} aria-valuenow={mine.remaining} aria-valuetext={`剩余 ${mine.remaining} / 5 次`}>{Array.from({ length: 5 }, (_, index) => <i className={index < mine.remaining ? styles.energyFilled : styles.energyEmpty} key={index} aria-hidden="true" />)}</div></div> : null}</div></div>
