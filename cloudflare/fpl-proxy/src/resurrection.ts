@@ -53,14 +53,14 @@ export async function registerResurrection(env: OpsEnv, entryId: number, side: R
   return result.meta.changes === 1;
 }
 
-export async function resurrectionState(env: OpsEnv, entryId?: number, now = Date.now(), admin = false) {
+export async function resurrectionState(env: OpsEnv, entryId?: number, now = Date.now(), showRegistrations = false) {
   const selection = await selectResurrection(env, now);
-  const rows = env.OPS_DB ? (await env.OPS_DB.prepare('SELECT * FROM resurrection_registrations ORDER BY created_at,id')
+  const rows = env.OPS_DB ? (await env.OPS_DB.prepare('SELECT entry_id,side,created_at,selection_status FROM resurrection_registrations ORDER BY created_at,id')
     .all<ResurrectionRegistration>()).results : [];
   return { gw: resurrectionGw, opensAt: resurrectionOpensAt, closesAt: resurrectionClosesAt,
     open: now >= Date.parse(resurrectionOpensAt) && now < Date.parse(resurrectionClosesAt),
     counts: { abyss: rows.filter(row => row.side === 'abyss').length, ice: rows.filter(row => row.side === 'ice').length },
-    selection, registrations: selection || admin ? rows : [], mine: rows.find(row => row.entry_id === entryId) ?? null };
+    selection, registrations: selection || showRegistrations ? rows : [], mine: rows.find(row => row.entry_id === entryId) ?? null };
 }
 
 export function settleResurrection(selection: ResurrectionResult | null, snapshot: Snapshot): ResurrectionResult | undefined {

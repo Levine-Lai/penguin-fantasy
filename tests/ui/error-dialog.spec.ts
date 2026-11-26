@@ -5,6 +5,7 @@ const snapshot = JSON.parse(readFileSync(new URL('../../app/static-fpl-data.json
 for (const [width, height] of [[320, 568], [375, 667], [390, 844], [768, 1024], [1440, 900], [568, 320]]) {
   test(`${width}x${height}: rejected challenge shows a readable compact dialog with a full-width dismissal`, async ({ page }) => {
     await page.setViewportSize({ width, height });
+    await page.clock.setFixedTime(new Date('2026-11-04T04:00:00Z'));
     const arena = { gw: 10, open: true, deadline: '2099-01-01T00:00:00Z' };
     await page.addInitScript(id => localStorage.setItem('penguin-fantasy:player-id:v1', String(id)), snapshot.league.teams[0].entryId);
     await page.route('https://penguin-fantasy.pages.dev/api/**', async route => {

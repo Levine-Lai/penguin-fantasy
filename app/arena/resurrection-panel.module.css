@@ -4,6 +4,11 @@ section.panel { margin-block-end: 2rem; }
 .panel .team h3 { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; margin: 0; }
 .team p { margin: .3rem 0; }
 .team ol { margin: .8rem 0; padding-left: 1.3rem; overflow-wrap: anywhere; }
+.team .roster { padding: 0; list-style: none; }
+.roster li { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .2rem .75rem; padding-block: .45rem; border-top: 1px solid var(--arena-rule); }
+.roster small { display: block; }
+.roster time { color: var(--arena-muted); font-size: var(--ui-text-sm); }
+.cancel[value="cancel"] { border-color: var(--arena-rule); color: var(--arena-ink); background: var(--color-paper-2); }
 .total { color: var(--color-accent); font-size: var(--ui-text-lg); }
 .error button { min-height: 2.75rem; padding: .65rem 1.25rem; border: 1px solid var(--color-accent); color: var(--color-accent); background: var(--color-paper-2); font: inherit; cursor: pointer; }
 .confirmed, .result { overflow-wrap: anywhere; }

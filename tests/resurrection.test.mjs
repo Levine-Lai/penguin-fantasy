@@ -69,6 +69,10 @@ test('the signed endpoint derives the side from settled health and makes repeate
     assert.equal(own.mine.side, 'abyss');
     assert.equal((await db.prepare('SELECT COUNT(*) AS total FROM resurrection_registrations').first()).total, 1);
     assert.equal((await request('/resurrection', 11, 'POST', { side: 'ice' })).status, 201);
+    const roster = await (await request('/resurrection', 11)).json();
+    assert.equal(roster.selection, null);
+    assert.deepEqual(roster.registrations.map(row => [row.entry_id, row.created_at]), [[1, resurrectionOpensAt], [11, resurrectionOpensAt]]);
+    assert.equal(roster.mine, null);
     const signed = await (await request('/duels/mine', 11)).json();
     assert.equal(signed.resurrectionLocked, true);
   } finally { Date.now = realNow; }
