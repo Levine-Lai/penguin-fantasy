@@ -29,6 +29,7 @@ for (const width of [320, 375, 390, 768, 1440]) {
       }
       const data = path === '/api/league' ? snapshot.league : path === '/api/history' ? snapshot.history
         : path === '/api/player/session' ? { token: 'test-only' }
+        : path === '/api/resurrection' ? { ...state(), mine: null, registrations: registered ? [state().mine] : [] }
         : path === '/api/resurrection/mine' ? { ...state(), entryId: identity, eliminated, ordinaryDuel: false }
         : path === '/api/duels/mine' ? { entryId: identity, gw: 12, arena, eliminated: false,
           remaining: 5, submitted: false, resurrectionLocked: registered }
@@ -41,7 +42,16 @@ for (const width of [320, 375, 390, 768, 1440]) {
     const signup = panel.getByRole('button', { name: buttonLabel, exact: true });
     await expect(signup).toBeEnabled();
     await signup.click();
+    const dialog = panel.getByRole('dialog', { name: '确认报名' });
+    await expect(dialog).toBeVisible();
+    expect(posts).toBe(0);
+    await dialog.getByRole('button', { name: '取消' }).click();
+    await expect(dialog).toBeHidden();
+    expect(posts).toBe(0);
+    await signup.click();
+    await dialog.getByRole('button', { name: '确认报名' }).click();
     await expect(panel.getByRole('status')).toContainText('已报名，等待入选');
+    await expect(panel.locator('time')).toHaveText('2026/11/26 12:00:00');
     expect(posts).toBe(1);
     await expect(page.getByText('已报名深渊复生，本轮普通决斗已锁定。', { exact: true })).toBeVisible();
     await expect(panel.getByRole('button', { name: buttonLabel, exact: true })).toHaveCount(0);
@@ -50,7 +60,7 @@ for (const width of [320, 375, 390, 768, 1440]) {
       const bounds = el.getBoundingClientRect();
       return [...el.querySelectorAll('p, button, h3, summary, li')].some(child => {
         const rect = child.getBoundingClientRect();
-        return rect.left < bounds.left - 1 || rect.right > bounds.right + 1 || child.scrollWidth > child.clientWidth + 1;
+        return child.getClientRects().length > 0 && (rect.left < bounds.left - 1 || rect.right > bounds.right + 1 || child.scrollWidth > child.clientWidth + 1);
       });
     });
     expect(overflow).toBe(false);

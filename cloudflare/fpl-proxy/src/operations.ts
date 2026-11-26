@@ -323,6 +323,9 @@ export async function handleOperations(request: Request, env: OpsEnv): Promise<R
       const token = await signSession(env.SESSION_SECRET, { role: 'player', entryId, exp: Date.now() + 12 * 3600000 });
       return response({ token, entryId }, request);
     }
+    if (path === '/api/resurrection' && request.method === 'GET') {
+      return response(await resurrectionState(env, undefined, Date.now(), true), request);
+    }
     if (path === '/api/resurrection/mine' && request.method === 'GET') {
       const entryId = await playerSession(env, request);
       const state = await resurrectionState(env, entryId);

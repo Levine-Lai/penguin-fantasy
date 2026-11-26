@@ -23,6 +23,8 @@ export default function ResurrectionPanel({ player, players, community, client, 
   const [error, setError] = useState('');
   const [uncertain, setUncertain] = useState(false);
   const [clock, setClock] = useState(() => Date.now());
+  const [liveRoster, setLiveRoster] = useState<ResurrectionState | null>(null);
+  const confirmDialog = useRef<HTMLDialogElement>(null);
   const submitting = useRef(false);
   const identity = player?.entryId;
   const identityRef = useRef(identity);
@@ -53,14 +55,39 @@ export default function ResurrectionPanel({ player, players, community, client, 
     return () => window.clearTimeout(timer);
   }, [clock, readOwn]);
   const status = own?.entryId === identity ? own : null;
-  const state = community?.resurrection ?? status;
-  const selection = state?.result ?? state?.selection;
+  const state = liveRoster ?? community?.resurrection ?? status;
+  const selection = community?.resurrection?.result ?? state?.selection;
   const open = clock >= Date.parse(resurrectionOpensAt) && clock < Date.parse(resurrectionClosesAt);
   const side = status?.eliminated ? 'abyss' : 'ice';
+  const teamName = side === 'abyss' ? '深渊组' : '冰海组';
   const registered = state?.registrations.find(item => item.entry_id === identity) ?? status?.mine;
-  const names = new Map(players.map(item => [item.entryId, item.name]));
+  const names = new Map(community?.members.map(item => [item.entryId, item.teamName]));
+  for (const item of players) names.set(item.entryId, item.name);
+  const refreshRoster = useCallback(async (signal?: AbortSignal) => {
+    const latest = await operationsFetch<ResurrectionState>('/resurrection', { signal: signal ?? AbortSignal.timeout(10000) });
+    if (!signal?.aborted) setLiveRoster(latest);
+  }, []);
+  useEffect(() => {
+    if (clock < Date.parse(resurrectionOpensAt)) return;
+    let active = true;
+    let timer: number | undefined;
+    const controller = new AbortController();
+    const refresh = async () => {
+      if (document.visibilityState === 'visible') {
+        await refreshRoster(AbortSignal.any([controller.signal, AbortSignal.timeout(10000)])).catch(() => {});
+      }
+      if (active && Date.now() < Date.parse(resurrectionClosesAt)) timer = window.setTimeout(() => { void refresh(); }, 15000);
+    };
+    void refresh();
+    const visible = () => {
+      if (document.visibilityState !== 'visible') return;
+      setClock(Date.now());
+    };
+    document.addEventListener('visibilitychange', visible);
+    return () => { active = false; controller.abort(); window.clearTimeout(timer); document.removeEventListener('visibilitychange', visible); };
+  }, [clock, refreshRoster]);
   const signedUp = async () => {
-    if (!client || !status || !identity || submitting.current) return;
+    if (!client || !status || !identity || registered || !open || status.ordinaryDuel || submitting.current || uncertain) return;
     submitting.current = true; setBusy(true); setError('');
     try {
       const session = await client.read();
@@ -72,7 +99,7 @@ export default function ResurrectionPanel({ player, players, community, client, 
       if (identityRef.current === identity) setOwn({ ...status, mine: {
         entry_id: identity, side, created_at: new Date().toISOString(), selection_status: 'pending',
       } });
-      await Promise.all([readOwn(), onRegistered()]).catch(() => {});
+      await Promise.allSettled([readOwn(), onRegistered(), refreshRoster()]);
     } catch (reason) {
       if (identityRef.current !== identity) return;
       const code = (reason as { status?: number }).status;
@@ -80,7 +107,7 @@ export default function ResurrectionPanel({ player, players, community, client, 
         setUncertain(true);
         try {
           const checked = await readOwn();
-          if (checked?.mine) await onRegistered().catch(() => {});
+          if (checked?.mine) await Promise.allSettled([onRegistered(), refreshRoster()]);
           else setError('未查到报名，可重新提交');
         } catch { setError('提交结果待确认，请核对报名状态'); }
       } else setError(reason instanceof Error ? reason.message : '报名失败，请重试');
@@ -95,7 +122,12 @@ export default function ResurrectionPanel({ player, players, community, client, 
       {(['abyss', 'ice'] as const).map(team => <section className={`${arena.profile} ${styles.team}`} key={team} aria-label={team === 'abyss' ? '深渊组' : '冰海组'}>
         <h3>{team === 'abyss' ? '深渊组' : '冰海组'}<small>{state?.counts[team] ?? '—'} 人报名</small></h3>
         <p>{team === 'abyss' ? '已淘汰玩家' : '存活玩家'}</p>
-        {selection ? <ol>{selection[team].map(id => <li key={id}>{names.get(id) ?? `FPL ID ${id}`}</li>)}</ol> : null}
+        {state?.registrations.some(item => item.side === team) ? <ol className={styles.roster}>
+          {state.registrations.filter(item => item.side === team).map(item => <li key={item.entry_id}>
+            <span>{names.get(item.entry_id) ?? `FPL ID ${item.entry_id}`}{selection ? <small>{selectionLabels[item.selection_status]}</small> : null}</span>
+            <time dateTime={item.created_at}>{chinaTime(item.created_at)}</time>
+          </li>)}
+        </ol> : null}
         {selection?.[team].length ? <strong className={styles.total}>{selection[team === 'abyss' ? 'abyssScore' : 'iceScore'] ?? '—'} 分</strong> : null}
       </section>)}
     </div>
@@ -107,9 +139,18 @@ export default function ResurrectionPanel({ player, players, community, client, 
       : !player ? <p>登录后报名</p>
         : !open ? <p>{clock < Date.parse(resurrectionOpensAt) ? '报名尚未开放' : '报名已截止'}</p>
           : status?.ordinaryDuel ? <p>你已参加 GW12 普通决斗，无法报名。</p>
-            : <button className={frame.challengeButton} type="button" disabled={busy || !status || uncertain} onClick={() => { void signedUp(); }}>
-              <strong>{busy ? '正在提交…' : `报名${side === 'abyss' ? '深渊组' : '冰海组'}`}</strong>
+            : <button className={frame.challengeButton} type="button" disabled={busy || !status || uncertain} onClick={() => confirmDialog.current?.showModal()}>
+              <strong>{busy ? '正在提交…' : `报名${teamName}`}</strong>
             </button>}
+    <dialog ref={confirmDialog} className={arena.confirmDialog} aria-labelledby="resurrection-confirm-title" aria-describedby="resurrection-confirm-note">
+      <form method="dialog" onSubmit={event => {
+        if ((event.nativeEvent as SubmitEvent).submitter?.getAttribute('value') === 'confirm') void signedUp();
+      }}>
+        <h2 id="resurrection-confirm-title">确认报名</h2>
+        <p id="resurrection-confirm-note">{player?.name}将报名{teamName}。提交后锁定本轮普通决斗资格。</p>
+        <div className={arena.confirmActions}><button type="submit" value="cancel" className={styles.cancel}>取消</button><button type="submit" value="confirm">确认报名</button></div>
+      </form>
+    </dialog>
     {error ? <p className={styles.error} role="alert">{error}<button type="button" disabled={busy} onClick={() => { setError(''); void readOwn().catch(() => setError('状态读取失败，请稍后重试')); }}>核对报名状态</button></p> : null}
     <details className={styles.rules}><summary>挑战规则</summary>
       <ul>
