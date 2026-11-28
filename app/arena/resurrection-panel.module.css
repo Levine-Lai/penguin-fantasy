@@ -6,7 +6,14 @@ section.panel { margin-block-end: 2rem; }
 .team ol { margin: .8rem 0; padding-left: 1.3rem; overflow-wrap: anywhere; }
 .team .roster { padding: 0; list-style: none; }
 .roster li { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .2rem .75rem; padding-block: .45rem; border-top: 1px solid var(--arena-rule); }
-.captain { color: var(--arena-cyan); font-size: var(--ui-text-sm); }
+.roster li.selectedPlayer {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: clamp(.35rem, 1vw, .75rem);
+}
+.captains { display: grid; gap: .2rem; color: var(--arena-muted); font-size: var(--ui-text-sm); }
+.panel .team .score { width: clamp(2.5rem, 7vw, 4rem); height: 2.4rem; margin-top: 0; }
 .roster time { color: var(--arena-muted); font-size: var(--ui-text-sm); }
 .cancel[value="cancel"] { border-color: var(--arena-rule); color: var(--arena-ink); background: var(--color-paper-2); }
 .total { color: var(--color-accent); font-size: var(--ui-text-lg); }

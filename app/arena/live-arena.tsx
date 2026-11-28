@@ -6,7 +6,7 @@ import { createDuelClient, UncertainSubmission, type PlayerSession } from './due
 import frame from '../test/arena.module.css';
 import styles from './live-arena.module.css';
 import heading from '../components/section-heading.module.css';
-import ResurrectionPanel from './resurrection-panel';
+import ResurrectionPanel, { type ResurrectionCaptain } from './resurrection-panel';
 
 type DuelCaptainRound = { gw: number; points: number; status?: 'not_started' | 'playing' | 'finished'; usedViceCaptain?: boolean };
 export type DuelPlayer = { entryId: number; name: string; rank: number | null; hp: number; captainTotal: number; history?: DuelCaptainRound[] };
@@ -35,7 +35,7 @@ function DuelHealth({ hp }: { hp: number | undefined }) {
 }
 
 export default function LiveArena({ player, players, resurrectionCaptains }: {
-  player: DuelPlayer | null; players: DuelPlayer[]; resurrectionCaptains: ReadonlyMap<number, string>;
+  player: DuelPlayer | null; players: DuelPlayer[]; resurrectionCaptains: ReadonlyMap<number, ResurrectionCaptain>;
 }) {
   const [community, setCommunity] = useState<Community | null>(null);
   const [session, setSession] = useState<PlayerSession | null>(null);
