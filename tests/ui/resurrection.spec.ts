@@ -2,6 +2,38 @@ import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
 const snapshot = JSON.parse(readFileSync(new URL('../../app/static-fpl-data.json', import.meta.url), 'utf8'));
+test('closed registration only lists the selected teams and uses the daily original captain', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.clock.setFixedTime(new Date('2026-11-30T00:00:00Z'));
+  const members = snapshot.league.teams.slice(0, 17) as Array<{ entryId: number; teamName: string }>;
+  const [abyss, ice] = [members.slice(0, 8), members.slice(8, 16)].map(team => team.map(player => player.entryId));
+  const result = { gw: 12, status: 'success', abyss, ice, abyssScore: 51, iceScore: 42 };
+  const arena = { gw: 12, open: false, deadline: '2026-11-28T13:30:00Z', selectionReady: true };
+  const resurrection = { gw: 12, open: false, result,
+    selection: { ...result, status: 'selected', abyssScore: null, iceScore: null }, counts: { abyss: 9, ice: 8 },
+    registrations: members.map(({ entryId }) => ({ entry_id: entryId, side: ice.includes(entryId) ? 'ice' : 'abyss', created_at: '2026-11-26T04:00:00Z' })),
+  };
+  const history = { ...snapshot.history, snapshots: [...snapshot.history.snapshots, {
+    gw: 12, ready: true, finished: true, officialFinalized: true, deadlineHasPassed: true, deadlineTime: arena.deadline,
+    teams: members.map(player => ({ ...player, captainName: '原选队长', scoringCaptainName: '替补队长', captainPoints: 8, captainPickRate: 10 })),
+  }] };
+  await page.route('https://penguin-fantasy.pages.dev/api/**', route => {
+    const path = new URL(route.request().url()).pathname;
+    return route.fulfill({ json: path === '/api/league' ? snapshot.league : path === '/api/history' ? history :
+      path === '/api/resurrection' ? resurrection :
+      { arena, members, results: [], announcements: [], duels: [], resurrection } });
+  });
+  await page.goto('/');
+  const panel = page.getByRole('region', { name: '深渊复生', exact: true });
+  await expect(panel.getByRole('region', { name: '深渊组' }).getByRole('listitem')).toHaveCount(8);
+  await expect(panel.getByRole('region', { name: '冰海组' }).getByRole('listitem')).toHaveCount(8);
+  await expect(panel.getByText('队长 原选队长', { exact: true })).toHaveCount(16);
+  await expect(panel.getByText(members[16].teamName, { exact: true })).toHaveCount(0);
+  await expect(panel.getByText('报名时间（北京时间）', { exact: false })).toHaveCount(0);
+  await expect(panel.locator('time')).toHaveCount(0);
+  await expect(panel.getByRole('status')).toContainText('深渊复生成功');
+});
+
 for (const width of [320, 375, 390, 768, 1440]) {
   test(`${width}px resurrection signup locks ordinary duels and recovers an interrupted response`, async ({ page }) => {
     const eliminated = width !== 1440;

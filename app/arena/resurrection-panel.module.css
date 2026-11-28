@@ -6,7 +6,7 @@ section.panel { margin-block-end: 2rem; }
 .team ol { margin: .8rem 0; padding-left: 1.3rem; overflow-wrap: anywhere; }
 .team .roster { padding: 0; list-style: none; }
 .roster li { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .2rem .75rem; padding-block: .45rem; border-top: 1px solid var(--arena-rule); }
-.roster small { display: block; }
+.captain { color: var(--arena-cyan); font-size: var(--ui-text-sm); }
 .roster time { color: var(--arena-muted); font-size: var(--ui-text-sm); }
 .cancel[value="cancel"] { border-color: var(--arena-rule); color: var(--arena-ink); background: var(--color-paper-2); }
 .total { color: var(--color-accent); font-size: var(--ui-text-lg); }

@@ -14,10 +14,11 @@ type OwnStatus = ResurrectionState & { entryId: number; eliminated: boolean; ord
 type Props = {
   player: DuelPlayer | null; players: DuelPlayer[]; community: Community | null;
   client: ReturnType<typeof createDuelClient> | null; onRegistered: () => Promise<void>; assets: CSSProperties;
+  captains: ReadonlyMap<number, string>;
 };
 const selectionLabels = { pending: '已报名，等待入选', selected: '已入选', overflow: '未入选，人数超额', cancelled: '人数不足，挑战取消' };
 
-export default function ResurrectionPanel({ player, players, community, client, onRegistered, assets }: Props) {
+export default function ResurrectionPanel({ player, players, community, client, onRegistered, assets, captains }: Props) {
   const [own, setOwn] = useState<OwnStatus | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -56,8 +57,9 @@ export default function ResurrectionPanel({ player, players, community, client, 
   }, [clock, readOwn]);
   const status = own?.entryId === identity ? own : null;
   const state = liveRoster ?? community?.resurrection ?? status;
-  const selection = community?.resurrection?.result ?? state?.selection;
-  const open = clock >= Date.parse(resurrectionOpensAt) && clock < Date.parse(resurrectionClosesAt);
+  const selection = community?.resurrection?.result ?? state?.selection ?? community?.resurrection?.selection;
+  const signupClosed = Boolean(selection) || clock >= Date.parse(resurrectionClosesAt);
+  const open = !signupClosed && clock >= Date.parse(resurrectionOpensAt);
   const side = status?.eliminated ? 'abyss' : 'ice';
   const teamName = side === 'abyss' ? '深渊组' : '冰海组';
   const registered = state?.registrations.find(item => item.entry_id === identity) ?? status?.mine;
@@ -116,15 +118,23 @@ export default function ResurrectionPanel({ player, players, community, client, 
   return <section id="resurrection" className={`${frame.arena} ${arena.panel} ${styles.panel}`} style={assets} aria-label="深渊复生">
     <header className={`${heading.heading} ${arena.header}`}>
       <div><small>GW12</small><h2>深渊复生</h2></div>
-      <p className={arena.deadline}>报名时间（北京时间）<br />{chinaTime(resurrectionOpensAt)} — {chinaTime(resurrectionClosesAt)}</p>
+      {!signupClosed ? <p className={arena.deadline}>报名时间（北京时间）<br />{chinaTime(resurrectionOpensAt)} — {chinaTime(resurrectionClosesAt)}</p> : null}
     </header>
     <div className={styles.teams}>
       {(['abyss', 'ice'] as const).map(team => <section className={`${arena.profile} ${styles.team}`} key={team} aria-label={team === 'abyss' ? '深渊组' : '冰海组'}>
-        <h3>{team === 'abyss' ? '深渊组' : '冰海组'}<small>{state?.counts[team] ?? '—'} 人报名</small></h3>
+        <h3>{team === 'abyss' ? '深渊组' : '冰海组'}
+          {selection ? <small>{selection[team].length} 人入选</small> : !signupClosed ? <small>{state?.counts[team] ?? '—'} 人报名</small> : null}
+        </h3>
         <p>{team === 'abyss' ? '已淘汰玩家' : '存活玩家'}</p>
-        {state?.registrations.some(item => item.side === team) ? <ol className={styles.roster}>
+        {selection?.[team].length ? <ol className={styles.roster} aria-label="入选名单与队长">
+          {selection[team].map(id => <li key={id}>
+            <span>{names.get(id) ?? `FPL ID ${id}`}</span>
+            <span className={styles.captain}>队长 {captains.get(id) ?? '—'}</span>
+          </li>)}
+        </ol> : null}
+        {!signupClosed && state?.registrations.some(item => item.side === team) ? <ol className={styles.roster}>
           {state.registrations.filter(item => item.side === team).map(item => <li key={item.entry_id}>
-            <span>{names.get(item.entry_id) ?? `FPL ID ${item.entry_id}`}{selection ? <small>{selectionLabels[item.selection_status]}</small> : null}</span>
+            <span>{names.get(item.entry_id) ?? `FPL ID ${item.entry_id}`}</span>
             <time dateTime={item.created_at}>{chinaTime(item.created_at)}</time>
           </li>)}
         </ol> : null}
@@ -135,7 +145,8 @@ export default function ResurrectionPanel({ player, players, community, client, 
       : selection?.status === 'success' || selection?.status === 'failed'
         ? <p className={styles.result} role="status">{selection.status === 'success' ? '深渊复生成功 · 深渊组全员以 1 血复活，冰海组各扣 1 血' : '深渊复生失败 · 深渊组继续淘汰，冰海组各加 1 血'}</p>
         : selection ? <p role="status">双方各 {selection.abyss.length} 人入选，等待 GW12 正式结算。</p> : null}
-    {registered ? <p className={styles.confirmed} role="status">{player?.name} · {registered.side === 'abyss' ? '深渊组' : '冰海组'} · {selectionLabels[registered.selection_status]}</p>
+    {signupClosed ? (!selection ? <p role="status">报名已截止，等待入选名单。</p> : null)
+      : registered ? <p className={styles.confirmed} role="status">{player?.name} · {registered.side === 'abyss' ? '深渊组' : '冰海组'} · {selectionLabels[registered.selection_status]}</p>
       : !player ? <p>登录后报名</p>
         : !open ? <p>{clock < Date.parse(resurrectionOpensAt) ? '报名尚未开放' : '报名已截止'}</p>
           : status?.ordinaryDuel ? <p>你已参加 GW12 普通决斗，无法报名。</p>
