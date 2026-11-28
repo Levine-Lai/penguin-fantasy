@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 
 const snapshot = JSON.parse(readFileSync(new URL('../../app/static-fpl-data.json', import.meta.url), 'utf8'));
-test('closed registration only lists the selected teams and uses the daily original captain', async ({ page }) => {
+test('selected teams show both captain choices and the actual scoring captain points', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 900 });
   await page.clock.setFixedTime(new Date('2026-11-30T00:00:00Z'));
   const members = snapshot.league.teams.slice(0, 17) as Array<{ entryId: number; teamName: string }>;
@@ -15,7 +15,9 @@ test('closed registration only lists the selected teams and uses the daily origi
   };
   const history = { ...snapshot.history, snapshots: [...snapshot.history.snapshots, {
     gw: 12, ready: true, finished: true, officialFinalized: true, deadlineHasPassed: true, deadlineTime: arena.deadline,
-    teams: members.map(player => ({ ...player, captainName: '原选队长', scoringCaptainName: '替补队长', captainPoints: 8, captainPickRate: 10 })),
+    teams: members.map((player, index) => ({ ...player, captainName: '原选队长', viceCaptainName: '副队长',
+      usedViceCaptain: index === 0, scoringCaptainName: index === 0 ? '副队长' : '原选队长',
+      originalCaptainPoints: 0, captainPoints: index === 0 ? 8 : 0, captainStatus: 'finished', captainPickRate: 10 })),
   }] };
   await page.route('https://penguin-fantasy.pages.dev/api/**', route => {
     const path = new URL(route.request().url()).pathname;
@@ -27,7 +29,16 @@ test('closed registration only lists the selected teams and uses the daily origi
   const panel = page.getByRole('region', { name: '深渊复生', exact: true });
   await expect(panel.getByRole('region', { name: '深渊组' }).getByRole('listitem')).toHaveCount(8);
   await expect(panel.getByRole('region', { name: '冰海组' }).getByRole('listitem')).toHaveCount(8);
-  await expect(panel.getByText('队长 原选队长', { exact: true })).toHaveCount(16);
+  await expect(panel.getByText('C 原选队长', { exact: true })).toHaveCount(16);
+  await expect(panel.getByText('V 副队长', { exact: true })).toHaveCount(16);
+  const rows = panel.getByRole('region', { name: '深渊组' }).getByRole('listitem');
+  await expect(rows.first().locator('[aria-label="计入挑战的基础分"]')).toHaveText('8');
+  await expect(rows.nth(1).locator('[aria-label="计入挑战的基础分"]')).toHaveText('0');
+  expect(await rows.first().evaluate(row => {
+    const [name, choices, score] = [...row.children].map(child => child.getBoundingClientRect());
+    return Math.abs(name.top + name.height / 2 - choices.top - choices.height / 2) < 1 &&
+      name.right <= choices.left && choices.right <= score.left && score.right <= row.getBoundingClientRect().right;
+  })).toBe(true);
   await expect(panel.getByText(members[16].teamName, { exact: true })).toHaveCount(0);
   await expect(panel.getByText('报名时间（北京时间）', { exact: false })).toHaveCount(0);
   await expect(panel.locator('time')).toHaveCount(0);

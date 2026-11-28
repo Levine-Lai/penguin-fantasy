@@ -22,6 +22,7 @@ type CaptainPopularity = { name: string; points: number; selections: number; rat
 type LeagueTeam = { entryId: number; teamName: string };
 type ApiTeam = LeagueTeam & {
   captainName: string | null;
+  viceCaptainName?: string | null;
   scoringCaptainName?: string | null;
   captainPoints: number;
   originalCaptainPoints?: number;
@@ -492,10 +493,16 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
   const [rankingPage, setRankingPage] = useState(0);
   const [leagueTeams, setLeagueTeams] = useState<LeagueTeam[]>(() => isLeagueResponse(bundledFplData.league) ? bundledFplData.league.teams : fallbackTeams);
   const [gwSnapshots, setGwSnapshots] = useState<GwSnapshot[]>(() => isHistoryResponse(bundledFplData.history) ? bundledFplData.history.snapshots : []);
-  const resurrectionCaptains = useMemo(() => new Map(
-    (gwSnapshots.find(snapshot => snapshot.gw === 12)?.teams ?? [])
-      .flatMap(team => team.captainName ? [[team.entryId, team.captainName] as const] : []),
-  ), [gwSnapshots]);
+  const resurrectionCaptains = useMemo(() => {
+    const round = gwSnapshots.find(snapshot => snapshot.gw === 12);
+    const finalized = round?.finished && round.officialFinalized;
+    return new Map((round?.teams ?? []).flatMap(team => team.captainName ? [[team.entryId, {
+      captainName: team.captainName,
+      viceCaptainName: team.viceCaptainName,
+      usedViceCaptain: team.usedViceCaptain,
+      points: finalized || team.captainStatus === 'finished' ? team.captainPoints : null,
+    }] as const] : []));
+  }, [gwSnapshots]);
   const [gwDeadlines, setGwDeadlines] = useState<GwDeadline[]>(() => isHistoryResponse(bundledFplData.history) ? bundledFplData.history.deadlines : []);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [playerEntryId, setPlayerEntryId] = useState<number | null>(null);

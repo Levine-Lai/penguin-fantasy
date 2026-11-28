@@ -11,10 +11,13 @@ import arena from './live-arena.module.css';
 import styles from './resurrection-panel.module.css';
 
 type OwnStatus = ResurrectionState & { entryId: number; eliminated: boolean; ordinaryDuel: boolean };
+export type ResurrectionCaptain = {
+  captainName: string; viceCaptainName?: string | null; usedViceCaptain?: boolean; points: number | null;
+};
 type Props = {
   player: DuelPlayer | null; players: DuelPlayer[]; community: Community | null;
   client: ReturnType<typeof createDuelClient> | null; onRegistered: () => Promise<void>; assets: CSSProperties;
-  captains: ReadonlyMap<number, string>;
+  captains: ReadonlyMap<number, ResurrectionCaptain>;
 };
 const selectionLabels = { pending: '已报名，等待入选', selected: '已入选', overflow: '未入选，人数超额', cancelled: '人数不足，挑战取消' };
 
@@ -127,10 +130,17 @@ export default function ResurrectionPanel({ player, players, community, client, 
         </h3>
         <p>{team === 'abyss' ? '已淘汰玩家' : '存活玩家'}</p>
         {selection?.[team].length ? <ol className={styles.roster} aria-label="入选名单与队长">
-          {selection[team].map(id => <li key={id}>
-            <span>{names.get(id) ?? `FPL ID ${id}`}</span>
-            <span className={styles.captain}>队长 {captains.get(id) ?? '—'}</span>
-          </li>)}
+          {selection[team].map(id => {
+            const pick = captains.get(id);
+            return <li key={id} className={styles.selectedPlayer}>
+              <strong>{names.get(id) ?? `FPL ID ${id}`}</strong>
+              <span className={styles.captains}>
+                <span className={pick && !pick.usedViceCaptain ? arena.activeCaptain : undefined}>C {pick?.captainName ?? '—'}</span>
+                <span className={pick?.usedViceCaptain ? arena.activeCaptain : undefined}>V {pick?.viceCaptainName ?? '—'}</span>
+              </span>
+              <em className={`${arena.captainScore} ${styles.score}`} aria-label="计入挑战的基础分">{pick?.points ?? '—'}</em>
+            </li>;
+          })}
         </ol> : null}
         {!signupClosed && state?.registrations.some(item => item.side === team) ? <ol className={styles.roster}>
           {state.registrations.filter(item => item.side === team).map(item => <li key={item.entry_id}>
