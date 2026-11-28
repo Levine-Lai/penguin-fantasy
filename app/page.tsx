@@ -492,6 +492,10 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
   const [rankingPage, setRankingPage] = useState(0);
   const [leagueTeams, setLeagueTeams] = useState<LeagueTeam[]>(() => isLeagueResponse(bundledFplData.league) ? bundledFplData.league.teams : fallbackTeams);
   const [gwSnapshots, setGwSnapshots] = useState<GwSnapshot[]>(() => isHistoryResponse(bundledFplData.history) ? bundledFplData.history.snapshots : []);
+  const resurrectionCaptains = useMemo(() => new Map(
+    (gwSnapshots.find(snapshot => snapshot.gw === 12)?.teams ?? [])
+      .flatMap(team => team.captainName ? [[team.entryId, team.captainName] as const] : []),
+  ), [gwSnapshots]);
   const [gwDeadlines, setGwDeadlines] = useState<GwDeadline[]>(() => isHistoryResponse(bundledFplData.history) ? bundledFplData.history.deadlines : []);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [playerEntryId, setPlayerEntryId] = useState<number | null>(null);
@@ -826,7 +830,7 @@ export function HomeView({ arenaPreview, initialStage }: { arenaPreview?: ReactN
 
       <section className="league-hero"><div className="hero-inner"><div className="hero-copy"><span>THE FROZEN ABYSS · 2026–27</span><h1>冰渊王座<span>之战</span></h1><p className="hero-myth"><span>在世界尽头，有一片被遗忘的禁地——终焉冰海。这里没有四季，只有永恒的寒冬。传说远古巨龙陨落后，它的心脏化为了贯穿天地的巨大冰山，而它的鲜血流入深海，孕育出了无数深渊生灵。</span><span>冰山之上，是荣耀、力量与王权的象征；<br />深海之下，是黑暗、危险与未知的试炼。</span><span>千年以来，无数冒险者、骑士、法师、海妖与巨兽都曾踏入这片领域，只为寻找传说中的至高宝藏。据说，只有经历五重试炼、在冰山与深海之间活到最后的人，才能获得王座认可，成为新一代——</span><strong>冰渊之王</strong></p></div></div></section>
 
-      {!isArenaPreview && activeStage === 2 ? <div className="arena-home"><LiveArena player={myRanking} players={ranking} /></div> : null}
+      {!isArenaPreview && activeStage === 2 ? <div className="arena-home"><LiveArena player={myRanking} players={ranking} resurrectionCaptains={resurrectionCaptains} /></div> : null}
       {isArenaPreview && activeStage === 2 ? arenaPreview : <section className="boards">
         <article className={`panel ranking-panel ${ledger.ranking}`} id="ranking" style={rankingPanelAssets}>
           <header className={`${heading.heading} ${heading.pageHeading}`}><div><small>{stage.range} · {stage.title}</small><h2>积分与血量排行榜</h2></div></header>
